@@ -77,7 +77,7 @@ export function ListaConversas({ ativa }: { ativa?: string }) {
             <Link className="text-sm font-medium text-marca-forte underline" href="/matches">Ver meus matches</Link>
           </div>
         ) : (
-          <ul className="flex flex-col gap-0.5">
+          <ul className="flex flex-col gap-0.5" aria-live="polite">
             {conversas.map((conversa, i) => {
               const ativo = conversa.com.username === ativa;
               return (
@@ -87,11 +87,11 @@ export function ListaConversas({ ativa }: { ativa?: string }) {
                       <Avatar nome={conversa.com.name} url={conversa.com.avatar_url} />
                       <span className="min-w-0 flex-1">
                         <span className="flex items-baseline justify-between gap-2">
-                          <span className="truncate font-medium text-texto">{conversa.com.name}</span>
+                          <span className="min-w-0 truncate font-medium text-texto">{conversa.com.name}</span>
+                          <span className="shrink-0 truncate text-xs text-texto-3">@{conversa.com.username}</span>
                           <time className="numeros shrink-0 text-xs text-texto-3" dateTime={conversa.em}>{formatarQuando(conversa.em)}</time>
                         </span>
                         <span className="block truncate text-sm text-texto-3">{conversa.ultima_de_mim ? "Você: " : ""}{conversa.ultima_mensagem}</span>
-                        <span className="sr-only">@{conversa.com.username}</span>
                       </span>
                     </Link>
                   </Revelar>
