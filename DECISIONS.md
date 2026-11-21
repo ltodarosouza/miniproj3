@@ -1,6 +1,6 @@
 # Decisões do time
 
-**Time:** _(nomes e usernames do GitHub: Pessoa A, B, C e D)_
+**Time:** @italoosilva (Pessoa A), @NicoleAlverga (Pessoa B), _a definir_ (Pessoa C) e @ltodarosouza (Pessoa D)
 
 **Rede:** troca de habilidades entre iniciantes em tech. Nome da rede: _a decidir_.
 
@@ -100,20 +100,20 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
 
 | Feature | Dono | Por quê (1 frase) |
 |---|---|---|
-| Auth (núcleo) | Pessoa A | Sem login não existe troca entre pessoas. |
-| Perfil com nível e habilidades (núcleo + diferencial) | Pessoa A | O perfil é o "currículo" que decide se vale trocar com alguém. |
-| Catálogo de habilidades com autocomplete e IA | Pessoa A | Garante que o match compare a mesma habilidade. |
-| Posts de rotina com tempo e foto (núcleo) | Pessoa B | Mostra que a pessoa estuda aquilo de verdade. |
-| Curtidas e comentários (núcleo) | Pessoa B | Motivação e dúvidas rápidas na rotina dos outros. |
-| Feed misto (núcleo) | Pessoa B | Ajuda a descobrir quem pode te ensinar. |
-| Streak de estudo | Pessoa B | Incentiva a voltar todo dia. |
-| Follow (núcleo) | Pessoa C | Acompanhar quem estuda o mesmo que você. |
-| Match em dois níveis | Pessoa C | É o centro do produto. |
-| Seed fake (núcleo) | Pessoa C | A demo começa com matches de verdade. |
-| Chat 1-para-1 | Pessoa D | É onde a troca é combinada. |
-| Agendamento de troca | Pessoa D | Marca a troca e avisa quando avaliar. |
-| Avaliação pós-troca | Pessoa D | Passa confiança sobre quem ensina bem. |
-| Deploy | Pessoa D | Bônus de +10 e banca testando na URL. |
+| Auth (núcleo) | @italoosilva | Sem login não existe troca entre pessoas. |
+| Perfil com nível e habilidades (núcleo + diferencial) | @italoosilva | O perfil é o "currículo" que decide se vale trocar com alguém. |
+| Catálogo de habilidades com autocomplete e IA | @italoosilva | Garante que o match compare a mesma habilidade. |
+| Posts de rotina com tempo e foto (núcleo) | @NicoleAlverga | Mostra que a pessoa estuda aquilo de verdade. |
+| Curtidas e comentários (núcleo) | @NicoleAlverga | Motivação e dúvidas rápidas na rotina dos outros. |
+| Feed misto (núcleo) | @NicoleAlverga | Ajuda a descobrir quem pode te ensinar. |
+| Streak de estudo | @NicoleAlverga | Incentiva a voltar todo dia. |
+| Follow (núcleo) | _a definir (C)_ | Acompanhar quem estuda o mesmo que você. |
+| Match em dois níveis | _a definir (C)_ | É o centro do produto. |
+| Seed fake (núcleo) | _a definir (C)_ | A demo começa com matches de verdade. |
+| Chat 1-para-1 | @ltodarosouza | É onde a troca é combinada. |
+| Agendamento de troca | @ltodarosouza | Marca a troca e avisa quando avaliar. |
+| Avaliação pós-troca | @ltodarosouza | Passa confiança sobre quem ensina bem. |
+| Deploy | @ltodarosouza | Bônus de +10 e banca testando na URL. |
 
 Extras, só depois de tudo acima pronto: notificações, trending de habilidades
 e badges.

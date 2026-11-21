@@ -5,6 +5,13 @@ model, service, router, tela e, quando houver, a estrutura em `core/`
 (guia 07). Rotas e campos abaixo são o contrato combinado entre as frentes.
 Quem mudar um contrato avisa o time e atualiza este arquivo.
 
+| Frente | Dono |
+|---|---|
+| A: Auth, perfil e habilidades | @italoosilva |
+| B: Posts de rotina, feed e streak | @NicoleAlverga |
+| C: Follow, match e seed | _a definir_ |
+| D: Chat, agendamento, avaliação e deploy | @ltodarosouza |
+
 Regras para todos:
 
 - uma branch e uma issue por feature; o PR fecha a issue com `Closes #N` e é
@@ -105,7 +112,7 @@ provisório troca. É uma mudança pequena, mas precisa acontecer na ordem:
 
 ---
 
-## Pessoa A: Auth, perfil e habilidades
+## Pessoa A (@italoosilva): Auth, perfil e habilidades
 
 **Área de revisão:** frontend (layout, navegação, `frontend/lib/api.ts`).
 
@@ -163,7 +170,7 @@ provisório troca. É uma mudança pequena, mas precisa acontecer na ordem:
 
 ---
 
-## Pessoa B: Posts de rotina, feed e streak
+## Pessoa B (@NicoleAlverga): Posts de rotina, feed e streak
 
 **Área de revisão:** backend (models, routers, services, `main.py`).
 
@@ -215,7 +222,7 @@ provisório troca. É uma mudança pequena, mas precisa acontecer na ordem:
 
 ---
 
-## Pessoa C: Follow, match e seed
+## Pessoa C (a definir): Follow, match e seed
 
 **Área de revisão:** dados (seed e `core/`).
 
@@ -267,7 +274,7 @@ provisório troca. É uma mudança pequena, mas precisa acontecer na ordem:
 
 ---
 
-## Pessoa D: Chat, agendamento, avaliação e deploy
+## Pessoa D (@ltodarosouza): Chat, agendamento, avaliação e deploy
 
 **Área de revisão:** reforça backend e cuida do deploy.
 
