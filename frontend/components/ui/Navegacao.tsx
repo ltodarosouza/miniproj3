@@ -28,9 +28,9 @@ export function Navegacao({ nomeRede }: { nomeRede: string }) {
       setPilula(null);
       return;
     }
-    const link = ul.querySelector<HTMLElement>(`[data-href="${alvo}"]`);
-    if (!link) return;
-    setPilula({ x: link.offsetLeft, w: link.offsetWidth });
+    const item = ul.querySelector<HTMLElement>(`[data-href="${alvo}"]`)?.parentElement;
+    if (!item) return;
+    setPilula({ x: item.offsetLeft, w: item.offsetWidth });
   }, [alvo]);
 
   return (
