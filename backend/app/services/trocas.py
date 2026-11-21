@@ -2,7 +2,7 @@ from datetime import timedelta
 from urllib.parse import urlencode
 
 from fastapi import HTTPException
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, update
 from sqlalchemy.orm import Session
 
 from app.core.tempo import agora_utc, como_utc
@@ -161,9 +161,14 @@ def responder(db: Session, pessoa: User, troca_id: int, status: str) -> TrocaOut
         raise HTTPException(
             status_code=403, detail="só quem recebeu a proposta pode responder"
         )
-    if troca.status != "proposta":
+    alteradas = db.execute(
+        update(Troca)
+        .where(Troca.id == troca_id, Troca.status == "proposta")
+        .values(status=status)
+    ).rowcount
+    if alteradas == 0:
+        db.rollback()
         raise HTTPException(status_code=409, detail="esta proposta já foi respondida")
-    troca.status = status
     db.commit()
     db.refresh(troca)
     return para_saida(db, troca)
