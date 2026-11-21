@@ -23,6 +23,7 @@ export default function PaginaConversa() {
   const [conversa, setConversa] = useState<Conversa | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [naoEncontrado, setNaoEncontrado] = useState(false);
+  const [erroInicial, setErroInicial] = useState(false);
   const [semConexao, setSemConexao] = useState(false);
   const [novas, setNovas] = useState(false);
   const lista = useRef<HTMLDivElement>(null);
@@ -53,6 +54,7 @@ export default function PaginaConversa() {
     setMensagens([]);
     setConversa(null);
     setNaoEncontrado(false);
+    setErroInicial(false);
     primeiroCarregamento.current = true;
     Promise.all([listarMensagens(username), listarConversas()])
       .then(([resposta, conversas]) => {
@@ -65,7 +67,10 @@ export default function PaginaConversa() {
         if (!ativo) return;
         const detalhe = erro instanceof Error ? erro.message.toLocaleLowerCase("pt-BR") : "";
         if (detalhe.includes("usuário não encontrado")) setNaoEncontrado(true);
-        else setSemConexao(true);
+        else {
+          setSemConexao(true);
+          setErroInicial(true);
+        }
       })
       .finally(() => {
         if (!ativo) return;
@@ -128,6 +133,10 @@ export default function PaginaConversa() {
 
   if (naoEncontrado) {
     return <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"><p className="text-lg font-medium text-texto">Não encontramos @{username}</p><Link href="/mensagens" className="text-sm font-medium text-marca-forte">Voltar para as conversas</Link></div>;
+  }
+
+  if (erroInicial && mensagens.length === 0) {
+    return <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"><p className="max-w-sm text-texto-2">Não conseguimos carregar esta conversa. Confira sua conexão e tente de novo.</p><Botao variante="secundario" onClick={() => { setErroInicial(false); setCarregando(true); void Promise.all([listarMensagens(username), listarConversas()]).then(([resposta, conversas]) => { setMensagens(resposta.items); setConversa(conversas.items.find((item) => item.com.username === username) ?? null); setSemConexao(false); }).catch(() => { setErroInicial(true); setSemConexao(true); }).finally(() => setCarregando(false)); }}>Tentar de novo</Botao></div>;
   }
 
   const com = conversa?.com;
