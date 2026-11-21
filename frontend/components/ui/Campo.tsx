@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, type InputHTMLAttributes, type TextareaHTMLAttributes } from "react";
+import { useId, type InputHTMLAttributes, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 
 const BASE =
   "w-full rounded-controle border bg-superficie px-3 text-[0.9375rem] text-texto placeholder:text-texto-3 transition-[border-color,box-shadow] duration-[var(--rapido)] ease-saida focus:outline-none focus:border-marca focus:shadow-[0_0_0_4px_var(--brilho)]";
@@ -75,6 +75,40 @@ export function AreaTexto({
         className={`${BASE} min-h-24 resize-y py-2.5 leading-relaxed ${erro ? "border-perigo" : "border-linha-forte"} ${className}`}
         {...resto}
       />
+    </Rotulo>
+  );
+}
+
+export function Selecao({
+  rotulo,
+  dica,
+  erro,
+  className = "",
+  children,
+  ...resto
+}: SelectHTMLAttributes<HTMLSelectElement> & { rotulo: string; dica?: string; erro?: string }) {
+  const id = useId();
+  return (
+    <Rotulo id={id} rotulo={rotulo} dica={dica} erro={erro}>
+      <span className="relative block">
+        <select
+          id={id}
+          aria-invalid={erro ? true : undefined}
+          aria-describedby={erro || dica ? `${id}-msg` : undefined}
+          className={`${BASE} h-10 appearance-none pr-10 ${erro ? "border-perigo" : "border-linha-forte"} ${className}`}
+          {...resto}
+        >
+          {children}
+        </select>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          fill="none"
+          className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-texto-3"
+        >
+          <path d="m5 7.5 5 5 5-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
     </Rotulo>
   );
 }
