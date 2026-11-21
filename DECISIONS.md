@@ -126,6 +126,20 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
   popularidade, e a nota precisa vir de uma troca real (princípio "prova, não
   promessa").
 
+### 9. Follow idempotente, com o estado devolvido na resposta
+
+- **Contexto:** o botão de seguir aparece no perfil, nas listas e nos
+  matches, e precisa mostrar o estado certo sem recarregar a página.
+- **Opções:** `POST`/`DELETE` devolvendo `204`; devolver o estado atualizado.
+- **Escolha:** `POST` e `DELETE /usuarios/{username}/follow` são idempotentes
+  (seguir duas vezes não duplica, e a tabela `follows` tem `UNIQUE` no par) e
+  devolvem `{"seguindo", "seguidores"}`. `GET` na mesma rota diz se quem está
+  logado segue a pessoa. `services.follows.contadores(db, id)` entrega
+  `seguidores` e `seguindo` para o perfil de A.
+- **O que cortamos e por quê:** seguir de volta automático e pedido de
+  aprovação. A rede é aberta e o follow serve para acompanhar a rotina, não
+  para dar acesso.
+
 ## Features
 
 | Feature | Dono | Por quê (1 frase) |
@@ -166,4 +180,7 @@ contra a versão que percorre todos os usuários.
   tarefas pequenas para agentes do Codex (GPT-6 Luna) em paralelo, um arquivo
   por agente. Claude revisou cada entrega, rodou os testes e conferiu as
   telas no navegador antes de mesclar.
+- Frente C (follow): Claude Code escreveu model, service, rotas, testes e as
+  telas de seguidores/seguindo seguindo o slice de usuários, e conferiu o
+  botão de seguir no navegador.
 - _(completem conforme usarem)_

@@ -181,3 +181,30 @@ export function avaliarTroca(id: number, estrelas: number, feedback: string): Pr
 export function avaliacoesDe(username: string): Promise<ResumoAvaliacoes> {
   return apiGet(`/usuarios/${encodeURIComponent(username)}/avaliacoes`);
 }
+
+// ---- follow (frente C) ----
+
+export type EstadoFollow = {
+  seguindo: boolean;
+  seguidores: number;
+};
+
+export function estadoFollow(username: string): Promise<EstadoFollow> {
+  return apiGet<EstadoFollow>(`/usuarios/${username}/follow`);
+}
+
+export function seguir(username: string): Promise<EstadoFollow> {
+  return apiPost<EstadoFollow>(`/usuarios/${username}/follow`);
+}
+
+export function deixarDeSeguir(username: string): Promise<EstadoFollow> {
+  return apiDelete<EstadoFollow>(`/usuarios/${username}/follow`);
+}
+
+export function listarSeguidores(username: string, offset = 0, limit = 20): Promise<Page<User>> {
+  return apiGet<Page<User>>(`/usuarios/${username}/seguidores?offset=${offset}&limit=${limit}`);
+}
+
+export function listarSeguindo(username: string, offset = 0, limit = 20): Promise<Page<User>> {
+  return apiGet<Page<User>>(`/usuarios/${username}/seguindo?offset=${offset}&limit=${limit}`);
+}
