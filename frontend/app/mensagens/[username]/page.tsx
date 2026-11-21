@@ -70,6 +70,7 @@ export default function PaginaConversa() {
     setNaoEncontrado(false);
     setErroInicial(false);
     primeiroCarregamento.current = true;
+    ciclosPolling.current = 0;
     Promise.all([listarMensagens(username), listarConversas(), listarTrocas(username)])
       .then(([resposta, conversas, trocasCarregadas]) => {
         if (!ativo) return;
