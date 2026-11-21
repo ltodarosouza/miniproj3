@@ -2,7 +2,6 @@ from datetime import timedelta
 
 from app.core.tempo import agora_utc
 from app.db import SessionLocal
-from app.models.avaliacao import Avaliacao
 from app.models.troca import Troca
 from app.services.avaliacoes import media_e_total
 
@@ -87,6 +86,8 @@ def test_proposta_e_recusada_nao_ficam_pendentes(client, pessoa):
     recusada = criar_troca(client, ana, ids, status="recusada")
     itens = client.get("/trocas/pendentes-avaliacao", headers=ana).json()["items"]
     assert all(item["id"] not in (proposta, recusada) for item in itens)
+    assert avaliar(client, proposta, ana).status_code == 409
+    assert avaliar(client, recusada, ana).status_code == 409
 
 
 def test_regras_de_avaliacao_e_estrelas(client, pessoa):
