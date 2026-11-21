@@ -15,3 +15,4 @@ labels: feature
 - [ ] página no frontend
 - [ ] linha no `DECISIONS.md`
 - [ ] se usar estrutura de dados: em `core/`, em Python puro, usada pelo endpoint
+- [ ] limpeza feita: worktrees e branches apagados, servidores fechados ([checklist](../../docs/FRENTES.md#ao-terminar-uma-tarefa-limpar-e-fechar-tudo))

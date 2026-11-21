@@ -22,7 +22,38 @@ Regras para todos:
 - toda tela usa os componentes de `frontend/components/ui/` e segue o
   [DESIGN.md](../DESIGN.md); componente novo que sirva para mais de uma tela
   entra lá e na página `/design`;
-- cada dono escreve a decisão da sua frente no `DECISIONS.md`.
+- cada dono escreve a decisão da sua frente no `DECISIONS.md`;
+- **ao terminar uma tarefa, limpar e fechar tudo** (checklist abaixo). Vale
+  para pessoas e para agentes de IA.
+
+## Ao terminar uma tarefa: limpar e fechar tudo
+
+Toda tarefa só está terminada depois desta limpeza. Worktree, branch ou
+servidor esquecido confunde o time e os agentes na tarefa seguinte.
+
+1. **PR mesclado e issue fechada.** O PR fecha a issue com `Closes #N`. Se a
+   issue não fechou sozinha, feche à mão. PR que não vai mais ser usado:
+   feche também.
+2. **Apagar os worktrees** que não serão mais usados:
+   ```bash
+   git worktree list
+   git worktree remove ../nome-do-worktree
+   git worktree prune
+   ```
+3. **Apagar as branches** já mescladas ou abandonadas, local e no GitHub:
+   ```bash
+   git switch main && git pull
+   git branch -d nome-da-branch
+   git push origin --delete nome-da-branch
+   git fetch --prune
+   ```
+   Use `git branch -D` só para branch abandonada que nunca vai ser mesclada.
+4. **Fechar o que ficou rodando:** servidores (`make dev-back`,
+   `make dev-front`), terminais em background, subagentes e processos de
+   teste. Confira com `lsof -i :3000` e `lsof -i :8000`.
+5. **Conferir:** `git worktree list` mostra só a pasta principal,
+   `git branch` mostra só `main` e as branches em uso, e `git status` está
+   limpo.
 
 ## Trabalho em paralelo
 
