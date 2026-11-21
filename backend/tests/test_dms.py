@@ -61,3 +61,56 @@ def test_isolamento_entre_conversas(client, pessoa):
     client.post("/dms/caio", json={"texto": "com caio"}, headers=ana)
     resposta = client.get("/dms/bia", headers=ana)
     assert [item["texto"] for item in resposta.json()["items"]] == ["com bia"]
+
+
+def test_listar_conversas_mais_recentes_primeiro_e_dos_dois_lados(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    caio = pessoa("caio")
+    client.post("/dms/bia", json={"texto": "conversa antiga"}, headers=ana)
+    client.post("/dms/ana", json={"texto": "resposta da bia"}, headers=bia)
+    client.post("/dms/caio", json={"texto": "conversa recente"}, headers=ana)
+
+    resposta = client.get("/dms", headers=ana)
+
+    assert resposta.status_code == 200
+    assert [item["com"]["username"] for item in resposta.json()["items"]] == [
+        "caio",
+        "bia",
+    ]
+    assert [item["ultima_mensagem"] for item in resposta.json()["items"]] == [
+        "conversa recente",
+        "resposta da bia",
+    ]
+    assert [item["ultima_de_mim"] for item in resposta.json()["items"]] == [
+        True,
+        False,
+    ]
+
+
+def test_listar_conversa_com_apenas_mensagens_recebidas(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    client.post("/dms/ana", json={"texto": "mensagem recebida"}, headers=bia)
+
+    resposta = client.get("/dms", headers=ana)
+
+    assert resposta.status_code == 200
+    assert len(resposta.json()["items"]) == 1
+    assert resposta.json()["items"][0]["com"]["username"] == "bia"
+    assert resposta.json()["items"][0]["ultima_mensagem"] == "mensagem recebida"
+    assert resposta.json()["items"][0]["ultima_de_mim"] is False
+
+
+def test_listar_conversas_isola_terceira_pessoa_e_exige_autenticacao(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    caio = pessoa("caio")
+    client.post("/dms/bia", json={"texto": "privada"}, headers=ana)
+
+    resposta = client.get("/dms", headers=caio)
+    assert resposta.status_code == 200
+    assert resposta.json()["items"] == []
+
+    resposta = client.get("/dms")
+    assert resposta.status_code == 401
