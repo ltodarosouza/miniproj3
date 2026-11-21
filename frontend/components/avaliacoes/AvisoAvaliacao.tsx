@@ -17,7 +17,7 @@ const LEGENDAS = ["", "Não rolou", "Poderia ser melhor", "Foi ok", "Foi muito b
 const CHAVE_ADIADAS = "avaliacoes_adiadas";
 
 export function AvisoAvaliacao() {
-  const usuarioId = meuId();
+  const [usuarioId, setUsuarioId] = useState<number | null>(null);
   const [trocas, setTrocas] = useState<Troca[]>([]);
   const [adiadas, setAdiadas] = useState<number[]>([]);
   const [estrelas, setEstrelas] = useState(0);
@@ -26,6 +26,10 @@ export function AvisoAvaliacao() {
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState(false);
   const [visivel, setVisivel] = useState(false);
+
+  useEffect(() => {
+    setUsuarioId(meuId());
+  }, []);
 
   const buscar = useCallback(async () => {
     if (usuarioId === null || document.hidden) return;
