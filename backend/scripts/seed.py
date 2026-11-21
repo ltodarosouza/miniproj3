@@ -1,9 +1,3 @@
-"""Seed mínimo: 3 usuários para o slice de exemplo renderizar.
-
-A versão de verdade (com faker, posts, follows, likes...) é FEATURE DO NÚCLEO —
-é do time. Rode com: make seed
-"""
-
 import sys
 from pathlib import Path
 
@@ -13,6 +7,7 @@ from sqlalchemy import select
 
 from app.db import Base, SessionLocal, engine
 from app.models.user import User
+from app.services.habilidades import garantir_catalogo
 
 USUARIOS = [
     User(username="ada", name="Ada Lovelace", bio="a primeira a programar"),
@@ -24,6 +19,7 @@ USUARIOS = [
 def main() -> None:
     Base.metadata.create_all(engine)
     with SessionLocal() as db:
+        garantir_catalogo(db)
         if db.scalar(select(User).limit(1)):
             print("banco já tem dados — nada a fazer")
             return
