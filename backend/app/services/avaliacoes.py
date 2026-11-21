@@ -13,18 +13,25 @@ from app.schemas.user import UserOut
 from app.services.trocas import para_saidas
 
 
-def _para_saida(db: Session, avaliacao: Avaliacao) -> AvaliacaoOut:
-    de = db.get(User, avaliacao.de_id)
-    para = db.get(User, avaliacao.para_id)
-    return AvaliacaoOut(
-        id=avaliacao.id,
-        troca_id=avaliacao.troca_id,
-        de=UserOut.model_validate(de),
-        para=UserOut.model_validate(para),
-        estrelas=avaliacao.estrelas,
-        feedback=avaliacao.feedback,
-        em=avaliacao.em,
+def _para_saidas(db: Session, avaliacoes: list[Avaliacao]) -> list[AvaliacaoOut]:
+    ids = {id for a in avaliacoes for id in (a.de_id, a.para_id)}
+    usuarios = (
+        {u.id: u for u in db.scalars(select(User).where(User.id.in_(ids)))}
+        if ids
+        else {}
     )
+    return [
+        AvaliacaoOut(
+            id=avaliacao.id,
+            troca_id=avaliacao.troca_id,
+            de=UserOut.model_validate(usuarios[avaliacao.de_id]),
+            para=UserOut.model_validate(usuarios[avaliacao.para_id]),
+            estrelas=avaliacao.estrelas,
+            feedback=avaliacao.feedback,
+            em=avaliacao.em,
+        )
+        for avaliacao in avaliacoes
+    ]
 
 
 def pendentes(db: Session, pessoa: User) -> list[TrocaOut]:
@@ -83,7 +90,7 @@ def avaliar(
         db.rollback()
         raise HTTPException(status_code=409, detail="você já avaliou esta troca")
     db.refresh(avaliacao)
-    return _para_saida(db, avaliacao)
+    return _para_saidas(db, [avaliacao])[0]
 
 
 def resumo(db: Session, username: str) -> ResumoAvaliacoes:
@@ -102,7 +109,7 @@ def resumo(db: Session, username: str) -> ResumoAvaliacoes:
     return ResumoAvaliacoes(
         media=media,
         total=total,
-        items=[_para_saida(db, item) for item in avaliacoes],
+        items=_para_saidas(db, avaliacoes),
     )
 
 

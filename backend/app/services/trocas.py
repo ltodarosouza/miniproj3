@@ -183,7 +183,13 @@ def listar(db: Session, pessoa: User, com_username: str | None) -> list[TrocaOut
                 (Troca.proposta_por_id == com.id) & (Troca.com_id == pessoa.id),
             )
         )
-    trocas = list(db.scalars(consulta))
     agora = agora_utc()
-    trocas.sort(key=lambda troca: (troca.data_hora < agora, -troca.data_hora.timestamp() if troca.data_hora < agora else troca.data_hora.timestamp()))
-    return para_saidas(db, trocas)
+    futuras = db.scalars(
+        consulta.where(Troca.data_hora >= agora).order_by(Troca.data_hora, Troca.id)
+    )
+    passadas = db.scalars(
+        consulta.where(Troca.data_hora < agora).order_by(
+            Troca.data_hora.desc(), Troca.id.desc()
+        )
+    )
+    return para_saidas(db, [*futuras, *passadas])
