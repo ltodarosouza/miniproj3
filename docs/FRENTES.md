@@ -71,9 +71,9 @@ e 0.3), e ela sai num só dia:
 
 | # | PR | Dono | O que entra | Por que bloqueia |
 |---|---|---|---|---|
-| 0.1 | Bypass de auth | @ltodarosouza | `get_current_user` lendo o header `X-User-Id` (guia 01, Passo 0) | Toda rota protegida depende dele |
-| 0.2 | Models de habilidade | @ltodarosouza | `Habilidade` e `UserHabilidade`, sem rotas, e o catálogo no seed | C monta o match em cima dessas tabelas |
-| 0.3 | Esqueleto do match | @ltodarosouza | `core/matches.py` com `quem_pode_ensinar(eu)` devolvendo `set()` e o singleton registrado no lifespan | B chama essa função no feed |
+| 0.1 | Bypass de auth | ✅ pronto | `get_current_user` lendo o header `X-User-Id` (guia 01, Passo 0) | Toda rota protegida depende dele |
+| 0.2 | Models de habilidade | ✅ pronto | `Habilidade` e `UserHabilidade`, sem rotas, e o catálogo no seed | C monta o match em cima dessas tabelas |
+| 0.3 | Esqueleto do match | ✅ pronto | `core/matches.py` com `quem_pode_ensinar(eu)` devolvendo `set()` e o singleton registrado no lifespan | B chama essa função no feed |
 | 0.4 | Design system | ✅ pronto | Tokens, componentes em `frontend/components/ui/`, movimento e a página `/design` ([DESIGN.md](../DESIGN.md)) | Todas as telas usam as mesmas peças |
 
 Enquanto a Fase 0 não termina, os outros fazem o `make check`, leem os guias e

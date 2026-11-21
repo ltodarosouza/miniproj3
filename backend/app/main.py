@@ -5,18 +5,26 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 
 from app.core.contadores import contador_iniciais
+from app.core.matches import indice_matches
 from app.db import Base, SessionLocal, engine
 from app.models.user import User
+from app.models.user_habilidade import UserHabilidade
 from app.routers import users
+from app.services.habilidades import garantir_catalogo
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
-    # Reconstrói as estruturas do core/ a partir do banco (memória zera a cada
-    # restart — inclusive no --reload; ver core/README.md).
     with SessionLocal() as db:
+        garantir_catalogo(db)
         usernames = list(db.scalars(select(User.username)))
+        indice_matches.reconstruir(
+            [
+                (uh.usuario_id, uh.habilidade_id, uh.tipo)
+                for uh in db.scalars(select(UserHabilidade))
+            ]
+        )
     contador_iniciais.reconstruir(usernames)
     yield
 
