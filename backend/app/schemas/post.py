@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from app.schemas.tempo import DataHoraUtc
 from app.schemas.troca import HabilidadeResumo
@@ -15,6 +15,19 @@ class PostCreate(BaseModel):
     texto: TextoPost
     habilidade_id: int | None = None
     minutos_estudados: int | None = Field(default=None, ge=1, le=1440)
+
+
+class PostUpdate(BaseModel):
+    texto: TextoPost | None = None
+    habilidade_id: int | None = None
+    minutos_estudados: int | None = Field(default=None, ge=1, le=1440)
+
+    @field_validator("texto")
+    @classmethod
+    def texto_nao_pode_ser_nulo(cls, valor: str | None) -> str | None:
+        if valor is None:
+            raise ValueError("texto não pode ser nulo")
+        return valor
 
 
 class PostOut(BaseModel):

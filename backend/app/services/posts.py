@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.models.habilidade import Habilidade
 from app.models.post import Post
 from app.models.user import User
-from app.schemas.post import PostCreate, PostOut
+from app.schemas.post import PostCreate, PostOut, PostUpdate
 
 
 def montar_saidas(db: Session, posts: list[Post]) -> list[PostOut]:
@@ -37,9 +37,13 @@ def montar_saidas(db: Session, posts: list[Post]) -> list[PostOut]:
     ]
 
 
-def criar(db: Session, eu: User, dados: PostCreate) -> PostOut:
-    if dados.habilidade_id is not None and db.get(Habilidade, dados.habilidade_id) is None:
+def _exigir_habilidade(db: Session, habilidade_id: int | None) -> None:
+    if habilidade_id is not None and db.get(Habilidade, habilidade_id) is None:
         raise HTTPException(status_code=422, detail="habilidade não encontrada")
+
+
+def criar(db: Session, eu: User, dados: PostCreate) -> PostOut:
+    _exigir_habilidade(db, dados.habilidade_id)
     post = Post(autor_id=eu.id, **dados.model_dump())
     db.add(post)
     db.commit()
@@ -56,3 +60,27 @@ def buscar(db: Session, post_id: int) -> Post:
 
 def detalhar(db: Session, post_id: int) -> PostOut:
     return montar_saidas(db, [buscar(db, post_id)])[0]
+
+
+def _post_do_autor(db: Session, eu: User, post_id: int) -> Post:
+    post = buscar(db, post_id)
+    if post.autor_id != eu.id:
+        raise HTTPException(status_code=403, detail="só o autor pode mexer neste post")
+    return post
+
+
+def editar(db: Session, eu: User, post_id: int, dados: PostUpdate) -> PostOut:
+    post = _post_do_autor(db, eu, post_id)
+    campos = dados.model_dump(exclude_unset=True)
+    _exigir_habilidade(db, campos.get("habilidade_id"))
+    for nome, valor in campos.items():
+        setattr(post, nome, valor)
+    db.commit()
+    db.refresh(post)
+    return montar_saidas(db, [post])[0]
+
+
+def apagar(db: Session, eu: User, post_id: int) -> None:
+    post = _post_do_autor(db, eu, post_id)
+    db.delete(post)
+    db.commit()

@@ -54,3 +54,66 @@ def test_buscar_post_existente_e_inexistente(client, pessoa):
     assert r.status_code == 200
     assert r.json()["texto"] == "meu post"
     assert client.get("/posts/9999", headers=ana).status_code == 404
+
+    
+
+def test_editar_post_so_muda_o_que_foi_enviado(client, pessoa):
+    ana = pessoa("ana")
+    post_id = client.post(
+        "/posts", json={"texto": "original", "minutos_estudados": 30}, headers=ana
+    ).json()["id"]
+
+    r = client.patch(f"/posts/{post_id}", json={"texto": "  editado  "}, headers=ana)
+
+    assert r.status_code == 200
+    assert r.json()["texto"] == "editado"
+    assert r.json()["minutos_estudados"] == 30
+
+
+def test_editar_pode_limpar_minutos_com_null(client, pessoa):
+    ana = pessoa("ana")
+    post_id = client.post(
+        "/posts", json={"texto": "oi", "minutos_estudados": 30}, headers=ana
+    ).json()["id"]
+
+    r = client.patch(f"/posts/{post_id}", json={"minutos_estudados": None}, headers=ana)
+
+    assert r.status_code == 200
+    assert r.json()["minutos_estudados"] is None
+    assert r.json()["texto"] == "oi"
+
+
+def test_editar_com_texto_vazio_ou_nulo_da_422(client, pessoa):
+    ana = pessoa("ana")
+    post_id = client.post("/posts", json={"texto": "oi"}, headers=ana).json()["id"]
+
+    for corpo in ({"texto": "   "}, {"texto": None}):
+        assert client.patch(f"/posts/{post_id}", json=corpo, headers=ana).status_code == 422
+
+
+def test_editar_post_de_outra_pessoa_da_403(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    post_id = client.post("/posts", json={"texto": "meu post"}, headers=ana).json()["id"]
+
+    r = client.patch(f"/posts/{post_id}", json={"texto": "invadido"}, headers=bia)
+
+    assert r.status_code == 403
+    assert client.get(f"/posts/{post_id}", headers=ana).json()["texto"] == "meu post"
+
+
+def test_apagar_post_so_o_autor(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    post_id = client.post("/posts", json={"texto": "apague-me"}, headers=ana).json()["id"]
+
+    assert client.delete(f"/posts/{post_id}", headers=bia).status_code == 403
+    assert client.delete(f"/posts/{post_id}", headers=ana).status_code == 204
+    assert client.get(f"/posts/{post_id}", headers=ana).status_code == 404
+    assert client.delete(f"/posts/{post_id}", headers=ana).status_code == 404
+
+
+def test_editar_post_inexistente_da_404(client, pessoa):
+    ana = pessoa("ana")
+
+    assert client.patch("/posts/9999", json={"texto": "x"}, headers=ana).status_code == 404
