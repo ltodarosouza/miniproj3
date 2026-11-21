@@ -20,6 +20,7 @@ export default function PaginaConversa() {
   const username = decodeURIComponent(parametros.username);
   const [idUsuario, setIdUsuario] = useState<number | null>(null);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
+  const [idsRecentes, setIdsRecentes] = useState<number[]>([]);
   const [conversa, setConversa] = useState<Conversa | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [naoEncontrado, setNaoEncontrado] = useState(false);
@@ -95,6 +96,7 @@ export default function PaginaConversa() {
       const container = lista.current;
       const pertoDoFim = !container || container.scrollHeight - container.scrollTop - container.clientHeight < 120;
       const recebidas = resposta.items;
+      setIdsRecentes(recebidas.map((mensagem) => mensagem.id));
       setMensagens((atuais) => {
         const ids = new Set(atuais.map((mensagem) => mensagem.id));
         return [...atuais, ...recebidas.filter((mensagem) => !ids.has(mensagem.id))];
@@ -174,7 +176,7 @@ export default function PaginaConversa() {
               return (
                 <div key={`${item.tipo}-${mensagem.id}`}>
                   {!mesmoDia && <p className="my-5 text-center text-xs text-texto-3">{formatarDia(mensagem.em)}</p>}
-                  <BalaoMensagem mensagem={mensagem} minha={mensagem.de_username !== username} mostrarHora={horaAoFinal} agrupadaComAnterior={agrupada} />
+                  <BalaoMensagem mensagem={mensagem} minha={mensagem.de_username !== username} mostrarHora={horaAoFinal} agrupadaComAnterior={agrupada} recemChegada={idsRecentes.includes(mensagem.id)} />
                 </div>
               );
             })}
