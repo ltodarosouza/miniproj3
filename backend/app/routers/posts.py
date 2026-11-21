@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, UploadFile, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.deps import get_current_user
 from app.models.user import User
 from app.schemas.comentario import ComentarioCreate, ComentarioOut, ComentarioPage
+from app.schemas.imagem import ImagemOut
 from app.schemas.post import PostCreate, PostOut, PostUpdate
-from app.services import comentarios, curtidas, posts
+from app.services import comentarios, curtidas, imagens, posts
 
 router = APIRouter(prefix="/posts", tags=["posts"])
 
@@ -18,6 +20,11 @@ def criar_post(
     eu: User = Depends(get_current_user),
 ) -> PostOut:
     return posts.criar(db, eu, dados)
+
+
+@router.get("/imagens/{nome}", tags=["imagens"])
+def ver_imagem(nome: str) -> FileResponse:
+    return FileResponse(imagens.caminho(nome))
 
 
 @router.get("/{post_id}", response_model=PostOut)
@@ -46,6 +53,16 @@ def apagar_post(
     eu: User = Depends(get_current_user),
 ) -> None:
     posts.apagar(db, eu, post_id)
+
+
+@router.post("/{post_id}/imagem", response_model=ImagemOut, tags=["imagens"])
+async def enviar_imagem(
+    post_id: int,
+    arquivo: UploadFile,
+    db: Session = Depends(get_db),
+    eu: User = Depends(get_current_user),
+) -> ImagemOut:
+    return ImagemOut(imagem_url=await imagens.salvar(db, eu, post_id, arquivo))
 
 
 @router.post(
