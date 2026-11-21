@@ -42,7 +42,8 @@ export function FormAgendarTroca({
       if (dialogo.current?.open) dialogo.current.close();
       return;
     }
-    setMinData(new Date().toLocaleDateString("en-CA"));
+    const agora = new Date();
+    setMinData(`${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}-${String(agora.getDate()).padStart(2, "0")}`);
     if (dialogo.current && !dialogo.current.open) dialogo.current.showModal();
     if (!habilidadesCarregadas.current) {
       habilidadesCarregadas.current = true;
@@ -96,6 +97,7 @@ export function FormAgendarTroca({
       });
       limpar();
       aoCriar(troca);
+      aoFechar();
     } catch (erro) {
       setErroApi(erro instanceof Error ? erro.message : "Não deu para propor a troca. Tente de novo.");
     } finally {
@@ -153,16 +155,17 @@ export function FormAgendarTroca({
               {porCategoria("disciplina").map((habilidade) => <option key={habilidade.id} value={habilidade.id}>{habilidade.nome}</option>)}
             </optgroup>
           </Selecao>
-          <Campo
-            rotulo="Link da chamada"
-            type="url"
-            placeholder="https://meet.google.com/abc-defg-hij"
-            dica="Pode deixar para depois e mandar no chat."
-            erro={erros.link}
-            value={link}
-            onChange={(evento) => setLink(evento.target.value)}
-            className="sm:col-span-2"
-          />
+          <div className="sm:col-span-2">
+            <Campo
+              rotulo="Link da chamada"
+              type="url"
+              placeholder="https://meet.google.com/abc-defg-hij"
+              dica="Pode deixar para depois e mandar no chat."
+              erro={erros.link}
+              value={link}
+              onChange={(evento) => setLink(evento.target.value)}
+            />
+          </div>
         </div>
 
         {erroApi ? <p role="alert" className="text-sm text-perigo">{erroApi}</p> : null}
