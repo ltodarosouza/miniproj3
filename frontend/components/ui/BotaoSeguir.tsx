@@ -87,7 +87,7 @@ export function BotaoSeguir({
       aoMudar?.(estado);
     } catch (err) {
       if (naoAutenticado(err)) setLogado(false);
-      else setErro(err instanceof Error ? err.message : "não deu certo, tente de novo");
+      else setErro(err instanceof ErroApi ? err.message : "sem conexão, tente de novo");
     } finally {
       setCarregando(false);
     }

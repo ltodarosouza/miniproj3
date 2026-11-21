@@ -7,7 +7,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Botao } from "@/components/ui/Botao";
 import { BotaoSeguir } from "@/components/ui/BotaoSeguir";
 import { Cartao } from "@/components/ui/Cartao";
-import { listarConexoes, type Conexao } from "@/lib/api";
+import { ErroApi, listarConexoes, type Conexao } from "@/lib/api";
 import { meuId } from "@/lib/sessao";
 
 const POR_PAGINA = 20;
@@ -48,7 +48,9 @@ export function ListaDeConexoes({ username, tipo }: { username: string; tipo: Ti
         setTemMais(pagina.items.length > 0 && proximo < pagina.total);
       } catch (err) {
         if (pedido !== pedidoAtual.current) return;
-        setErro(err instanceof Error ? err.message : "não consegui carregar a lista");
+        setErro(
+          err instanceof ErroApi ? err.message : "sem conexão com o servidor, tente de novo",
+        );
       } finally {
         if (pedido === pedidoAtual.current) setCarregando(false);
       }
