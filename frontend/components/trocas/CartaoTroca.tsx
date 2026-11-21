@@ -74,6 +74,13 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
         </div>
       )}
 
+      {troca.link_meet && (
+        <a href={troca.link_meet} target="_blank" rel="noopener noreferrer" className="inline-flex min-w-0 items-center gap-2 text-sm text-marca-forte hover:underline">
+          <Icone nome="link" tamanho={16} />
+          <span className="truncate">{new URL(troca.link_meet).host}</span>
+        </a>
+      )}
+
       {troca.status === "proposta" && (
         propus ? (
           <p className="flex items-center gap-2 text-sm text-texto-2">
@@ -100,12 +107,12 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
           <p className="text-sm text-texto-2">A troca já aconteceu</p>
         ) : (
           <div className="flex flex-wrap gap-2">
-            <a href={troca.link_google_agenda} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-controle border border-linha bg-superficie px-4 text-sm font-medium text-texto transition-[background-color,border-color,color,box-shadow,scale] duration-[var(--rapido)] ease-saida hover:border-marca hover:text-marca-forte active:scale-[0.97]">
+            <a href={troca.link_google_agenda} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 flex-1 select-none items-center justify-center gap-1.5 rounded-controle border border-linha bg-superficie px-3 text-sm font-medium text-texto transition-[background-color,border-color,color,box-shadow,scale] duration-[var(--rapido)] ease-saida active:scale-[0.97] hover:border-marca hover:text-marca-forte motion-reduce:transition-none">
               <Icone nome="calendario" tamanho={16} />
               Adicionar ao Google Agenda
             </a>
             {troca.link_meet && (
-              <a href={troca.link_meet} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-controle bg-marca px-4 text-sm font-medium text-marca-texto shadow-cartao transition-[background-color,border-color,color,box-shadow,scale] duration-[var(--rapido)] ease-saida hover:bg-marca-forte active:scale-[0.97]">
+              <a href={troca.link_meet} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 flex-1 select-none items-center justify-center gap-1.5 rounded-controle bg-marca px-3 text-sm font-medium text-marca-texto shadow-cartao transition-[background-color,border-color,color,box-shadow,scale] duration-[var(--rapido)] ease-saida active:scale-[0.97] hover:bg-marca-forte motion-reduce:transition-none">
                 <Icone nome="link" tamanho={16} />
                 Entrar na chamada
               </a>
