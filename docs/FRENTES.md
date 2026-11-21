@@ -93,6 +93,7 @@ pessoa usa um **provisório** no lugar do que vem de outra frente:
 | A (perfil) | `media_professor`, `avaliacoes` | D | `null` e `0` |
 | B (form de post) | Autocomplete de habilidades | A | Um `<select>` com as habilidades do catálogo |
 | C e D (telas) | Navegação e `api.ts` com token | A | Página solta, acessada pela URL |
+| D (telas do chat) | Saber quem está logado | A | `localStorage.usuario_id` vira o header `X-User-Id` em `lib/api.ts`, e `lib/sessao.ts` (`meuId()`) devolve esse id. No encaixe do login, A troca as duas funções pelo token |
 | D (botão "Conversar") | Tela de matches | C | Abrir a conversa digitando a URL `/mensagens/[username]` |
 
 Regra de ouro: o provisório entra no código com o **mesmo nome e o mesmo
