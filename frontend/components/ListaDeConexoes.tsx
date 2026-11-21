@@ -21,11 +21,11 @@ function juntarSemRepetir(anteriores: Conexao[], novos: Conexao[]): Conexao[] {
 
 export function ListaDeConexoes({ username, tipo }: { username: string; tipo: Tipo }) {
   const [itens, setItens] = useState<Conexao[]>([]);
-  const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
-  const [eu, setEu] = useState<number | null>(null);
+  const [eu, setEu] = useState<number | null | undefined>(undefined);
+  const [temMais, setTemMais] = useState(false);
   const pedidoAtual = useRef(0);
 
   useEffect(() => {
@@ -43,8 +43,9 @@ export function ListaDeConexoes({ username, tipo }: { username: string; tipo: Ti
         setItens((anteriores) =>
           deslocamento === 0 ? pagina.items : juntarSemRepetir(anteriores, pagina.items),
         );
-        setTotal(pagina.total);
-        setOffset(deslocamento + pagina.items.length);
+        const proximo = deslocamento + pagina.items.length;
+        setOffset(proximo);
+        setTemMais(pagina.items.length > 0 && proximo < pagina.total);
       } catch (err) {
         if (pedido !== pedidoAtual.current) return;
         setErro(err instanceof Error ? err.message : "não consegui carregar a lista");
@@ -57,8 +58,8 @@ export function ListaDeConexoes({ username, tipo }: { username: string; tipo: Ti
 
   useEffect(() => {
     setItens([]);
-    setTotal(0);
     setOffset(0);
+    setTemMais(false);
     carregar(0);
     return () => {
       pedidoAtual.current++;
@@ -123,7 +124,7 @@ export function ListaDeConexoes({ username, tipo }: { username: string; tipo: Ti
                   {u.bio ? ` · ${u.bio}` : ""}
                 </p>
               </div>
-              {eu !== u.id && (
+              {eu !== undefined && eu !== u.id && (
                 <BotaoSeguir username={u.username} seguindoInicial={u.eu_sigo} tamanho="sm" />
               )}
             </Cartao>
@@ -131,7 +132,7 @@ export function ListaDeConexoes({ username, tipo }: { username: string; tipo: Ti
         ))}
       </ul>
 
-      {itens.length > 0 && itens.length < total && !erro && (
+      {temMais && !erro && (
         <Botao variante="fantasma" carregando={carregando} onClick={() => carregar(offset)}>
           Carregar mais
         </Botao>

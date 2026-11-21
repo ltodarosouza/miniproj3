@@ -13,6 +13,15 @@ function headers(): HeadersInit {
   return h;
 }
 
+export class ErroApi extends Error {
+  constructor(
+    message: string,
+    public status: number,
+  ) {
+    super(message);
+  }
+}
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method,
@@ -32,7 +41,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     // 422 = corpo inválido; 409 = conflito (ex.: username repetido). Ver guia 04.
     const erro = await res.json().catch(() => null);
     const detail = typeof erro?.detail === "string" ? erro.detail : null;
-    throw new Error(detail ?? `${method} ${path} → ${res.status}`);
+    throw new ErroApi(detail ?? `${method} ${path} → ${res.status}`, res.status);
   }
 
   // 204 No Content (seguir, curtir, apagar...) não tem corpo: não há JSON para ler.
