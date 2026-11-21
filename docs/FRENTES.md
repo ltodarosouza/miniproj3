@@ -319,26 +319,47 @@ provisório troca. É uma mudança pequena, mas precisa acontecer na ordem:
 
 ### Backend
 
-- Model `Mensagem`: `de_id`, `para_id`, `texto`, `em`.
-  - `POST /dms/{username}` → `201`; mensagem para si mesmo → `422`;
-  - `GET /dms` → conversas, pela mensagem mais recente;
-  - `GET /dms/{username}?depois_de=` → mensagens mais antigas primeiro; o
-    parâmetro permite que o polling busque só as novas.
+- Model `Mensagem`: `de_id`, `para_id`, `texto` (1 a 1000 caracteres), `em`.
+  - `POST /dms/{username}` com `{"texto"}` → `201`,
+    `{"id", "de_username", "para_username", "texto", "em"}`; para si mesmo →
+    `422`; username inexistente → `404`;
+  - `GET /dms` → `{"items": [{"com": UserOut, "ultima_mensagem",
+    "ultima_de_mim", "em"}]}`, pela mensagem mais recente;
+  - `GET /dms/{username}?depois_de=&limit=` → `{"items": [...]}`, mais
+    antigas primeiro. `depois_de` é o **id** da última mensagem que a tela já
+    tem (o polling busca só as novas); sem ele, vêm as `limit` (50) mais
+    recentes.
 - Model `Troca`: `proposta_por_id`, `com_id`, `data_hora`, `link_meet`,
-  `habilidade_ensino_id`, `habilidade_aprendo_id` (opcional), `status`:
-  `proposta`, `confirmada`, `recusada`.
-  - `POST /trocas` → `201`; `POST /trocas/{id}/confirmar` e `/recusar`, só
-    por quem recebeu;
-  - `GET /trocas` → minhas trocas, próximas primeiro.
+  `habilidade_ensino_id`, `habilidade_aprendo_id`, `status`: `proposta`,
+  `confirmada`, `recusada`. As duas habilidades são do ponto de vista de quem
+  propôs (o que ele ensina e o que ele aprende) e ambas são opcionais, mas
+  pelo menos uma é obrigatória: as duas juntas são um match de troca; só
+  `aprendo` é o caso "pode te ensinar".
+  - `POST /trocas` com `{"com_username", "data_hora", "link_meet",
+    "habilidade_ensino_id", "habilidade_aprendo_id"}` → `201`; horário no
+    passado → `422`;
+  - `POST /trocas/{id}/confirmar` e `/recusar`, só por quem recebeu (`403`
+    para quem propôs, `409` se já foi respondida);
+  - `GET /trocas?com=` → minhas trocas (ou só as com uma pessoa), futuras
+    primeiro e da mais próxima para a mais distante, depois as passadas;
+  - cada troca vem com `link_google_agenda` pronto.
 - Model `Avaliacao`: `troca_id`, `de_id`, `para_id`, `estrelas` (1 a 5),
-  `feedback`.
+  `feedback` (até 500).
   - `GET /trocas/pendentes-avaliacao` → trocas confirmadas cujo horário já
     passou e que eu ainda não avaliei;
   - `POST /trocas/{id}/avaliar` → `201`; antes do horário → `409`; segunda
     avaliação → `409`; quem não participou → `403`;
-  - média e total por usuário para o perfil de A.
+  - `GET /usuarios/{username}/avaliacoes` → `{"media", "total", "items"}`
+    com as avaliações recebidas;
+  - `services/avaliacoes.media_e_total(db, usuario_id)` para o perfil de A.
 - Link do Google Agenda gerado no service a partir da troca:
   `https://calendar.google.com/calendar/render?action=TEMPLATE&text=...&dates=...&details=...`.
+- Datas da frente D são guardadas em UTC e saem da API com `Z` no fim
+  (`schemas/tempo.py`). O frontend formata no fuso do navegador
+  (`lib/datas.ts`).
+- `GET /habilidades` → catálogo completo (`{"items": [{id, nome,
+  categoria}]}`), usado no formulário de agendamento. A pode estender este
+  router com o autocomplete.
 
 ### Frontend
 
