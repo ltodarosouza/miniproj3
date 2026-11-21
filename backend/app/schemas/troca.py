@@ -40,6 +40,7 @@ class TrocaOut(BaseModel):
     habilidade_aprendo: HabilidadeResumo | None
     status: StatusTroca
     criada_em: DataHoraUtc
+    respondida_em: DataHoraUtc | None
     link_google_agenda: str
 
 

@@ -88,7 +88,10 @@ def test_confirmar_recusar_e_permissoes(client, pessoa):
     primeira = criar(client, ana, proposta(ids)).json()["id"]
     segunda = criar(client, ana, proposta(ids)).json()["id"]
 
-    assert client.post(f"/trocas/{primeira}/confirmar", headers=bia).status_code == 200
+    assert criar(client, ana, proposta(ids)).json()["respondida_em"] is None
+    confirmada = client.post(f"/trocas/{primeira}/confirmar", headers=bia)
+    assert confirmada.status_code == 200
+    assert confirmada.json()["respondida_em"].endswith("Z")
     assert client.post(f"/trocas/{segunda}/recusar", headers=bia).json()["status"] == "recusada"
     assert client.post(f"/trocas/{primeira}/confirmar", headers=bia).status_code == 409
     assert client.post(f"/trocas/{segunda}/confirmar", headers=ana).status_code == 403

@@ -105,6 +105,7 @@ def para_saidas(db: Session, trocas: list[Troca]) -> list[TrocaOut]:
                 ),
                 status=troca.status,
                 criada_em=troca.criada_em,
+                respondida_em=troca.respondida_em,
                 link_google_agenda=link_google_agenda(
                     troca,
                     proposta_por,
@@ -164,7 +165,7 @@ def responder(db: Session, pessoa: User, troca_id: int, status: str) -> TrocaOut
     alteradas = db.execute(
         update(Troca)
         .where(Troca.id == troca_id, Troca.status == "proposta")
-        .values(status=status)
+        .values(status=status, respondida_em=agora_utc())
     ).rowcount
     if alteradas == 0:
         db.rollback()
