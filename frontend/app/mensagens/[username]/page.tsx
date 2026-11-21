@@ -9,17 +9,20 @@ import { Botao } from "@/components/ui/Botao";
 import { Icone } from "@/components/ui/Icone";
 import { BalaoMensagem } from "@/components/mensagens/BalaoMensagem";
 import { CaixaMensagem } from "@/components/mensagens/CaixaMensagem";
-import { enviarMensagem, listarConversas, listarMensagens, type Conversa, type Mensagem } from "@/lib/api";
+import { enviarMensagem, listarConversas, listarMensagens, listarTrocas, type Conversa, type Mensagem, type Troca } from "@/lib/api";
 import { chaveDoDia, formatarDia } from "@/lib/datas";
 import { meuId } from "@/lib/sessao";
+import { CartaoTroca } from "@/components/trocas/CartaoTroca";
+import { FormAgendarTroca } from "@/components/trocas/FormAgendarTroca";
 
-type ItemLinhaDoTempo = { tipo: "mensagem"; mensagem: Mensagem };
+type ItemLinhaDoTempo = { tipo: "mensagem"; mensagem: Mensagem } | { tipo: "troca"; troca: Troca };
 
 export default function PaginaConversa() {
   const parametros = useParams<{ username: string }>();
   const username = decodeURIComponent(parametros.username);
   const [idUsuario, setIdUsuario] = useState<number | null>(null);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
+  const [trocas, setTrocas] = useState<Troca[]>([]);
   const [idsRecentes, setIdsRecentes] = useState<number[]>([]);
   const [conversa, setConversa] = useState<Conversa | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -27,13 +30,22 @@ export default function PaginaConversa() {
   const [erroInicial, setErroInicial] = useState(false);
   const [semConexao, setSemConexao] = useState(false);
   const [novas, setNovas] = useState(false);
+  const [formAberto, setFormAberto] = useState(false);
   const lista = useRef<HTMLDivElement>(null);
   const primeiroCarregamento = useRef(true);
+  const ciclosPolling = useRef(0);
 
-  const linhaDoTempo = useMemo<ItemLinhaDoTempo[]>(() => mensagens
-    .slice()
-    .sort((a, b) => new Date(a.em).getTime() - new Date(b.em).getTime() || a.id - b.id)
-    .map((mensagem) => ({ tipo: "mensagem", mensagem })), [mensagens]);
+  const linhaDoTempo = useMemo<ItemLinhaDoTempo[]>(() => [
+    ...mensagens.map((mensagem): ItemLinhaDoTempo => ({ tipo: "mensagem", mensagem })),
+    ...trocas.map((troca): ItemLinhaDoTempo => ({ tipo: "troca", troca })),
+  ].sort((a, b) => {
+    const dataA = a.tipo === "mensagem" ? a.mensagem.em : a.troca.criada_em;
+    const dataB = b.tipo === "mensagem" ? b.mensagem.em : b.troca.criada_em;
+    const diferenca = new Date(dataA).getTime() - new Date(dataB).getTime();
+    if (diferenca) return diferenca;
+    if (a.tipo !== b.tipo) return a.tipo === "troca" ? 1 : -1;
+    return a.tipo === "mensagem" && b.tipo === "mensagem" ? a.mensagem.id - b.mensagem.id : a.tipo === "troca" && b.tipo === "troca" ? a.troca.id - b.troca.id : 0;
+  }), [mensagens, trocas]);
 
   const rolarAteFim = useCallback((behavior: ScrollBehavior) => {
     const elemento = lista.current;
@@ -53,14 +65,16 @@ export default function PaginaConversa() {
     let ativo = true;
     setCarregando(true);
     setMensagens([]);
+    setTrocas([]);
     setConversa(null);
     setNaoEncontrado(false);
     setErroInicial(false);
     primeiroCarregamento.current = true;
-    Promise.all([listarMensagens(username), listarConversas()])
-      .then(([resposta, conversas]) => {
+    Promise.all([listarMensagens(username), listarConversas(), listarTrocas(username)])
+      .then(([resposta, conversas, trocasCarregadas]) => {
         if (!ativo) return;
         setMensagens(resposta.items);
+        setTrocas(trocasCarregadas.items);
         setConversa(conversas.items.find((item) => item.com.username === username) ?? null);
         setSemConexao(false);
       })
@@ -86,11 +100,22 @@ export default function PaginaConversa() {
 
   const buscarNovas = useCallback(async () => {
     if (document.hidden || idUsuario === null) return;
+    ciclosPolling.current += 1;
+    const buscarTrocasAgora = ciclosPolling.current % 2 === 0;
     const ultimoId = mensagens.reduce((maior, mensagem) => Math.max(maior, mensagem.id), 0);
     try {
-      const resposta = await listarMensagens(username, ultimoId);
+      const [resposta, respostaTrocas] = await Promise.all([listarMensagens(username, ultimoId), buscarTrocasAgora ? listarTrocas(username) : Promise.resolve(null)]);
+      const idsTrocasAtuais = new Set(trocas.map((troca) => troca.id));
+      const trocasNovas = respostaTrocas?.items.filter((troca) => !idsTrocasAtuais.has(troca.id)) ?? [];
+      if (respostaTrocas) setTrocas(respostaTrocas.items);
       if (!resposta.items.length) {
         setSemConexao(false);
+        if (trocasNovas.length) {
+          const container = lista.current;
+          const pertoDoFim = !container || container.scrollHeight - container.scrollTop - container.clientHeight < 120;
+          if (pertoDoFim) requestAnimationFrame(() => rolarAteFim(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"));
+          else setNovas(true);
+        }
         return;
       }
       const container = lista.current;
@@ -102,7 +127,7 @@ export default function PaginaConversa() {
         return [...atuais, ...recebidas.filter((mensagem) => !ids.has(mensagem.id))];
       });
       setSemConexao(false);
-      if (pertoDoFim || recebidas.some((mensagem) => mensagem.de_username !== username)) {
+      if (pertoDoFim || recebidas.some((mensagem) => mensagem.de_username !== username) || trocasNovas.length > 0 && pertoDoFim) {
         requestAnimationFrame(() => rolarAteFim(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"));
       } else {
         setNovas(true);
@@ -110,7 +135,7 @@ export default function PaginaConversa() {
     } catch {
       setSemConexao(true);
     }
-  }, [idUsuario, mensagens, rolarAteFim, username]);
+  }, [idUsuario, mensagens, rolarAteFim, trocas, username]);
 
   useEffect(() => {
     if (idUsuario === null) return;
@@ -138,7 +163,7 @@ export default function PaginaConversa() {
   }
 
   if (erroInicial && mensagens.length === 0) {
-    return <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"><p className="max-w-sm text-texto-2">Não conseguimos carregar esta conversa. Confira sua conexão e tente de novo.</p><Botao variante="secundario" onClick={() => { setErroInicial(false); setCarregando(true); void Promise.all([listarMensagens(username), listarConversas()]).then(([resposta, conversas]) => { setMensagens(resposta.items); setConversa(conversas.items.find((item) => item.com.username === username) ?? null); setSemConexao(false); }).catch(() => { setErroInicial(true); setSemConexao(true); }).finally(() => setCarregando(false)); }}>Tentar de novo</Botao></div>;
+    return <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"><p className="max-w-sm text-texto-2">Não conseguimos carregar esta conversa. Confira sua conexão e tente de novo.</p><Botao variante="secundario" onClick={() => { setErroInicial(false); setCarregando(true); void Promise.all([listarMensagens(username), listarConversas(), listarTrocas(username)]).then(([resposta, conversas, trocasCarregadas]) => { setMensagens(resposta.items); setTrocas(trocasCarregadas.items); setConversa(conversas.items.find((item) => item.com.username === username) ?? null); setSemConexao(false); }).catch(() => { setErroInicial(true); setSemConexao(true); }).finally(() => setCarregando(false)); }}>Tentar de novo</Botao></div>;
   }
 
   const com = conversa?.com;
@@ -153,28 +178,39 @@ export default function PaginaConversa() {
           <h1 className="truncate text-[0.9375rem] font-semibold text-texto">{titulo}</h1>
           {com && <p className="truncate text-xs text-texto-3">@{username}</p>}
         </div>
-        <div className="flex shrink-0 items-center gap-2" />
+        <div className="flex shrink-0 items-center gap-2">
+          <Botao variante="secundario" tamanho="sm" aria-label="Agendar troca" onClick={() => setFormAberto(true)}>
+            <Icone nome="calendario" tamanho={16} />
+            <span className="hidden sm:inline">Agendar troca</span>
+          </Botao>
+        </div>
       </header>
 
       <div ref={lista} className="relative flex-1 overflow-y-auto px-4 py-6">
         {semConexao && <p className="mb-3 rounded-controle bg-superficie-2 px-3 py-2 text-center text-xs text-texto-2" role="status">Sem conexão, tentando de novo…</p>}
-        {carregando ? <p className="py-8 text-center text-sm text-texto-3">Carregando mensagens…</p> : mensagens.length === 0 ? (
+        {carregando ? <p className="py-8 text-center text-sm text-texto-3">Carregando mensagens…</p> : mensagens.length === 0 && trocas.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <Avatar nome={titulo} url={com?.avatar_url} tamanho="lg" />
             <h2 className="mt-4 text-lg font-semibold text-texto">Comece a conversa com @{username}</h2>
             <p className="mt-2 max-w-sm text-sm leading-relaxed text-texto-2">Contem o que cada um sabe e quer aprender e, quando combinarem, agendem a troca.</p>
+            <Botao className="mt-4" variante="secundario" onClick={() => setFormAberto(true)}>Agendar troca</Botao>
           </div>
         ) : (
           <div aria-live="polite" className="mx-auto flex max-w-3xl flex-col">
             {linhaDoTempo.map((item, indice) => {
+              if (item.tipo === "troca") {
+                return <div key={`troca-${item.troca.id}`} className="my-4"><CartaoTroca troca={item.troca} aoAtualizar={(atualizada) => setTrocas((atuais) => atuais.map((troca) => troca.id === atualizada.id ? atualizada : troca))} /></div>;
+              }
               const mensagem = item.mensagem;
-              const anterior = linhaDoTempo[indice - 1]?.mensagem;
-              const proxima = linhaDoTempo[indice + 1]?.mensagem;
-              const mesmoDia = anterior && chaveDoDia(anterior.em) === chaveDoDia(mensagem.em);
-              const agrupada = Boolean(anterior && anterior.de_username === mensagem.de_username && new Date(mensagem.em).getTime() - new Date(anterior.em).getTime() < 5 * 60 * 1000);
-              const horaAoFinal = !proxima || proxima.de_username !== mensagem.de_username || new Date(proxima.em).getTime() - new Date(mensagem.em).getTime() >= 5 * 60 * 1000;
+              const anterior = linhaDoTempo[indice - 1];
+              const proxima = linhaDoTempo[indice + 1];
+              const mensagemAnterior = anterior?.tipo === "mensagem" ? anterior.mensagem : null;
+              const mensagemProxima = proxima?.tipo === "mensagem" ? proxima.mensagem : null;
+              const mesmoDia = mensagemAnterior && chaveDoDia(mensagemAnterior.em) === chaveDoDia(mensagem.em);
+              const agrupada = Boolean(mensagemAnterior && mensagemAnterior.de_username === mensagem.de_username && new Date(mensagem.em).getTime() - new Date(mensagemAnterior.em).getTime() < 5 * 60 * 1000);
+              const horaAoFinal = !mensagemProxima || mensagemProxima.de_username !== mensagem.de_username || new Date(mensagemProxima.em).getTime() - new Date(mensagem.em).getTime() >= 5 * 60 * 1000;
               return (
-                <div key={`${item.tipo}-${mensagem.id}`}>
+                <div key={`mensagem-${mensagem.id}`}>
                   {!mesmoDia && <p className="my-5 text-center text-xs text-texto-3">{formatarDia(mensagem.em)}</p>}
                   <BalaoMensagem mensagem={mensagem} minha={mensagem.de_username !== username} mostrarHora={horaAoFinal} agrupadaComAnterior={agrupada} recemChegada={idsRecentes.includes(mensagem.id)} />
                 </div>
@@ -185,6 +221,7 @@ export default function PaginaConversa() {
         {novas && <div className="sticky bottom-2 flex justify-center"><Botao tamanho="sm" variante="secundario" onClick={() => rolarAteFim("smooth")}>Novas mensagens</Botao></div>}
       </div>
       <CaixaMensagem aoEnviar={aoEnviar} desabilitada={carregando || naoEncontrado} />
+      <FormAgendarTroca comUsername={username} comNome={com?.name || username} aberto={formAberto} aoFechar={() => setFormAberto(false)} aoCriar={(troca) => { setTrocas((atuais) => atuais.some((item) => item.id === troca.id) ? atuais : [...atuais, troca]); requestAnimationFrame(() => rolarAteFim("smooth")); }} />
     </div>
   );
 }
