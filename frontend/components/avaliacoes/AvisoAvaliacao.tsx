@@ -103,7 +103,7 @@ export function AvisoAvaliacao() {
 
   return (
     <div className={`fixed inset-x-3 bottom-3 z-50 transition-[opacity,translate] duration-[var(--lento)] ease-saida motion-reduce:transition-none md:inset-x-auto md:right-6 md:bottom-6 md:w-[22rem] ${visivel ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}>
-      <Cartao role="dialog" aria-labelledby="titulo-avaliacao" className="p-5 shadow-alta">
+      <Cartao role="dialog" aria-labelledby="titulo-avaliacao" className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-5 shadow-alta">
         {sucesso ? (
           <div className="flex items-start gap-3 py-2" aria-live="polite">
             <Icone nome="confirmar" tamanho={22} className="shrink-0 text-sucesso" />
@@ -135,7 +135,7 @@ export function AvisoAvaliacao() {
               <AreaTexto rotulo="Quer deixar um recado?" maxLength={500} rows={3} placeholder="O que foi legal, o que pode melhorar…" value={feedback} onChange={(evento) => setFeedback(evento.target.value)} />
             </div>
             {erro && <p className="mt-2 text-sm text-perigo" role="alert">{erro}</p>}
-            <div className="mt-3 flex items-center justify-between gap-2">
+            <div className="sticky bottom-0 -mx-5 -mb-5 mt-3 flex items-center justify-between gap-2 border-t border-linha bg-superficie px-5 py-3">
               <Botao type="button" variante="fantasma" onClick={adiar}>Agora não</Botao>
               <Botao type="button" carregando={carregando} disabled={estrelas === 0 || carregando} onClick={enviar}>Enviar avaliação</Botao>
             </div>
