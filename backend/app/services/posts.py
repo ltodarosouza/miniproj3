@@ -1,14 +1,16 @@
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
+from app.models.curtida import Curtida
 from app.models.habilidade import Habilidade
 from app.models.post import Post
 from app.models.user import User
 from app.schemas.post import PostCreate, PostOut, PostUpdate
 
 
-def montar_saidas(db: Session, posts: list[Post]) -> list[PostOut]:
+def montar_saidas(db: Session, eu: User, posts: list[Post]) -> list[PostOut]:
+    posts_ids = {post.id for post in posts}
     autores_ids = {post.autor_id for post in posts}
     habilidades_ids = {
         post.habilidade_id for post in posts if post.habilidade_id is not None
@@ -23,6 +25,21 @@ def montar_saidas(db: Session, posts: list[Post]) -> list[PostOut]:
             select(Habilidade).where(Habilidade.id.in_(habilidades_ids))
         )
     }
+    curtidas = {
+        post_id: total
+        for post_id, total in db.execute(
+            select(Curtida.post_id, func.count())
+            .where(Curtida.post_id.in_(posts_ids))
+            .group_by(Curtida.post_id)
+        )
+    }
+    curtidos_por_mim = set(
+        db.scalars(
+            select(Curtida.post_id).where(
+                Curtida.usuario_id == eu.id, Curtida.post_id.in_(posts_ids)
+            )
+        )
+    )
     return [
         PostOut(
             id=post.id,
@@ -32,6 +49,8 @@ def montar_saidas(db: Session, posts: list[Post]) -> list[PostOut]:
             minutos_estudados=post.minutos_estudados,
             imagem_url=post.imagem_url,
             created_at=post.created_at,
+            curtidas=curtidas.get(post.id, 0),
+            curtido=post.id in curtidos_por_mim,
         )
         for post in posts
     ]
@@ -48,7 +67,7 @@ def criar(db: Session, eu: User, dados: PostCreate) -> PostOut:
     db.add(post)
     db.commit()
     db.refresh(post)
-    return montar_saidas(db, [post])[0]
+    return montar_saidas(db, eu, [post])[0]
 
 
 def buscar(db: Session, post_id: int) -> Post:
@@ -58,8 +77,8 @@ def buscar(db: Session, post_id: int) -> Post:
     return post
 
 
-def detalhar(db: Session, post_id: int) -> PostOut:
-    return montar_saidas(db, [buscar(db, post_id)])[0]
+def detalhar(db: Session, eu: User, post_id: int) -> PostOut:
+    return montar_saidas(db, eu, [buscar(db, post_id)])[0]
 
 
 def _post_do_autor(db: Session, eu: User, post_id: int) -> Post:
@@ -77,10 +96,11 @@ def editar(db: Session, eu: User, post_id: int, dados: PostUpdate) -> PostOut:
         setattr(post, nome, valor)
     db.commit()
     db.refresh(post)
-    return montar_saidas(db, [post])[0]
+    return montar_saidas(db, eu, [post])[0]
 
 
 def apagar(db: Session, eu: User, post_id: int) -> None:
     post = _post_do_autor(db, eu, post_id)
+    db.execute(delete(Curtida).where(Curtida.post_id == post.id))
     db.delete(post)
     db.commit()
