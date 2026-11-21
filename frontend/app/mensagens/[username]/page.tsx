@@ -127,7 +127,10 @@ export default function PaginaConversa() {
         return [...atuais, ...recebidas.filter((mensagem) => !ids.has(mensagem.id))];
       });
       setSemConexao(false);
-      if (pertoDoFim || recebidas.some((mensagem) => mensagem.de_username !== username) || trocasNovas.length > 0 && pertoDoFim) {
+      if (trocasNovas.length) {
+        if (pertoDoFim) requestAnimationFrame(() => rolarAteFim(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"));
+        else setNovas(true);
+      } else if (pertoDoFim || recebidas.some((mensagem) => mensagem.de_username !== username)) {
         requestAnimationFrame(() => rolarAteFim(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"));
       } else {
         setNovas(true);
