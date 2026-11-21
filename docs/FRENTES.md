@@ -35,17 +35,18 @@ ninguém.
 ### Fase 0: bloqueante (primeiras horas do dia 1)
 
 Ninguém começa a própria feature antes destes três PRs estarem na `main`.
-São pequenos e devem sair no mesmo dia, nesta ordem:
+Para não atrasar ninguém, **@ltodarosouza assumiu a Fase 0 inteira** (0.1, 0.2
+e 0.3), e ela sai num só dia:
 
 | # | PR | Dono | O que entra | Por que bloqueia |
 |---|---|---|---|---|
-| 0.1 | Bypass de auth | A | `get_current_user` lendo o header `X-User-Id` (guia 01, Passo 0) | Toda rota protegida depende dele |
-| 0.2 | Models de habilidade | A | `Habilidade` e `UserHabilidade`, sem rotas, e o catálogo no seed | C monta o match em cima dessas tabelas |
-| 0.3 | Esqueleto do match | C | `core/matches.py` com `quem_pode_ensinar(eu)` devolvendo `set()` e o singleton registrado no lifespan | B chama essa função no feed |
+| 0.1 | Bypass de auth | @ltodarosouza | `get_current_user` lendo o header `X-User-Id` (guia 01, Passo 0) | Toda rota protegida depende dele |
+| 0.2 | Models de habilidade | @ltodarosouza | `Habilidade` e `UserHabilidade`, sem rotas, e o catálogo no seed | C monta o match em cima dessas tabelas |
+| 0.3 | Esqueleto do match | @ltodarosouza | `core/matches.py` com `quem_pode_ensinar(eu)` devolvendo `set()` e o singleton registrado no lifespan | B chama essa função no feed |
 | 0.4 | Design system | ✅ pronto | Tokens, componentes em `frontend/components/ui/`, movimento e a página `/design` ([DESIGN.md](../DESIGN.md)) | Todas as telas usam as mesmas peças |
 
-Enquanto a Fase 0 não termina, B e D podem ler os guias e desenhar as telas,
-sem escrever rotas.
+Enquanto a Fase 0 não termina, os outros fazem o `make check`, leem os guias e
+desenham as telas, sem escrever rotas.
 
 ### Fase 1: paralelo de verdade (do fim do dia 1 até 26/11)
 
@@ -118,7 +119,7 @@ provisório troca. É uma mudança pequena, mas precisa acontecer na ordem:
 
 | Paralelismo | |
 |---|---|
-| Fase 0 (bloqueia todos) | 0.1 bypass de auth e 0.2 models de habilidade |
+| Fase 0 | Feita por @ltodarosouza: A começa direto pelo login real em cima do bypass e dos models prontos |
 | Entrega cedo para os outros | Login real (dia 2), navegação e `api.ts` com token |
 | Começa já, sem esperar ninguém | Auth, catálogo, trie, IA, telas de cadastro, login e edição de perfil |
 | Depende de outros | Contadores (C), streak (B) e média (D) no perfil: usa `0`/`null` até lá |
@@ -228,7 +229,7 @@ provisório troca. É uma mudança pequena, mas precisa acontecer na ordem:
 
 | Paralelismo | |
 |---|---|
-| Fase 0 (bloqueia B) | 0.3 esqueleto do match, depois de 0.2 de A |
+| Fase 0 | Feita por @ltodarosouza: C começa direto pelo follow e pelo índice do match em cima do esqueleto pronto |
 | Entrega cedo para os outros | Contadores de seguidores/seguindo para o perfil de A |
 | Começa já, sem esperar ninguém | Follow, índice do match, `GET /matches`, tela de matches, bench |
 | Depende de outros | Seed: só quando todos os models estiverem na `main` (meta 25/11); botão "Conversar" aponta para o chat de D |
@@ -280,7 +281,7 @@ provisório troca. É uma mudança pequena, mas precisa acontecer na ordem:
 
 | Paralelismo | |
 |---|---|
-| Fase 0 | Espera 0.1 |
+| Fase 0 | Faz 0.1, 0.2 e 0.3 para destravar o time; depois segue a própria frente |
 | Entrega cedo para os outros | Primeiro deploy (dia 2); models `Mensagem`, `Troca` e `Avaliacao` para o seed de C; média e total para o perfil de A |
 | Começa já, sem esperar ninguém | Chat, agendamento, avaliação, link do Google Agenda, telas, deploy |
 | Depende de outros | Deploy final: depois do seed de C |
