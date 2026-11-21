@@ -12,6 +12,9 @@ Regras para todos:
 - router fino, regra de negócio no service, estrutura de dados em `core/`;
 - nomes em português, iguais em model, schema, rota e tela;
 - sem código comentado, sem `print` de debug: explicações vão no markdown;
+- toda tela usa os componentes de `frontend/components/ui/` e segue o
+  [DESIGN.md](../DESIGN.md); componente novo que sirva para mais de uma tela
+  entra lá e na página `/design`;
 - cada dono escreve a decisão da sua frente no `DECISIONS.md`.
 
 ## Trabalho em paralelo
@@ -32,6 +35,7 @@ São pequenos e devem sair no mesmo dia, nesta ordem:
 | 0.1 | Bypass de auth | A | `get_current_user` lendo o header `X-User-Id` (guia 01, Passo 0) | Toda rota protegida depende dele |
 | 0.2 | Models de habilidade | A | `Habilidade` e `UserHabilidade`, sem rotas, e o catálogo no seed | C monta o match em cima dessas tabelas |
 | 0.3 | Esqueleto do match | C | `core/matches.py` com `quem_pode_ensinar(eu)` devolvendo `set()` e o singleton registrado no lifespan | B chama essa função no feed |
+| 0.4 | Design system | ✅ pronto | Tokens, componentes em `frontend/components/ui/`, movimento e a página `/design` ([DESIGN.md](../DESIGN.md)) | Todas as telas usam as mesmas peças |
 
 Enquanto a Fase 0 não termina, B e D podem ler os guias e desenhar as telas,
 sem escrever rotas.

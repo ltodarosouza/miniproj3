@@ -83,6 +83,19 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
 - **O que cortamos e por quê:** o feed ranqueado por engajamento. Para quem
   quer aprender, importa ver quem estuda aquilo agora, não o post mais curtido.
 
+### 6. Visual de rede social conhecida, com movimento caprichado
+
+- **Contexto:** quatro pessoas constroem telas em paralelo, e o público é
+  iniciante e precisa se sentir em casa.
+- **Opções:** um visual temático (álbum de figurinhas, tabela periódica,
+  quadro branco) ou o padrão de rede social executado com capricho.
+- **Escolha:** o padrão de rede social, limpo e acolhedor, em verde-azulado,
+  com tema claro e escuro e movimento fluido (holofote que segue o mouse,
+  arrastar habilidades, transições suaves). Detalhes no [DESIGN.md](DESIGN.md).
+- **O que cortamos e por quê:** os visuais temáticos. Seriam mais marcantes,
+  mas mais difíceis de reproduzir igual em quatro frentes e mais arriscados
+  de parecer infantis. A personalidade fica no movimento e nos detalhes.
+
 ## Features
 
 | Feature | Dono | Por quê (1 frase) |
