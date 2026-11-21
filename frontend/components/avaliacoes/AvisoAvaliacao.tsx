@@ -93,7 +93,7 @@ export function AvisoAvaliacao() {
       }, 2500);
     } catch (falha) {
       const mensagem = falha instanceof Error ? falha.message : "Não foi possível enviar sua avaliação.";
-      if (mensagem.includes("409") && mensagem.toLowerCase().includes("já avaliou")) {
+      if (mensagem.toLowerCase().includes("já avaliou")) {
         setTrocas((atuais) => atuais.filter((item) => item.id !== troca.id));
       } else {
         setErro(mensagem);
@@ -127,8 +127,8 @@ export function AvisoAvaliacao() {
             </div>
             {(troca.habilidade_ensino || troca.habilidade_aprendo) && (
               <div className="mt-3 flex flex-wrap gap-2">
-                {troca.habilidade_ensino && <TagHabilidade nome={troca.habilidade_ensino.nome} tipo={troca.proposta_por.id === usuarioId ? "quero_aprender" : "sei"} />}
-                {troca.habilidade_aprendo && <TagHabilidade nome={troca.habilidade_aprendo.nome} tipo={troca.proposta_por.id === usuarioId ? "sei" : "quero_aprender"} />}
+                {troca.habilidade_ensino && <TagHabilidade nome={troca.habilidade_ensino.nome} tipo={troca.proposta_por.id === usuarioId ? "sei" : "quero_aprender"} />}
+                {troca.habilidade_aprendo && <TagHabilidade nome={troca.habilidade_aprendo.nome} tipo={troca.proposta_por.id === usuarioId ? "quero_aprender" : "sei"} />}
               </div>
             )}
             <div className="mt-4 flex flex-col items-center gap-1">

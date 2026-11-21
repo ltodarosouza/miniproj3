@@ -120,7 +120,7 @@ export function FormAgendarTroca({
       onClick={(evento) => {
         if (evento.target === dialogo.current) aoFechar();
       }}
-      className="m-auto w-[min(32rem,calc(100vw-2rem))] overflow-y-auto rounded-cartao border border-linha bg-superficie p-6 text-texto shadow-alta backdrop:bg-[color-mix(in_oklch,var(--texto)_35%,transparent)] backdrop:backdrop-blur-sm open:animate-[entrar-dialogo_var(--medio)_var(--ease-saida)_both] motion-reduce:open:animate-none max-sm:mt-auto max-sm:mb-0 max-sm:w-full max-sm:rounded-t-cartao max-sm:rounded-b-none max-sm:p-5"
+      className="m-auto w-[min(32rem,calc(100vw-2rem))] overflow-y-auto rounded-cartao border border-linha bg-superficie p-6 text-texto shadow-alta backdrop:bg-[color-mix(in_oklch,var(--texto)_35%,transparent)] backdrop:backdrop-blur-sm open:animate-[aparecer-escala_var(--medio)_var(--ease-saida)_both] motion-reduce:open:animate-none max-sm:mt-auto max-sm:mb-0 max-sm:w-full max-sm:rounded-t-cartao max-sm:rounded-b-none max-sm:p-5"
     >
       <form onSubmit={enviar} className="flex max-h-[calc(100dvh-2.5rem)] flex-col gap-5 max-sm:max-h-[calc(100dvh-1.25rem)]">
         <header className="space-y-1">
@@ -175,7 +175,6 @@ export function FormAgendarTroca({
           <Botao type="submit" variante="troca" magnetico carregando={carregando} className="max-sm:w-full">Propor troca</Botao>
         </footer>
       </form>
-      <style>{`@keyframes entrar-dialogo { from { opacity: 0; transform: translateY(0.5rem) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }`}</style>
     </dialog>
   );
 }
