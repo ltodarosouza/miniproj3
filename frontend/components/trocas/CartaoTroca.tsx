@@ -21,6 +21,8 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
   const habilidadeAprendo = troca.habilidade_aprendo;
   const ambasHabilidades = Boolean(habilidadeEnsino && habilidadeAprendo);
   const passou = jaPassou(troca.data_hora);
+  const tipoEnsino = propus ? "sei" : "quero_aprender";
+  const tipoAprendo = propus ? "quero_aprender" : "sei";
 
   const titulo = troca.status === "confirmada"
     ? "Troca confirmada"
@@ -60,13 +62,13 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
           {habilidadeEnsino && (
             <p className="flex flex-wrap items-center gap-2">
               <span>{propus ? "Você ensina" : `${nomeOutraPessoa} te ensina`}</span>
-              <TagHabilidade nome={habilidadeEnsino.nome} tipo="sei" destaque={ambasHabilidades} />
+              <TagHabilidade nome={habilidadeEnsino.nome} tipo={tipoEnsino} destaque={ambasHabilidades} />
             </p>
           )}
           {habilidadeAprendo && (
             <p className="flex flex-wrap items-center gap-2">
               <span>{propus ? `${nomeOutraPessoa} te ensina` : "Você ensina"}</span>
-              <TagHabilidade nome={habilidadeAprendo.nome} tipo="quero_aprender" destaque={ambasHabilidades} />
+              <TagHabilidade nome={habilidadeAprendo.nome} tipo={tipoAprendo} destaque={ambasHabilidades} />
             </p>
           )}
         </div>
