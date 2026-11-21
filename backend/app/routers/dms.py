@@ -4,10 +4,18 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.deps import get_current_user
 from app.models.user import User
-from app.schemas.dm import MensagemCreate, MensagemOut, MensagemPage
+from app.schemas.dm import ConversaPage, MensagemCreate, MensagemOut, MensagemPage
 from app.services import dms
 
 router = APIRouter(prefix="/dms", tags=["dms"])
+
+
+@router.get("", response_model=ConversaPage)
+def listar_conversas(
+    db: Session = Depends(get_db),
+    eu: User = Depends(get_current_user),
+) -> ConversaPage:
+    return dms.listar_conversas(db, eu)
 
 
 @router.post("/{username}", response_model=MensagemOut, status_code=status.HTTP_201_CREATED)
