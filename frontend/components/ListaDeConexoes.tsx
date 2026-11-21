@@ -1,47 +1,69 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
+import { Botao } from "@/components/ui/Botao";
 import { BotaoSeguir } from "@/components/ui/BotaoSeguir";
 import { Cartao } from "@/components/ui/Cartao";
-import { listarSeguidores, listarSeguindo, type Page, type User } from "@/lib/api";
+import { listarConexoes, type Conexao } from "@/lib/api";
 import { meuId } from "@/lib/sessao";
 
 const POR_PAGINA = 20;
 
-export function ListaDeConexoes({
-  username,
-  tipo,
-}: {
-  username: string;
-  tipo: "seguidores" | "seguindo";
-}) {
-  const [itens, setItens] = useState<User[]>([]);
+type Tipo = "seguidores" | "seguindo";
+
+function juntarSemRepetir(anteriores: Conexao[], novos: Conexao[]): Conexao[] {
+  const vistos = new Set(anteriores.map((u) => u.id));
+  return [...anteriores, ...novos.filter((u) => !vistos.has(u.id))];
+}
+
+export function ListaDeConexoes({ username, tipo }: { username: string; tipo: Tipo }) {
+  const [itens, setItens] = useState<Conexao[]>([]);
   const [total, setTotal] = useState(0);
+  const [offset, setOffset] = useState(0);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
-  const eu = meuId();
-
-  async function carregar(offset: number) {
-    setCarregando(true);
-    try {
-      const buscar = tipo === "seguidores" ? listarSeguidores : listarSeguindo;
-      const pagina: Page<User> = await buscar(username, offset, POR_PAGINA);
-      setItens((anteriores) => (offset === 0 ? pagina.items : [...anteriores, ...pagina.items]));
-      setTotal(pagina.total);
-      setErro(null);
-    } catch (err) {
-      setErro(err instanceof Error ? err.message : "não consegui carregar a lista");
-    } finally {
-      setCarregando(false);
-    }
-  }
+  const [eu, setEu] = useState<number | null>(null);
+  const pedidoAtual = useRef(0);
 
   useEffect(() => {
+    setEu(meuId());
+  }, []);
+
+  const carregar = useCallback(
+    async (deslocamento: number) => {
+      const pedido = ++pedidoAtual.current;
+      setCarregando(true);
+      setErro(null);
+      try {
+        const pagina = await listarConexoes(username, tipo, deslocamento, POR_PAGINA);
+        if (pedido !== pedidoAtual.current) return;
+        setItens((anteriores) =>
+          deslocamento === 0 ? pagina.items : juntarSemRepetir(anteriores, pagina.items),
+        );
+        setTotal(pagina.total);
+        setOffset(deslocamento + pagina.items.length);
+      } catch (err) {
+        if (pedido !== pedidoAtual.current) return;
+        setErro(err instanceof Error ? err.message : "não consegui carregar a lista");
+      } finally {
+        if (pedido === pedidoAtual.current) setCarregando(false);
+      }
+    },
+    [username, tipo],
+  );
+
+  useEffect(() => {
+    setItens([]);
+    setTotal(0);
+    setOffset(0);
     carregar(0);
-  }, [username, tipo]);
+    return () => {
+      pedidoAtual.current++;
+    };
+  }, [carregar]);
 
   const vazio =
     tipo === "seguidores"
@@ -53,22 +75,39 @@ export function ListaDeConexoes({
       <header className="space-y-3">
         <p className="text-sm text-texto-2">@{username}</p>
         <nav className="flex gap-2 text-sm">
-          <Link
-            href={`/usuarios/${username}/seguidores`}
-            className={`rounded-controle px-3 py-1.5 ${tipo === "seguidores" ? "bg-marca-suave text-marca-forte" : "text-texto-2 hover:text-texto"}`}
-          >
-            Seguidores
-          </Link>
-          <Link
-            href={`/usuarios/${username}/seguindo`}
-            className={`rounded-controle px-3 py-1.5 ${tipo === "seguindo" ? "bg-marca-suave text-marca-forte" : "text-texto-2 hover:text-texto"}`}
-          >
-            Seguindo
-          </Link>
+          {(["seguidores", "seguindo"] as const).map((aba) => (
+            <Link
+              key={aba}
+              href={`/usuarios/${encodeURIComponent(username)}/${aba}`}
+              aria-current={tipo === aba ? "page" : undefined}
+              className={`rounded-controle px-3 py-1.5 ${
+                tipo === aba ? "bg-marca-suave text-marca-forte" : "text-texto-2 hover:text-texto"
+              }`}
+            >
+              {aba === "seguidores" ? "Seguidores" : "Seguindo"}
+            </Link>
+          ))}
         </nav>
       </header>
 
-      {erro && <p className="rounded-cartao border border-linha p-3 text-sm text-texto-2">{erro}</p>}
+      {erro && (
+        <Cartao className="flex items-center justify-between gap-3 p-3">
+          <p role="alert" className="text-sm text-texto-2">
+            {erro}
+          </p>
+          <Botao variante="secundario" tamanho="sm" onClick={() => carregar(itens.length ? offset : 0)}>
+            Tentar de novo
+          </Botao>
+        </Cartao>
+      )}
+
+      {carregando && itens.length === 0 && !erro && (
+        <ul className="space-y-2" aria-hidden>
+          {[0, 1, 2].map((i) => (
+            <li key={i} className="h-16 animate-pulse rounded-cartao bg-superficie-2" />
+          ))}
+        </ul>
+      )}
 
       {!erro && !carregando && itens.length === 0 && <p className="text-sm text-texto-2">{vazio}</p>}
 
@@ -84,20 +123,18 @@ export function ListaDeConexoes({
                   {u.bio ? ` · ${u.bio}` : ""}
                 </p>
               </div>
-              {eu !== null && eu !== u.id && <BotaoSeguir username={u.username} tamanho="sm" />}
+              {eu !== u.id && (
+                <BotaoSeguir username={u.username} seguindoInicial={u.eu_sigo} tamanho="sm" />
+              )}
             </Cartao>
           </li>
         ))}
       </ul>
 
-      {itens.length < total && (
-        <button
-          onClick={() => carregar(itens.length)}
-          disabled={carregando}
-          className="text-sm text-marca-forte hover:underline disabled:opacity-50"
-        >
-          {carregando ? "carregando..." : "carregar mais"}
-        </button>
+      {itens.length > 0 && itens.length < total && !erro && (
+        <Botao variante="fantasma" carregando={carregando} onClick={() => carregar(offset)}>
+          Carregar mais
+        </Botao>
       )}
     </div>
   );

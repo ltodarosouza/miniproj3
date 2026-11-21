@@ -79,3 +79,57 @@ def test_estado_do_follow_para_quem_esta_logado(client, pessoa):
     client.post("/usuarios/bia/follow", headers=ana)
     assert client.get("/usuarios/bia/follow", headers=ana).json() == {"seguindo": True, "seguidores": 1}
     assert client.get("/usuarios/bia/follow", headers=bia).json() == {"seguindo": False, "seguidores": 1}
+
+
+def test_rotas_de_follow_exigem_login(client, pessoa):
+    pessoa("bia")
+    assert client.delete("/usuarios/bia/follow").status_code == 401
+    assert client.get("/usuarios/bia/follow").status_code == 401
+
+
+def test_inexistente_da_404_em_todas_as_rotas(client, pessoa):
+    ana = pessoa("ana")
+    assert client.delete("/usuarios/ninguem/follow", headers=ana).status_code == 404
+    assert client.get("/usuarios/ninguem/follow", headers=ana).status_code == 404
+    assert client.get("/usuarios/ninguem/seguindo").status_code == 404
+
+
+def test_deixar_de_seguir_a_si_mesmo_nao_quebra(client, pessoa):
+    ana = pessoa("ana")
+    r = client.delete("/usuarios/ana/follow", headers=ana)
+    assert r.status_code == 200
+    assert r.json() == {"seguindo": False, "seguidores": 0}
+
+
+def test_paginacao_valida_limites(client, pessoa):
+    pessoa("ana")
+    for query in ("limit=0", "limit=101", "offset=-1"):
+        assert client.get(f"/usuarios/ana/seguidores?{query}").status_code == 422
+
+
+def test_lista_mais_recente_primeiro_e_pagina_com_offset(client, pessoa):
+    ana = pessoa("ana")
+    for nome in ("bia", "caio", "duda"):
+        pessoa(nome)
+        client.post(f"/usuarios/{nome}/follow", headers=ana)
+
+    primeira = client.get("/usuarios/ana/seguindo?limit=2").json()
+    segunda = client.get("/usuarios/ana/seguindo?offset=2&limit=2").json()
+    assert [u["username"] for u in primeira["items"]] == ["duda", "caio"]
+    assert [u["username"] for u in segunda["items"]] == ["bia"]
+    assert primeira["total"] == segunda["total"] == 3
+
+
+def test_lista_diz_se_quem_esta_logado_segue_cada_pessoa(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    pessoa("caio")
+    client.post("/usuarios/caio/follow", headers=ana)
+    client.post("/usuarios/caio/follow", headers=bia)
+    client.post("/usuarios/bia/follow", headers=ana)
+
+    itens = client.get("/usuarios/caio/seguidores", headers=ana).json()["items"]
+    assert {u["username"]: u["eu_sigo"] for u in itens} == {"ana": False, "bia": True}
+
+    itens = client.get("/usuarios/caio/seguidores").json()["items"]
+    assert all(u["eu_sigo"] is None for u in itens)

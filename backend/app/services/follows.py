@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.models.follow import Follow
 from app.models.user import User
-from app.schemas.follow import Contadores, EstadoFollow
+from app.schemas.follow import ConexaoOut, ConexaoPage, Contadores, EstadoFollow
+from app.schemas.user import UserOut
 
 
 def _buscar(db: Session, username: str) -> User:
@@ -77,9 +78,28 @@ def deixar_de_seguir(db: Session, pessoa: User, username: str) -> EstadoFollow:
     return EstadoFollow(seguindo=False, seguidores=_total_seguidores(db, alvo.id))
 
 
+def _ids_que_sigo(db: Session, pessoa: User | None, ids: list[int]) -> set[int] | None:
+    if pessoa is None:
+        return None
+    if not ids:
+        return set()
+    return set(
+        db.scalars(
+            select(Follow.seguido_id).where(
+                Follow.seguidor_id == pessoa.id, Follow.seguido_id.in_(ids)
+            )
+        )
+    )
+
+
 def _listar(
-    db: Session, username: str, de_seguidores: bool, offset: int, limit: int
-) -> tuple[list[User], int]:
+    db: Session,
+    username: str,
+    de_seguidores: bool,
+    pessoa: User | None,
+    offset: int,
+    limit: int,
+) -> ConexaoPage:
     alvo = _buscar(db, username)
     if de_seguidores:
         coluna_filtro, coluna_outro = Follow.seguido_id, Follow.seguidor_id
@@ -98,12 +118,28 @@ def _listar(
             .limit(limit)
         )
     )
-    return usuarios, total
+    sigo = _ids_que_sigo(db, pessoa, [u.id for u in usuarios])
+    return ConexaoPage(
+        items=[
+            ConexaoOut(
+                **UserOut.model_validate(u).model_dump(),
+                eu_sigo=None if sigo is None else u.id in sigo,
+            )
+            for u in usuarios
+        ],
+        total=total,
+        offset=offset,
+        limit=limit,
+    )
 
 
-def seguidores(db: Session, username: str, offset: int, limit: int):
-    return _listar(db, username, True, offset, limit)
+def seguidores(
+    db: Session, username: str, pessoa: User | None, offset: int, limit: int
+) -> ConexaoPage:
+    return _listar(db, username, True, pessoa, offset, limit)
 
 
-def seguindo(db: Session, username: str, offset: int, limit: int):
-    return _listar(db, username, False, offset, limit)
+def seguindo(
+    db: Session, username: str, pessoa: User | None, offset: int, limit: int
+) -> ConexaoPage:
+    return _listar(db, username, False, pessoa, offset, limit)

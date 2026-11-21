@@ -189,22 +189,29 @@ export type EstadoFollow = {
   seguidores: number;
 };
 
+export type Conexao = User & {
+  eu_sigo: boolean | null;
+};
+
 export function estadoFollow(username: string): Promise<EstadoFollow> {
-  return apiGet<EstadoFollow>(`/usuarios/${username}/follow`);
+  return apiGet<EstadoFollow>(`/usuarios/${encodeURIComponent(username)}/follow`);
 }
 
 export function seguir(username: string): Promise<EstadoFollow> {
-  return apiPost<EstadoFollow>(`/usuarios/${username}/follow`);
+  return apiPost<EstadoFollow>(`/usuarios/${encodeURIComponent(username)}/follow`);
 }
 
 export function deixarDeSeguir(username: string): Promise<EstadoFollow> {
-  return apiDelete<EstadoFollow>(`/usuarios/${username}/follow`);
+  return apiDelete<EstadoFollow>(`/usuarios/${encodeURIComponent(username)}/follow`);
 }
 
-export function listarSeguidores(username: string, offset = 0, limit = 20): Promise<Page<User>> {
-  return apiGet<Page<User>>(`/usuarios/${username}/seguidores?offset=${offset}&limit=${limit}`);
-}
-
-export function listarSeguindo(username: string, offset = 0, limit = 20): Promise<Page<User>> {
-  return apiGet<Page<User>>(`/usuarios/${username}/seguindo?offset=${offset}&limit=${limit}`);
+export function listarConexoes(
+  username: string,
+  tipo: "seguidores" | "seguindo",
+  offset = 0,
+  limit = 20,
+): Promise<Page<Conexao>> {
+  return apiGet<Page<Conexao>>(
+    `/usuarios/${encodeURIComponent(username)}/${tipo}?offset=${offset}&limit=${limit}`,
+  );
 }
