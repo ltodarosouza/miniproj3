@@ -91,7 +91,7 @@ def detalhar(db: Session, eu: User, post_id: int) -> PostOut:
     return montar_saidas(db, eu, [buscar(db, post_id)])[0]
 
 
-def _post_do_autor(db: Session, eu: User, post_id: int) -> Post:
+def post_do_autor(db: Session, eu: User, post_id: int) -> Post:
     post = buscar(db, post_id)
     if post.autor_id != eu.id:
         raise HTTPException(status_code=403, detail="só o autor pode mexer neste post")
@@ -99,7 +99,7 @@ def _post_do_autor(db: Session, eu: User, post_id: int) -> Post:
 
 
 def editar(db: Session, eu: User, post_id: int, dados: PostUpdate) -> PostOut:
-    post = _post_do_autor(db, eu, post_id)
+    post = post_do_autor(db, eu, post_id)
     campos = dados.model_dump(exclude_unset=True)
     _exigir_habilidade(db, campos.get("habilidade_id"))
     for nome, valor in campos.items():
@@ -110,7 +110,7 @@ def editar(db: Session, eu: User, post_id: int, dados: PostUpdate) -> PostOut:
 
 
 def apagar(db: Session, eu: User, post_id: int) -> None:
-    post = _post_do_autor(db, eu, post_id)
+    post = post_do_autor(db, eu, post_id)
     db.execute(delete(Curtida).where(Curtida.post_id == post.id))
     db.execute(delete(Comentario).where(Comentario.post_id == post.id))
     db.delete(post)
