@@ -48,7 +48,7 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
   return (
     <Cartao className={`mx-auto w-full max-w-sm p-4 space-y-3 transition-[color,opacity] duration-[var(--medio)] ease-saida motion-reduce:transition-none ${troca.status === "recusada" ? "opacity-70" : ""}`}>
       <div className="flex items-start gap-3">
-        <span className={`flex size-9 shrink-0 items-center justify-center rounded-controle ${troca.status === "confirmada" ? "text-sucesso" : "bg-marca-suave text-marca-forte"}`}>
+        <span className={`flex size-9 shrink-0 items-center justify-center rounded-controle ${troca.status === "confirmada" ? "bg-[color-mix(in_oklch,var(--sucesso)_16%,transparent)] text-sucesso" : "bg-marca-suave text-marca-forte"}`}>
           <Icone nome={troca.status === "confirmada" ? "confirmar" : "calendario"} tamanho={19} />
         </span>
         <div className="min-w-0 flex-1">
@@ -106,22 +106,22 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
         passou ? (
           <p className="text-sm text-texto-2">A troca já aconteceu</p>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            <a href={troca.link_google_agenda} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 flex-1 select-none items-center justify-center gap-1.5 rounded-controle border border-linha bg-superficie px-3 text-sm font-medium text-texto transition-[background-color,border-color,color,box-shadow,scale] duration-[var(--rapido)] ease-saida active:scale-[0.97] hover:border-marca hover:text-marca-forte motion-reduce:transition-none">
-              <Icone nome="calendario" tamanho={16} />
-              Adicionar ao Google Agenda
-            </a>
+          <div className="flex flex-col gap-2">
             {troca.link_meet && (
-              <a href={troca.link_meet} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 flex-1 select-none items-center justify-center gap-1.5 rounded-controle bg-marca px-3 text-sm font-medium text-marca-texto shadow-cartao transition-[background-color,border-color,color,box-shadow,scale] duration-[var(--rapido)] ease-saida active:scale-[0.97] hover:bg-marca-forte motion-reduce:transition-none">
+              <a href={troca.link_meet} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 w-full select-none items-center justify-center gap-1.5 rounded-controle bg-marca px-3 text-sm font-medium text-marca-texto shadow-cartao transition-[background-color,border-color,color,box-shadow,scale] duration-[var(--rapido)] ease-saida active:scale-[0.97] hover:bg-marca-forte motion-reduce:transition-none">
                 <Icone nome="link" tamanho={16} />
                 Entrar na chamada
               </a>
             )}
+            <a href={troca.link_google_agenda} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 w-full select-none items-center justify-center gap-1.5 rounded-controle border border-linha-forte bg-superficie px-3 text-sm font-medium text-texto transition-[background-color,border-color,color,box-shadow,scale] duration-[var(--rapido)] ease-saida active:scale-[0.97] hover:border-marca hover:text-marca-forte motion-reduce:transition-none">
+              <Icone nome="calendario" tamanho={16} />
+              Adicionar ao Google Agenda
+            </a>
           </div>
         )
       )}
 
-      {troca.status === "recusada" && <p className="text-sm text-texto-2">Esta proposta foi recusada.</p>}
+      {troca.status === "recusada" && <p className="text-sm text-texto-2">{propus ? `${nomeOutraPessoa} não pôde desta vez. Que tal combinar outro horário?` : "Você recusou esta proposta."}</p>}
     </Cartao>
   );
 }

@@ -47,6 +47,21 @@ export default function PaginaConversa() {
     return a.tipo === "mensagem" && b.tipo === "mensagem" ? a.mensagem.id - b.mensagem.id : a.tipo === "troca" && b.tipo === "troca" ? a.troca.id - b.troca.id : 0;
   }), [mensagens, trocas]);
 
+  const carregarConversa = useCallback(
+    () => Promise.all([listarMensagens(username), listarConversas(), listarTrocas(username)]),
+    [username],
+  );
+
+  const aplicarCarga = useCallback(
+    ([resposta, conversas, trocasCarregadas]: Awaited<ReturnType<typeof carregarConversa>>) => {
+      setMensagens(resposta.items);
+      setTrocas(trocasCarregadas.items);
+      setConversa(conversas.items.find((item) => item.com.username === username) ?? null);
+      setSemConexao(false);
+    },
+    [username],
+  );
+
   const rolarAteFim = useCallback((behavior: ScrollBehavior) => {
     const elemento = lista.current;
     if (elemento) elemento.scrollTo({ top: elemento.scrollHeight, behavior });
@@ -71,13 +86,9 @@ export default function PaginaConversa() {
     setErroInicial(false);
     primeiroCarregamento.current = true;
     ciclosPolling.current = 0;
-    Promise.all([listarMensagens(username), listarConversas(), listarTrocas(username)])
-      .then(([resposta, conversas, trocasCarregadas]) => {
-        if (!ativo) return;
-        setMensagens(resposta.items);
-        setTrocas(trocasCarregadas.items);
-        setConversa(conversas.items.find((item) => item.com.username === username) ?? null);
-        setSemConexao(false);
+    carregarConversa()
+      .then((dados) => {
+        if (ativo) aplicarCarga(dados);
       })
       .catch((erro: unknown) => {
         if (!ativo) return;
@@ -97,7 +108,7 @@ export default function PaginaConversa() {
         });
       });
     return () => { ativo = false; };
-  }, [idUsuario, username, rolarAteFim]);
+  }, [idUsuario, username, rolarAteFim, carregarConversa, aplicarCarga]);
 
   const buscarNovas = useCallback(async () => {
     if (document.hidden || idUsuario === null) return;
@@ -167,7 +178,7 @@ export default function PaginaConversa() {
   }
 
   if (erroInicial && mensagens.length === 0) {
-    return <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"><p className="max-w-sm text-texto-2">Não conseguimos carregar esta conversa. Confira sua conexão e tente de novo.</p><Botao variante="secundario" onClick={() => { setErroInicial(false); setCarregando(true); void Promise.all([listarMensagens(username), listarConversas(), listarTrocas(username)]).then(([resposta, conversas, trocasCarregadas]) => { setMensagens(resposta.items); setTrocas(trocasCarregadas.items); setConversa(conversas.items.find((item) => item.com.username === username) ?? null); setSemConexao(false); }).catch(() => { setErroInicial(true); setSemConexao(true); }).finally(() => setCarregando(false)); }}>Tentar de novo</Botao></div>;
+    return <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"><p className="max-w-sm text-texto-2">Não conseguimos carregar esta conversa. Confira sua conexão e tente de novo.</p><Botao variante="secundario" onClick={() => { setErroInicial(false); setCarregando(true); void carregarConversa().then(aplicarCarga).catch(() => { setErroInicial(true); setSemConexao(true); }).finally(() => setCarregando(false)); }}>Tentar de novo</Botao></div>;
   }
 
   const com = conversa?.com;
@@ -191,7 +202,7 @@ export default function PaginaConversa() {
       </header>
 
       <div ref={lista} className="relative flex-1 overflow-y-auto px-4 py-6">
-        {semConexao && <p className="mb-3 rounded-controle bg-superficie-2 px-3 py-2 text-center text-xs text-texto-2" role="status">Sem conexão, tentando de novo…</p>}
+        {semConexao && <p className="sticky top-0 z-10 mb-3 rounded-controle bg-superficie-2 px-3 py-2 text-center text-xs text-texto-2" role="status">Sem conexão, tentando de novo…</p>}
         {carregando ? <p className="py-8 text-center text-sm text-texto-3">Carregando mensagens…</p> : mensagens.length === 0 && trocas.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <Avatar nome={titulo} url={com?.avatar_url} tamanho="lg" />
@@ -210,7 +221,8 @@ export default function PaginaConversa() {
               const proxima = linhaDoTempo[indice + 1];
               const mensagemAnterior = anterior?.tipo === "mensagem" ? anterior.mensagem : null;
               const mensagemProxima = proxima?.tipo === "mensagem" ? proxima.mensagem : null;
-              const mesmoDia = mensagemAnterior && chaveDoDia(mensagemAnterior.em) === chaveDoDia(mensagem.em);
+              const ultimaMensagemAntes = linhaDoTempo.slice(0, indice).findLast((anteriorItem) => anteriorItem.tipo === "mensagem");
+              const mesmoDia = ultimaMensagemAntes?.tipo === "mensagem" && chaveDoDia(ultimaMensagemAntes.mensagem.em) === chaveDoDia(mensagem.em);
               const agrupada = Boolean(mensagemAnterior && mensagemAnterior.de_username === mensagem.de_username && new Date(mensagem.em).getTime() - new Date(mensagemAnterior.em).getTime() < 5 * 60 * 1000);
               const horaAoFinal = !mensagemProxima || mensagemProxima.de_username !== mensagem.de_username || new Date(mensagemProxima.em).getTime() - new Date(mensagem.em).getTime() >= 5 * 60 * 1000;
               return (
