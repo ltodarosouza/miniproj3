@@ -6,7 +6,7 @@ check:
 	cd backend && uv run python scripts/check_setup.py
 
 dev-back:
-	cd backend && uv run uvicorn app.main:app --reload
+	cd backend && DEBUG=true uv run uvicorn app.main:app --reload
 
 dev-front:
 	cd frontend && npm run dev
