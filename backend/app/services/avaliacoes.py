@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -100,10 +98,7 @@ def resumo(db: Session, username: str) -> ResumoAvaliacoes:
             .limit(50)
         )
     )
-    total = db.scalar(
-        select(func.count(Avaliacao.id)).where(Avaliacao.para_id == usuario.id)
-    ) or 0
-    media = round(sum(item.estrelas for item in avaliacoes) / len(avaliacoes), 1) if avaliacoes else None
+    media, total = media_e_total(db, usuario.id)
     return ResumoAvaliacoes(
         media=media,
         total=total,
