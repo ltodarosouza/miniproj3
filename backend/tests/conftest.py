@@ -67,3 +67,15 @@ def auth_client(client, logar):
     """Client já autenticado (header fixado). Vermelho até a auth do time existir."""
     client.headers.update(logar("tester_auth", "Tester"))
     return client
+
+
+@pytest.fixture()
+def pessoa(client, monkeypatch):
+    monkeypatch.setenv("DEBUG", "true")
+
+    def _pessoa(username: str, name: str | None = None) -> dict:
+        r = client.post("/usuarios", json={"username": username, "name": name or username.title()})
+        assert r.status_code == 201
+        return {"X-User-Id": str(r.json()["id"])}
+
+    return _pessoa

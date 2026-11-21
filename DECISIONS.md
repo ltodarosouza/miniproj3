@@ -96,6 +96,36 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
   mas mais difíceis de reproduzir igual em quatro frentes e mais arriscados
   de parecer infantis. A personalidade fica no movimento e nos detalhes.
 
+### 7. Chat por polling, com o id da última mensagem como cursor
+
+- **Contexto:** a conversa precisa mostrar as mensagens novas sem a pessoa
+  recarregar a página. WebSocket está fora do escopo.
+- **Opções:** recarregar a conversa inteira a cada poucos segundos; buscar só
+  o que chegou depois de uma data; buscar só o que chegou depois do id da
+  última mensagem.
+- **Escolha:** a tela pergunta a cada 3 segundos
+  `GET /dms/{username}?depois_de=<id>` e recebe só as novas. O polling pausa
+  com a aba escondida. O id é crescente e único, então não perde nem repete
+  mensagens enviadas no mesmo segundo, o que a data não garante.
+- **O que cortamos e por quê:** WebSocket e "digitando...". Exigiriam um
+  servidor com conexão aberta e complicariam o deploy; 3 segundos de atraso
+  bastam para combinar uma troca.
+
+### 8. Troca proposta no chat, avaliada só depois do horário
+
+- **Contexto:** a rede só pode pedir avaliação de uma troca que aconteceu, e
+  nem toda troca é recíproca ("pode te ensinar").
+- **Opções:** avaliar a pessoa a qualquer momento; avaliar a troca depois do
+  horário marcado.
+- **Escolha:** a troca guarda o que quem propôs ensina e o que aprende, e
+  basta uma das duas. Ela nasce `proposta`, só quem recebeu confirma ou recusa,
+  e a avaliação abre para os dois quando o horário de uma troca confirmada
+  passa. Cada pessoa avalia uma vez por troca. O pedido aparece num cartão
+  flutuante em qualquer tela, que pode ser adiado.
+- **O que cortamos e por quê:** avaliação livre de perfil. Viraria ranking de
+  popularidade, e a nota precisa vir de uma troca real (princípio "prova, não
+  promessa").
+
 ## Features
 
 | Feature | Dono | Por quê (1 frase) |
@@ -131,4 +161,9 @@ contra a versão que percorre todos os usuários.
 - Claude para ajudar a definir o produto, recortar o escopo e dividir as
   frentes.
 - IA dentro do produto: mapear a habilidade digitada para um item do catálogo.
+- Frente D (chat, agendamento e avaliação): Claude Code planejou a frente,
+  escreveu os models, schemas e o contrato do `api.ts`, e dividiu o resto em
+  tarefas pequenas para agentes do Codex (GPT-6 Luna) em paralelo, um arquivo
+  por agente. Claude revisou cada entrega, rodou os testes e conferiu as
+  telas no navegador antes de mesclar.
 - _(completem conforme usarem)_
