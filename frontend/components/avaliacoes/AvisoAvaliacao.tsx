@@ -89,7 +89,7 @@ export function AvisoAvaliacao() {
       }, 2500);
     } catch (falha) {
       const mensagem = falha instanceof Error ? falha.message : "Não foi possível enviar sua avaliação.";
-      if (mensagem.includes("409") || mensagem.toLowerCase().includes("já avaliou")) {
+      if (mensagem.includes("409") && mensagem.toLowerCase().includes("já avaliou")) {
         setTrocas((atuais) => atuais.filter((item) => item.id !== troca.id));
       } else {
         setErro(mensagem);
