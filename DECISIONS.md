@@ -1,6 +1,6 @@
 # Decisões do time
 
-**Time:** @italoosilva (Pessoa A), @NicoleAlverga (Pessoa B), _a definir_ (Pessoa C) e @ltodarosouza (Pessoa D)
+**Time:** @italoosilva (Pessoa A), @NicoleAlverga (Pessoa B), @gecbeltrao (Pessoa C) e @ltodarosouza (Pessoa D)
 
 **Rede:** troca de habilidades entre iniciantes em tech. Nome da rede: _a decidir_.
 
@@ -137,9 +137,9 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
 | Curtidas e comentários (núcleo) | @NicoleAlverga | Motivação e dúvidas rápidas na rotina dos outros. |
 | Feed misto (núcleo) | @NicoleAlverga | Ajuda a descobrir quem pode te ensinar. |
 | Streak de estudo | @NicoleAlverga | Incentiva a voltar todo dia. |
-| Follow (núcleo) | _a definir (C)_ | Acompanhar quem estuda o mesmo que você. |
-| Match em dois níveis | _a definir (C)_ | É o centro do produto. |
-| Seed fake (núcleo) | _a definir (C)_ | A demo começa com matches de verdade. |
+| Follow (núcleo) | @gecbeltrao | Acompanhar quem estuda o mesmo que você. |
+| Match em dois níveis | @gecbeltrao | É o centro do produto. |
+| Seed fake (núcleo) | @gecbeltrao | A demo começa com matches de verdade. |
 | Chat 1-para-1 | @ltodarosouza | É onde a troca é combinada. |
 | Agendamento de troca | @ltodarosouza | Marca a troca e avisa quando avaliar. |
 | Avaliação pós-troca | @ltodarosouza | Passa confiança sobre quem ensina bem. |
