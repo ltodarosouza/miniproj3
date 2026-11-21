@@ -16,3 +16,12 @@ def get_current_user(
         if user:
             return user
     raise HTTPException(status_code=401, detail="não autenticado")
+
+
+def get_current_user_opcional(
+    x_user_id: int | None = Header(default=None),
+    db: Session = Depends(get_db),
+) -> User | None:
+    if os.environ.get("DEBUG") == "true" and x_user_id is not None:
+        return db.get(User, x_user_id)
+    return None

@@ -13,6 +13,15 @@ function headers(): HeadersInit {
   return h;
 }
 
+export class ErroApi extends Error {
+  constructor(
+    message: string,
+    public status: number,
+  ) {
+    super(message);
+  }
+}
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method,
@@ -32,7 +41,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     // 422 = corpo inválido; 409 = conflito (ex.: username repetido). Ver guia 04.
     const erro = await res.json().catch(() => null);
     const detail = typeof erro?.detail === "string" ? erro.detail : null;
-    throw new Error(detail ?? `${method} ${path} → ${res.status}`);
+    throw new ErroApi(detail ?? `${method} ${path} → ${res.status}`, res.status);
   }
 
   // 204 No Content (seguir, curtir, apagar...) não tem corpo: não há JSON para ler.
@@ -180,4 +189,38 @@ export function avaliarTroca(id: number, estrelas: number, feedback: string): Pr
 
 export function avaliacoesDe(username: string): Promise<ResumoAvaliacoes> {
   return apiGet(`/usuarios/${encodeURIComponent(username)}/avaliacoes`);
+}
+
+// ---- follow (frente C) ----
+
+export type EstadoFollow = {
+  seguindo: boolean;
+  seguidores: number;
+};
+
+export type Conexao = User & {
+  eu_sigo: boolean | null;
+};
+
+export function estadoFollow(username: string): Promise<EstadoFollow> {
+  return apiGet<EstadoFollow>(`/usuarios/${encodeURIComponent(username)}/follow`);
+}
+
+export function seguir(username: string): Promise<EstadoFollow> {
+  return apiPost<EstadoFollow>(`/usuarios/${encodeURIComponent(username)}/follow`);
+}
+
+export function deixarDeSeguir(username: string): Promise<EstadoFollow> {
+  return apiDelete<EstadoFollow>(`/usuarios/${encodeURIComponent(username)}/follow`);
+}
+
+export function listarConexoes(
+  username: string,
+  tipo: "seguidores" | "seguindo",
+  offset = 0,
+  limit = 20,
+): Promise<Page<Conexao>> {
+  return apiGet<Page<Conexao>>(
+    `/usuarios/${encodeURIComponent(username)}/${tipo}?offset=${offset}&limit=${limit}`,
+  );
 }

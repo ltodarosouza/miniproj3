@@ -10,7 +10,7 @@ from app.db import Base, SessionLocal, engine
 import app.models  # noqa: F401
 from app.models.user import User
 from app.models.user_habilidade import UserHabilidade
-from app.routers import avaliacoes, dms, habilidades, posts, trocas, users
+from app.routers import avaliacoes, dms, follows, habilidades, posts, trocas, users
 from app.services.habilidades import garantir_catalogo
 
 
@@ -46,4 +46,5 @@ app.include_router(habilidades.router)
 app.include_router(dms.router)
 app.include_router(avaliacoes.router)
 app.include_router(trocas.router)
+app.include_router(follows.router)
 app.include_router(posts.router)
