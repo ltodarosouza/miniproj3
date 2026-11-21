@@ -6,7 +6,7 @@ import { Botao } from "@/components/ui/Botao";
 import { Cartao } from "@/components/ui/Cartao";
 import { Icone } from "@/components/ui/Icone";
 import { TagHabilidade } from "@/components/ui/TagHabilidade";
-import { formatarDataHora, jaPassou } from "@/lib/datas";
+import { formatarDataHora, formatarQuando, jaPassou } from "@/lib/datas";
 import { confirmarTroca, recusarTroca, type Troca } from "@/lib/api";
 import { meuId } from "@/lib/sessao";
 
@@ -31,6 +31,11 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
       : propus
         ? "Você propôs uma troca"
         : `${nomeOutraPessoa} propôs uma troca`;
+
+  const momento = troca.respondida_em ?? troca.criada_em;
+  const quando = formatarQuando(momento);
+  const quandoTexto = quando.includes(":") ? `às ${quando}` : quando === "ontem" ? "ontem" : `em ${quando}`;
+  const acao = troca.status === "confirmada" ? "Confirmada" : troca.status === "recusada" ? "Recusada" : "Proposta";
 
   const executarAcao = async (acao: "confirmar" | "recusar") => {
     setCarregando(acao);
@@ -122,6 +127,9 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
       )}
 
       {troca.status === "recusada" && <p className="text-sm text-texto-2">{propus ? `${nomeOutraPessoa} não pôde desta vez. Que tal combinar outro horário?` : "Você recusou esta proposta."}</p>}
+      <p className="numeros border-t border-linha pt-2.5 text-xs text-texto-3">
+        <time dateTime={momento}>{acao} {quandoTexto}</time>
+      </p>
     </Cartao>
   );
 }
