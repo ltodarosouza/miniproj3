@@ -14,33 +14,103 @@ Regras para todos:
 - sem código comentado, sem `print` de debug: explicações vão no markdown;
 - cada dono escreve a decisão da sua frente no `DECISIONS.md`.
 
-## Ordem e dependências
+## Trabalho em paralelo
 
-1. **Dia 1:** Pessoa A sobe o bypass do guia 01 (Passo 0). Todo mundo já
-   desenvolve com o header `X-User-Id` no Swagger.
-2. **Dias 1 e 2:** A entrega registro e login. B entrega `POST /posts` e
-   `GET /posts/{id}`. A e C combinam o formato de `GET /usuarios/{username}`.
-3. **Até 24/11:** núcleo inteiro com `make test` verde e primeiro deploy (D).
-4. **25 e 26/11:** diferenciais (habilidades, match, chat, agendamento,
-   avaliação), seed com a cara da rede, vídeo e pitch.
-5. **27/11:** entrega. Extras só se tudo acima estiver pronto.
+As quatro frentes andam em paralelo quase o tempo todo. Só três coisas não
+são paralelas: a **Fase 0** (curta, no começo), os **pontos de encaixe**
+(quando a peça real de um substitui o provisório no código do outro) e o
+**seed** (no fim). Tudo o que não está nesta seção pode ser feito sem esperar
+ninguém.
 
-| Quem precisa | De quê | De quem |
+### Fase 0: bloqueante (primeiras horas do dia 1)
+
+Ninguém começa a própria feature antes destes três PRs estarem na `main`.
+São pequenos e devem sair no mesmo dia, nesta ordem:
+
+| # | PR | Dono | O que entra | Por que bloqueia |
+|---|---|---|---|---|
+| 0.1 | Bypass de auth | A | `get_current_user` lendo o header `X-User-Id` (guia 01, Passo 0) | Toda rota protegida depende dele |
+| 0.2 | Models de habilidade | A | `Habilidade` e `UserHabilidade`, sem rotas, e o catálogo no seed | C monta o match em cima dessas tabelas |
+| 0.3 | Esqueleto do match | C | `core/matches.py` com `quem_pode_ensinar(eu)` devolvendo `set()` e o singleton registrado no lifespan | B chama essa função no feed |
+
+Enquanto a Fase 0 não termina, B e D podem ler os guias e desenhar as telas,
+sem escrever rotas.
+
+### Fase 1: paralelo de verdade (do fim do dia 1 até 26/11)
+
+Cada frente trabalha nos próprios arquivos. Para não esperar o colega, cada
+pessoa usa um **provisório** no lugar do que vem de outra frente:
+
+| Quem usa | O quê | De quem | Provisório até ficar pronto |
+|---|---|---|---|
+| B, C e D | Login de verdade | A | Header `X-User-Id` no Swagger |
+| B (feed misto) | `matches.quem_pode_ensinar(eu)` | C | Esqueleto da Fase 0, que devolve vazio: o feed mostra só os seguidos |
+| A (perfil) | `seguidores`, `seguindo` | C | Valor `0` |
+| A (perfil) | `streak` | B | Valor `0` |
+| A (perfil) | `media_professor`, `avaliacoes` | D | `null` e `0` |
+| B (form de post) | Autocomplete de habilidades | A | Um `<select>` com as habilidades do catálogo |
+| C e D (telas) | Navegação e `api.ts` com token | A | Página solta, acessada pela URL |
+| D (botão "Conversar") | Tela de matches | C | Abrir a conversa digitando a URL `/mensagens/[username]` |
+
+Regra de ouro: o provisório entra no código com o **mesmo nome e o mesmo
+formato** do contrato deste arquivo. Assim, o encaixe muda só uma linha.
+
+### Pontos de encaixe
+
+Quando a peça real fica pronta, o dono dela avisa no grupo e quem usava o
+provisório troca. É uma mudança pequena, mas precisa acontecer na ordem:
+
+| Encaixe | Acontece quando | Quem troca |
 |---|---|---|
-| Todos | registro, login, `get_current_user` | A |
-| C (match) | tabela `user_habilidades` | A |
-| B (feed misto) | `matches.quem_pode_ensinar(usuario_id)` | C |
-| D (chat) | `matches` para mostrar o botão "Conversar" | C |
-| A (perfil) | `seguidores`, `seguindo` | C |
-| A (perfil) | `streak` | B |
-| A (perfil) | `media_professor`, `avaliacoes` | D |
-| C (seed) | models de todas as frentes | A, B, D |
+| Login real no lugar do header | A termina registro e login (dia 1 ou 2) | Cada um testa de novo a própria tela com login |
+| Contadores, streak e média no perfil | C, B e D terminam suas funções | A liga no `GET /usuarios/{username}` |
+| Feed misto acende | C implementa o índice de verdade | Ninguém: a função já é chamada, só passa a devolver usuários |
+| Autocomplete no form de post | A termina a trie | B troca o `<select>` pelo componente de A |
+| Botão "Conversar" | C termina a tela de matches e D, o chat | C aponta o botão para a rota de D |
+
+### O que não pode ser paralelo
+
+- **Fase 0:** tem que vir antes de tudo.
+- **Seed (C):** depende dos models de todas as frentes. C começa por follow e
+  match e só escreve o `seed_fake` quando `Post`, `Mensagem`, `Troca` e
+  `Avaliacao` estiverem na `main` (meta: 25/11).
+- **Teste ponta a ponta e vídeo:** só com tudo integrado (26/11).
+- **Deploy final (D):** o primeiro deploy sai cedo, mas o último é depois do
+  seed.
+
+### Para não dar conflito
+
+- Cada pessoa mexe só nos arquivos da sua frente: `models/`, `schemas/`,
+  `services/`, `routers/` e páginas com o nome da feature.
+- Arquivos compartilhados mudam pouco e com cuidado: `main.py` (uma linha por
+  router), `frontend/lib/api.ts` (uma função por rota) e `scripts/seed.py`
+  (só C). Conflito nesses arquivos se resolve mantendo as linhas dos dois
+  lados (guia 02).
+- Façam `git pull` da `main` todo dia antes de começar.
+
+### Cronograma
+
+| Data | Marco |
+|---|---|
+| 21/11 (dia 1) | Fase 0 na `main`; todos começam a Fase 1 |
+| 22/11 | Login real (A); `POST /posts` e `GET /posts/{id}` (B); primeiro deploy (D) |
+| 24/11 | Núcleo inteiro com `make test` verde |
+| 25/11 | Diferenciais prontos; todos os models na `main`; C fecha o seed |
+| 26/11 | Integração, teste na URL pública, vídeo e pitch |
+| 27/11 | Entrega. Extras só se tudo acima estiver pronto |
 
 ---
 
 ## Pessoa A: Auth, perfil e habilidades
 
 **Área de revisão:** frontend (layout, navegação, `frontend/lib/api.ts`).
+
+| Paralelismo | |
+|---|---|
+| Fase 0 (bloqueia todos) | 0.1 bypass de auth e 0.2 models de habilidade |
+| Entrega cedo para os outros | Login real (dia 2), navegação e `api.ts` com token |
+| Começa já, sem esperar ninguém | Auth, catálogo, trie, IA, telas de cadastro, login e edição de perfil |
+| Depende de outros | Contadores (C), streak (B) e média (D) no perfil: usa `0`/`null` até lá |
 
 ### Backend
 
@@ -93,6 +163,13 @@ Regras para todos:
 
 **Área de revisão:** backend (models, routers, services, `main.py`).
 
+| Paralelismo | |
+|---|---|
+| Fase 0 | Espera 0.1 e 0.3 |
+| Entrega cedo para os outros | `POST /posts` e `GET /posts/{id}` (dia 2), que destravam vários testes; model `Post` para o seed de C; função de streak para o perfil de A |
+| Começa já, sem esperar ninguém | Posts, curtidas, comentários, upload, streak, feed dos seguidos, telas |
+| Depende de outros | Feed misto acende quando C termina o índice; autocomplete de A no form (usa `<select>` até lá) |
+
 ### Backend
 
 - Model `Post`: `texto`, `autor_id`, `habilidade_id` (opcional),
@@ -138,6 +215,13 @@ Regras para todos:
 
 **Área de revisão:** dados (seed e `core/`).
 
+| Paralelismo | |
+|---|---|
+| Fase 0 (bloqueia B) | 0.3 esqueleto do match, depois de 0.2 de A |
+| Entrega cedo para os outros | Contadores de seguidores/seguindo para o perfil de A |
+| Começa já, sem esperar ninguém | Follow, índice do match, `GET /matches`, tela de matches, bench |
+| Depende de outros | Seed: só quando todos os models estiverem na `main` (meta 25/11); botão "Conversar" aponta para o chat de D |
+
 ### Backend
 
 - Model `Follow` (tabela `follows`): `POST` e
@@ -182,6 +266,13 @@ Regras para todos:
 ## Pessoa D: Chat, agendamento, avaliação e deploy
 
 **Área de revisão:** reforça backend e cuida do deploy.
+
+| Paralelismo | |
+|---|---|
+| Fase 0 | Espera 0.1 |
+| Entrega cedo para os outros | Primeiro deploy (dia 2); models `Mensagem`, `Troca` e `Avaliacao` para o seed de C; média e total para o perfil de A |
+| Começa já, sem esperar ninguém | Chat, agendamento, avaliação, link do Google Agenda, telas, deploy |
+| Depende de outros | Deploy final: depois do seed de C |
 
 ### Backend
 
