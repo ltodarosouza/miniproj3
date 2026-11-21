@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
+from app.models.comentario import Comentario
 from app.models.curtida import Curtida
 from app.models.habilidade import Habilidade
 from app.models.post import Post
@@ -40,6 +41,14 @@ def montar_saidas(db: Session, eu: User, posts: list[Post]) -> list[PostOut]:
             )
         )
     )
+    comentarios = {
+        post_id: total
+        for post_id, total in db.execute(
+            select(Comentario.post_id, func.count())
+            .where(Comentario.post_id.in_(posts_ids))
+            .group_by(Comentario.post_id)
+        )
+    }
     return [
         PostOut(
             id=post.id,
@@ -51,6 +60,7 @@ def montar_saidas(db: Session, eu: User, posts: list[Post]) -> list[PostOut]:
             created_at=post.created_at,
             curtidas=curtidas.get(post.id, 0),
             curtido=post.id in curtidos_por_mim,
+            comentarios=comentarios.get(post.id, 0),
         )
         for post in posts
     ]
@@ -102,5 +112,6 @@ def editar(db: Session, eu: User, post_id: int, dados: PostUpdate) -> PostOut:
 def apagar(db: Session, eu: User, post_id: int) -> None:
     post = _post_do_autor(db, eu, post_id)
     db.execute(delete(Curtida).where(Curtida.post_id == post.id))
+    db.execute(delete(Comentario).where(Comentario.post_id == post.id))
     db.delete(post)
     db.commit()

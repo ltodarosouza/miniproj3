@@ -40,3 +40,4 @@ class PostOut(BaseModel):
     created_at: DataHoraUtc
     curtidas: int = 0
     curtido: bool = False
+    comentarios: int = 0

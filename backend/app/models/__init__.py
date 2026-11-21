@@ -6,3 +6,4 @@ from app.models.troca import Troca  # noqa: F401
 from app.models.avaliacao import Avaliacao  # noqa: F401
 from app.models.post import Post  # noqa: F401
 from app.models.curtida import Curtida  # noqa: F401
+from app.models.comentario import Comentario  # noqa: F401
