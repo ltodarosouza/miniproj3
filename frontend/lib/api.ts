@@ -108,6 +108,7 @@ export type Troca = {
   habilidade_aprendo: HabilidadeResumo | null;
   status: StatusTroca;
   criada_em: string;
+  respondida_em: string | null;
   link_google_agenda: string;
 };
 

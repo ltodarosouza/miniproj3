@@ -39,8 +39,8 @@ export default function PaginaConversa() {
     ...mensagens.map((mensagem): ItemLinhaDoTempo => ({ tipo: "mensagem", mensagem })),
     ...trocas.map((troca): ItemLinhaDoTempo => ({ tipo: "troca", troca })),
   ].sort((a, b) => {
-    const dataA = a.tipo === "mensagem" ? a.mensagem.em : a.troca.criada_em;
-    const dataB = b.tipo === "mensagem" ? b.mensagem.em : b.troca.criada_em;
+    const dataA = a.tipo === "mensagem" ? a.mensagem.em : a.troca.respondida_em ?? a.troca.criada_em;
+    const dataB = b.tipo === "mensagem" ? b.mensagem.em : b.troca.respondida_em ?? b.troca.criada_em;
     const diferenca = new Date(dataA).getTime() - new Date(dataB).getTime();
     if (diferenca) return diferenca;
     if (a.tipo !== b.tipo) return a.tipo === "troca" ? 1 : -1;
@@ -214,7 +214,7 @@ export default function PaginaConversa() {
           <div aria-live="polite" className="mx-auto flex max-w-3xl flex-col">
             {linhaDoTempo.map((item, indice) => {
               if (item.tipo === "troca") {
-                return <div key={`troca-${item.troca.id}`} className="my-4"><CartaoTroca troca={item.troca} aoAtualizar={(atualizada) => setTrocas((atuais) => atuais.map((troca) => troca.id === atualizada.id ? atualizada : troca))} /></div>;
+                return <div key={`troca-${item.troca.id}`} className="my-4"><CartaoTroca troca={item.troca} aoAtualizar={(atualizada) => { setTrocas((atuais) => atuais.map((troca) => troca.id === atualizada.id ? atualizada : troca)); requestAnimationFrame(() => rolarAteFim("smooth")); }} /></div>;
               }
               const mensagem = item.mensagem;
               const anterior = linhaDoTempo[indice - 1];

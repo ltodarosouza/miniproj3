@@ -29,3 +29,4 @@ class Troca(Base):
     )
     status: Mapped[str] = mapped_column(String(20), default="proposta")
     criada_em: Mapped[datetime] = mapped_column(default=agora_utc)
+    respondida_em: Mapped[datetime | None] = mapped_column(default=None)

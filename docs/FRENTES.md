@@ -343,7 +343,9 @@ provisório troca. É uma mudança pequena, mas precisa acontecer na ordem:
     para quem propôs, `409` se já foi respondida);
   - `GET /trocas?com=` → minhas trocas (ou só as com uma pessoa), futuras
     primeiro e da mais próxima para a mais distante, depois as passadas;
-  - cada troca vem com `link_google_agenda` pronto.
+  - cada troca vem com `link_google_agenda` pronto e com `respondida_em`
+    (quando foi confirmada ou recusada). Na conversa, o cartão fica no
+    momento da última ação: `respondida_em` ou, sem resposta, `criada_em`.
 - Model `Avaliacao`: `troca_id`, `de_id`, `para_id`, `estrelas` (1 a 5),
   `feedback` (até 500).
   - `GET /trocas/pendentes-avaliacao` → trocas confirmadas cujo horário já
