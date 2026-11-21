@@ -1,0 +1,32 @@
+# banco local — NUNCA commitar (conflito binário é pânico garantido)
+*.db
+*.sqlite
+*.sqlite3
+
+# segredos
+.env
+.env.local
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# node
+node_modules/
+.next/
+out/
+
+# editores/os
+.DS_Store
+.vscode/
+.idea/
+
+# material do instrutor NUNCA entra neste repo — ele vive no repo privado
+# (gabaritos da banca, roteiros). Se aparecer aqui,
+# é engano: mova para ../miniproj3-instrutor.
+instrutor/
+TODO.md
+docs/design.md
+docs/review-painel-v2.md
