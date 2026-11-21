@@ -6,6 +6,10 @@ const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 function headers(): HeadersInit {
   const h: Record<string, string> = { "Content-Type": "application/json" };
   // Parte 2 do guia 01: leia o token salvo no login e envie em Authorization.
+  if (typeof window !== "undefined") {
+    const usuarioId = localStorage.getItem("usuario_id");
+    if (usuarioId) h["X-User-Id"] = usuarioId;
+  }
   return h;
 }
 
@@ -69,3 +73,110 @@ export type Page<T> = {
   offset: number;
   limit: number;
 };
+
+
+export type Mensagem = {
+  id: number;
+  de_username: string;
+  para_username: string;
+  texto: string;
+  em: string;
+};
+
+export type Conversa = {
+  com: User;
+  ultima_mensagem: string;
+  ultima_de_mim: boolean;
+  em: string;
+};
+
+export type HabilidadeResumo = {
+  id: number;
+  nome: string;
+  categoria: "tech" | "disciplina";
+};
+
+export type StatusTroca = "proposta" | "confirmada" | "recusada";
+
+export type Troca = {
+  id: number;
+  proposta_por: User;
+  com: User;
+  data_hora: string;
+  link_meet: string;
+  habilidade_ensino: HabilidadeResumo | null;
+  habilidade_aprendo: HabilidadeResumo | null;
+  status: StatusTroca;
+  criada_em: string;
+  link_google_agenda: string;
+};
+
+export type NovaTroca = {
+  com_username: string;
+  data_hora: string;
+  link_meet: string;
+  habilidade_ensino_id: number | null;
+  habilidade_aprendo_id: number | null;
+};
+
+export type Avaliacao = {
+  id: number;
+  troca_id: number;
+  de: User;
+  para: User;
+  estrelas: number;
+  feedback: string;
+  em: string;
+};
+
+export type ResumoAvaliacoes = {
+  media: number | null;
+  total: number;
+  items: Avaliacao[];
+};
+
+export function listarConversas(): Promise<{ items: Conversa[] }> {
+  return apiGet("/dms");
+}
+
+export function listarMensagens(username: string, depoisDe?: number): Promise<{ items: Mensagem[] }> {
+  const filtro = depoisDe === undefined ? "" : `?depois_de=${depoisDe}`;
+  return apiGet(`/dms/${encodeURIComponent(username)}${filtro}`);
+}
+
+export function enviarMensagem(username: string, texto: string): Promise<Mensagem> {
+  return apiPost(`/dms/${encodeURIComponent(username)}`, { texto });
+}
+
+export function listarHabilidades(): Promise<{ items: HabilidadeResumo[] }> {
+  return apiGet("/habilidades");
+}
+
+export function listarTrocas(comUsername?: string): Promise<{ items: Troca[] }> {
+  const filtro = comUsername ? `?com=${encodeURIComponent(comUsername)}` : "";
+  return apiGet(`/trocas${filtro}`);
+}
+
+export function proporTroca(dados: NovaTroca): Promise<Troca> {
+  return apiPost("/trocas", dados);
+}
+
+export function confirmarTroca(id: number): Promise<Troca> {
+  return apiPost(`/trocas/${id}/confirmar`);
+}
+
+export function recusarTroca(id: number): Promise<Troca> {
+  return apiPost(`/trocas/${id}/recusar`);
+}
+
+export function trocasPendentesAvaliacao(): Promise<{ items: Troca[] }> {
+  return apiGet("/trocas/pendentes-avaliacao");
+}
+
+export function avaliarTroca(id: number, estrelas: number, feedback: string): Promise<Avaliacao> {
+  return apiPost(`/trocas/${id}/avaliar`, { estrelas, feedback });
+}
+
+export function avaliacoesDe(username: string): Promise<ResumoAvaliacoes> {
+  return apiGet(`/usuarios/${encodeURIComponent(username)}/avaliacoes`);
+}

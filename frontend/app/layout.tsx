@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { Navegacao } from "@/components/ui/Navegacao";
+import { AvisoAvaliacao } from "@/components/avaliacoes/AvisoAvaliacao";
 
 import "./globals.css";
 
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="min-h-screen font-sans">
         <Navegacao nomeRede={NOME_REDE} />
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+        <AvisoAvaliacao />
       </body>
     </html>
   );

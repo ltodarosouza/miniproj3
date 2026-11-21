@@ -7,9 +7,10 @@ from sqlalchemy import select
 from app.core.contadores import contador_iniciais
 from app.core.matches import indice_matches
 from app.db import Base, SessionLocal, engine
+import app.models  # noqa: F401
 from app.models.user import User
 from app.models.user_habilidade import UserHabilidade
-from app.routers import users
+from app.routers import avaliacoes, dms, habilidades, trocas, users
 from app.services.habilidades import garantir_catalogo
 
 
@@ -41,3 +42,7 @@ app.add_middleware(
 
 # 1 linha por feature — registre o seu router aqui.
 app.include_router(users.router)
+app.include_router(habilidades.router)
+app.include_router(dms.router)
+app.include_router(avaliacoes.router)
+app.include_router(trocas.router)
