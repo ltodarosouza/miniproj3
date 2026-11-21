@@ -6,3 +6,4 @@ from app.models.troca import Troca  # noqa: F401
 from app.models.avaliacao import Avaliacao  # noqa: F401
 from app.models.follow import Follow  # noqa: F401
 from app.models.post import Post  # noqa: F401
+from app.models.session import Session  # noqa: F401
