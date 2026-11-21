@@ -126,6 +126,27 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
   popularidade, e a nota precisa vir de uma troca real (princípio "prova, não
   promessa").
 
+### 9. Follow idempotente, com o estado devolvido na resposta
+
+- **Contexto:** o botão de seguir aparece no perfil, nas listas e nos
+  matches, e precisa mostrar o estado certo sem recarregar a página.
+- **Opções:** `POST`/`DELETE` devolvendo `204`, com a tela fazendo um `GET`
+  depois para saber o contador; ou devolver o estado atualizado na resposta.
+- **Escolha:** `POST` e `DELETE /usuarios/{username}/follow` são idempotentes
+  (seguir duas vezes não duplica, e a tabela `follows` tem `UNIQUE` no par) e
+  devolvem `{"seguindo", "seguidores"}`. Assim a tela economiza uma ida ao
+  servidor e o contador nunca fica velho. `GET` na mesma rota diz se quem está
+  logado segue a pessoa, e as listas de seguidores/seguindo trazem `eu_sigo`
+  em cada item, para não fazer um pedido por pessoa.
+  `services.follows.contadores(db, id)` entrega `seguidores` e `seguindo` para
+  o perfil de A.
+- **O que cortamos e por quê:** seguir de volta automático. O follow imediato
+  é o comportamento de conta pública do [CONTRATO.md](CONTRATO.md); conta
+  privada com pedidos (`202`) fica como extra, se der tempo.
+- **Encaixe com o login:** as listas usam `get_current_user_opcional` em
+  `deps.py`, para quem não está logado ver as listas. Quando A trocar o
+  `X-User-Id` pelo token, troca nas duas funções.
+
 ## Features
 
 | Feature | Dono | Por quê (1 frase) |
@@ -166,4 +187,9 @@ contra a versão que percorre todos os usuários.
   tarefas pequenas para agentes do Codex (GPT-6 Luna) em paralelo, um arquivo
   por agente. Claude revisou cada entrega, rodou os testes e conferiu as
   telas no navegador antes de mesclar.
+- Frente C (follow): Claude Code escreveu model, service, rotas, testes e as
+  telas de seguidores/seguindo seguindo o slice de usuários, e conferiu o
+  botão de seguir no navegador. Um subagente revisor apontou bugs no
+  frontend (erro engolido, resposta velha na lista, hydration), que foram
+  corrigidos antes do PR.
 - _(completem conforme usarem)_
