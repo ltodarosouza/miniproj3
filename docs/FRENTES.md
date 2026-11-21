@@ -9,7 +9,7 @@ Quem mudar um contrato avisa o time e atualiza este arquivo.
 |---|---|
 | A: Auth, perfil e habilidades | @italoosilva |
 | B: Posts de rotina, feed e streak | @NicoleAlverga |
-| C: Follow, match e seed | _a definir_ |
+| C: Follow, match e seed | @gecbeltrao |
 | D: Chat, agendamento, avaliação e deploy | @ltodarosouza |
 
 Regras para todos:
@@ -255,7 +255,7 @@ provisório troca. É uma mudança pequena, mas precisa acontecer na ordem:
 
 ---
 
-## Pessoa C (a definir): Follow, match e seed
+## Pessoa C (@gecbeltrao): Follow, match e seed
 
 **Área de revisão:** dados (seed e `core/`).
 
