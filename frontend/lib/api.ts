@@ -6,7 +6,6 @@ const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 function headers(): HeadersInit {
   const h: Record<string, string> = { "Content-Type": "application/json" };
   // Parte 2 do guia 01: leia o token salvo no login e envie em Authorization.
-  // Provisório da Fase 1 (docs/FRENTES.md): sem login, o backend em DEBUG aceita X-User-Id.
   if (typeof window !== "undefined") {
     const usuarioId = localStorage.getItem("usuario_id");
     if (usuarioId) h["X-User-Id"] = usuarioId;
@@ -75,7 +74,6 @@ export type Page<T> = {
   limit: number;
 };
 
-// ---- frente D: chat, trocas e avaliações (espelham backend/app/schemas/{dm,troca,avaliacao}.py) ----
 
 export type Mensagem = {
   id: number;
