@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 import { CartaoPost } from "@/components/posts/CartaoPost";
 import { FormNovoPost } from "@/components/posts/FormNovoPost";
-import { Botao } from "@/components/ui/Botao";
+import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { Revelar } from "@/components/ui/Revelar";
 import { listarFeed, type ItemFeed, type Post } from "@/lib/posts";
 import { meuId } from "@/lib/sessao";
@@ -102,13 +102,18 @@ export default function FeedPage() {
     );
   } else if (itens.length === 0) {
     conteudo = (
-      <div className="space-y-2">
-        <p className="text-sm text-texto-2">
-          Seu feed está vazio. Siga pessoas para ver o que elas estudam.
+      <div className="space-y-3 rounded-cartao border border-dashed border-linha-forte p-6 text-center">
+        <p className="text-sm leading-relaxed text-texto-2">
+          Seu feed ainda está vazio. Siga quem estuda o mesmo que você ou veja quem pode te ensinar.
         </p>
-        <Link className="text-sm font-medium text-marca-forte underline" href="/usuarios">
-          Encontrar pessoas
-        </Link>
+        <div className="flex flex-wrap justify-center gap-2">
+          <BotaoLink href="/usuarios" variante="secundario" tamanho="sm">
+            Encontrar pessoas
+          </BotaoLink>
+          <BotaoLink href="/matches" variante="fantasma" tamanho="sm">
+            Ver meus matches
+          </BotaoLink>
+        </div>
       </div>
     );
   } else {
