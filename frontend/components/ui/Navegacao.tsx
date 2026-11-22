@@ -61,7 +61,7 @@ export function Navegacao({ nomeRede }: { nomeRede: string }) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-linha bg-[color-mix(in_oklch,var(--fundo)_82%,transparent)] backdrop-blur-md">
-      <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
+      <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-2 px-4 sm:gap-4">
         <Link
           href="/"
           className="flex items-center gap-2 font-semibold tracking-tight text-texto"
@@ -93,7 +93,7 @@ export function Navegacao({ nomeRede }: { nomeRede: string }) {
                     data-href={item.href}
                     onPointerEnter={() => setSobre(item.href)}
                     aria-current={ativo === item.href ? "page" : undefined}
-                    className={`flex h-9 items-center gap-2 rounded-controle px-3 text-sm font-medium transition-colors duration-[var(--rapido)] ${
+                    className={`flex h-9 items-center gap-2 rounded-controle px-2.5 text-sm font-medium sm:px-3 transition-colors duration-[var(--rapido)] ${
                       ativo === item.href ? "text-marca-forte" : "text-texto-2 hover:text-texto"
                     }`}
                   >
@@ -107,7 +107,7 @@ export function Navegacao({ nomeRede }: { nomeRede: string }) {
             <button
               type="button"
               onClick={sair}
-              className="flex h-9 items-center rounded-controle px-3 text-sm font-medium text-texto-2 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 hover:text-texto"
+              className="flex h-9 items-center rounded-controle px-2.5 text-sm font-medium text-texto-2 sm:px-3 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 hover:text-texto"
             >
               Sair
             </button>
