@@ -37,6 +37,11 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
   aparece em destaque.
 - **O que cortamos e por quê:** a troca recíproca pura. Ela é o ideal, mas
   deixaria a maioria das pessoas sem nenhum resultado.
+- **Como ficou:** `GET /matches` devolve `troca` e `pode_te_ensinar`. Quem
+  está na troca não se repete na outra lista. Dentro de cada grupo, vem
+  primeiro quem tem mais habilidades em comum comigo, com empate pelo nome. O
+  índice invertido de `core/matches.py` escolhe os candidatos, e o banco só
+  completa nome e nível deles.
 
 ### 2. Agendamento interno, sem login com Google
 
