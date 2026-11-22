@@ -136,7 +136,7 @@ export default function EditarPerfilPage() {
             {erro && <p role="alert" className="text-sm text-perigo">{erro}</p>}
             {salvo && <p role="status" className="text-sm text-sucesso">Perfil salvo.</p>}
             <div className="flex flex-wrap gap-3">
-              <Botao type="submit" carregando={salvando}>Salvar perfil</Botao>
+              <Botao type="submit" variante="secundario" carregando={salvando}>Salvar perfil</Botao>
               <BotaoLink href={`/perfil/${encodeURIComponent(perfil.username)}`} variante="fantasma">
                 Ver meu perfil
               </BotaoLink>
