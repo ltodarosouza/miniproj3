@@ -1,7 +1,10 @@
+import logging
 import os
 import unicodedata
 
 import httpx
+
+logger = logging.getLogger(__name__)
 
 PROVIDERS = {
     "openai": {
@@ -10,7 +13,7 @@ PROVIDERS = {
     },
     "groq": {
         "base_url": "https://api.groq.com/openai/v1",
-        "default_model": "llama-3.1-8b-instant",
+        "default_model": "qwen/qwen3.8-27b",
     },
     "gemini": {
         "base_url": "https://generativelanguage.googleapis.com/v1beta",
@@ -108,16 +111,19 @@ def mapear(texto: str, catalogo: list[str]) -> str | None:
     api_key = os.getenv("IA_API_KEY", "").strip()
 
     if not api_key:
+        logger.info("IA desativada: IA_API_KEY vazia. Usando fallback difflib.")
         return None
 
     config = PROVIDERS.get(provider)
     if config is None:
+        logger.warning("IA desativada: provedor '%s' não suportado.", provider)
         return None
 
     model = os.getenv("IA_MODEL", config["default_model"]).strip()
     if not model:
         model = config["default_model"]
 
+    logger.info("Chamando IA: provider=%s model=%s texto=%r", provider, model, texto)
     try:
         if provider == "gemini":
             resposta = _chamar_gemini(api_key, config["base_url"], model, catalogo, texto)
@@ -125,17 +131,21 @@ def mapear(texto: str, catalogo: list[str]) -> str | None:
             resposta = _chamar_openai_compativel(
                 api_key, config["base_url"], model, catalogo, texto
             )
-    except Exception:
+    except Exception as exc:
+        logger.warning("Falha na chamada da IA: %s", exc)
         return None
 
     if resposta is None:
         return None
 
     resposta = resposta.strip().strip('"').strip("'")
+    logger.info("Resposta da IA: %r", resposta)
     if resposta.upper() == "NENHUMA":
         return None
 
     if not _resposta_esta_no_catalogo(resposta, set(catalogo)):
+        logger.warning("IA respondeu %r, mas não está no catálogo.", resposta)
         return None
 
+    logger.info("IA mapeou %r -> %r", texto, resposta)
     return resposta

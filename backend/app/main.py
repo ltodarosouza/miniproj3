@@ -1,9 +1,13 @@
+import logging
 import os
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
+
+load_dotenv()
 
 from app.core.contadores import contador_iniciais
 from app.core.matches import indice_matches
@@ -24,6 +28,11 @@ from app.routers import (
     users,
 )
 from app.services.habilidades import garantir_catalogo, reconstruir_trie
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
 
 
 ORIGEM_LOCAL = "http://localhost:3000"

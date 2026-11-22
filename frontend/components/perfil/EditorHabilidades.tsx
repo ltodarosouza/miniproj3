@@ -5,8 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { AutocompleteHabilidade } from "@/components/perfil/AutocompleteHabilidade";
 import { Botao } from "@/components/ui/Botao";
 import { Icone } from "@/components/ui/Icone";
-import { QuadroArrastavel } from "@/components/ui/QuadroArrastavel";
-import { Selecao } from "@/components/ui/Campo";
 import { TagHabilidade } from "@/components/ui/TagHabilidade";
 import {
   buscarAutocomplete,
@@ -50,6 +48,10 @@ function assinatura(itens: ItemEditor[]): string {
     .join("|");
 }
 
+function alternarTipo(tipo: TipoHabilidade): TipoHabilidade {
+  return tipo === "sei" ? "quero_aprender" : "sei";
+}
+
 export function EditorHabilidades({
   iniciais,
   aoSalvar,
@@ -82,16 +84,6 @@ export function EditorHabilidades({
       .finally(() => setCarregandoCatalogo(false));
   }, []);
 
-  function mover(itemId: string, _de: string, para: string) {
-    if (para !== "sei" && para !== "quero_aprender") return;
-    setItens((atuais) =>
-      atuais.map((item) =>
-        item.id === itemId ? { ...item, tipo: para } : item,
-      ),
-    );
-    setMensagem(null);
-  }
-
   function adicionar(habilidade: HabilidadeResumo) {
     if (
       !habilidade ||
@@ -110,6 +102,29 @@ export function EditorHabilidades({
       },
     ]);
     setTextoHabilidade("");
+    setMensagem(null);
+  }
+
+  function remover(itemId: string) {
+    setItens((atuais) => atuais.filter((item) => item.id !== itemId));
+    setMensagem(null);
+  }
+
+  function mover(itemId: string) {
+    setItens((atuais) =>
+      atuais.map((item) =>
+        item.id === itemId ? { ...item, tipo: alternarTipo(item.tipo) } : item,
+      ),
+    );
+    setMensagem(null);
+  }
+
+  function ajustarNivel(itemId: string, nivel: number) {
+    setItens((atuais) =>
+      atuais.map((item) =>
+        item.id === itemId ? { ...item, nivel } : item,
+      ),
+    );
     setMensagem(null);
   }
 
@@ -155,77 +170,35 @@ export function EditorHabilidades({
       )
     : disponiveis;
 
-  const colunas = [
-    {
-      id: "sei",
-      titulo: "Sei",
-      descricao: "O que você pode ensinar",
-      itens: itens.filter((item) => item.tipo === "sei"),
-    },
-    {
-      id: "quero_aprender",
-      titulo: "Quero aprender",
-      descricao: "O que você procura",
-      itens: itens.filter((item) => item.tipo === "quero_aprender"),
-    },
-  ];
+  const sei = itens.filter((item) => item.tipo === "sei");
+  const quero = itens.filter((item) => item.tipo === "quero_aprender");
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-texto-2">
-        Arraste entre as colunas para organizar. O nível é só informativo.
-      </p>
       {logado === false ? (
         <p className="text-sm text-texto-2">
           Entre na sua conta para editar suas habilidades.
         </p>
       ) : (
         <>
-          <QuadroArrastavel
-            colunas={colunas}
-            aoMover={mover}
-            renderItem={(item) => (
-              <>
-                <TagHabilidade nome={item.nome} tipo={item.tipo} />
-                <select
-                  aria-label={`Nível em ${item.nome}`}
-                  value={item.nivel}
-                  onChange={(evento) => {
-                    const nivel = Number(evento.target.value);
-                    setItens((atuais) =>
-                      atuais.map((atual) =>
-                        atual.id === item.id ? { ...atual, nivel } : atual,
-                      ),
-                    );
-                    setMensagem(null);
-                  }}
-                  onPointerDown={(evento) => evento.stopPropagation()}
-                  className="h-8 rounded-controle border border-linha-forte bg-superficie px-2 text-sm text-texto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
-                >
-                  {[1, 2, 3, 4, 5].map((nivel) => (
-                    <option
-                      key={nivel}
-                      value={nivel}
-                    >{`Nível ${nivel}`}</option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  aria-label={`Remover ${item.nome}`}
-                  onClick={() => {
-                    setItens((atuais) =>
-                      atuais.filter((atual) => atual.id !== item.id),
-                    );
-                    setMensagem(null);
-                  }}
-                  onPointerDown={(evento) => evento.stopPropagation()}
-                  className="flex size-8 items-center justify-center rounded-full text-texto-2 transition-colors duration-[var(--rapido)] hover:bg-superficie hover:text-texto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca motion-reduce:transition-none"
-                >
-                  <Icone nome="fechar" tamanho={16} />
-                </button>
-              </>
-            )}
-          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ColunaHabilidades
+              titulo="Sei"
+              descricao="O que você pode ensinar"
+              itens={sei}
+              onMover={mover}
+              onRemover={remover}
+              onNivel={ajustarNivel}
+            />
+            <ColunaHabilidades
+              titulo="Quero aprender"
+              descricao="O que você procura"
+              itens={quero}
+              onMover={mover}
+              onRemover={remover}
+              onNivel={ajustarNivel}
+            />
+          </div>
 
           <div className="rounded-cartao border border-linha-forte bg-superficie p-4 space-y-4">
             <div className="flex flex-col gap-1">
@@ -250,16 +223,33 @@ export function EditorHabilidades({
                 />
               </div>
               <div className="sm:w-44">
-                <Selecao
-                  rotulo="Vai para"
-                  value={tipoSelecionado}
-                  onChange={(evento) =>
-                    setTipoSelecionado(evento.target.value as TipoHabilidade)
-                  }
-                >
-                  <option value="sei">Sei</option>
-                  <option value="quero_aprender">Quero aprender</option>
-                </Selecao>
+                <label className="mb-1.5 block text-sm font-medium text-texto">
+                  Vai para
+                </label>
+                <div className="flex rounded-controle border border-linha-forte bg-superficie p-1">
+                  <button
+                    type="button"
+                    onClick={() => setTipoSelecionado("sei")}
+                    className={`flex-1 rounded-[8px] py-1.5 text-sm font-medium transition-colors ${
+                      tipoSelecionado === "sei"
+                        ? "bg-marca text-white"
+                        : "text-texto-2 hover:bg-superficie-2"
+                    }`}
+                  >
+                    Sei
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTipoSelecionado("quero_aprender")}
+                    className={`flex-1 rounded-[8px] py-1.5 text-sm font-medium transition-colors ${
+                      tipoSelecionado === "quero_aprender"
+                        ? "bg-marca text-white"
+                        : "text-texto-2 hover:bg-superficie-2"
+                    }`}
+                  >
+                    Quero
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -278,7 +268,7 @@ export function EditorHabilidades({
                       : "Todas as habilidades já foram adicionadas."}
                   </p>
                 ) : (
-                  filtradas.slice(0, 24).map((habilidade) => (
+                  filtradas.slice(0, 30).map((habilidade) => (
                     <button
                       key={habilidade.id}
                       type="button"
@@ -314,6 +304,77 @@ export function EditorHabilidades({
             )}
           </div>
         </>
+      )}
+    </div>
+  );
+}
+
+function ColunaHabilidades({
+  titulo,
+  descricao,
+  itens,
+  onMover,
+  onRemover,
+  onNivel,
+}: {
+  titulo: string;
+  descricao: string;
+  itens: ItemEditor[];
+  onMover: (id: string) => void;
+  onRemover: (id: string) => void;
+  onNivel: (id: string, nivel: number) => void;
+}) {
+  return (
+    <div className="rounded-cartao border border-linha-forte bg-superficie p-4">
+      <div className="mb-3">
+        <h3 className="text-sm font-semibold text-texto">{titulo}</h3>
+        <p className="text-xs text-texto-3">{descricao}</p>
+      </div>
+      {itens.length === 0 ? (
+        <p className="py-4 text-center text-sm text-texto-3">
+          Nenhuma habilidade aqui.
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {itens.map((item) => (
+            <li
+              key={item.id}
+              className="flex items-center gap-2 rounded-controle border border-linha-forte bg-fundo p-2"
+            >
+              <TagHabilidade nome={item.nome} tipo={item.tipo} />
+              <select
+                aria-label={`Nível em ${item.nome}`}
+                value={item.nivel}
+                onChange={(evento) => onNivel(item.id, Number(evento.target.value))}
+                className="h-8 rounded-controle border border-linha-forte bg-superficie px-2 text-sm text-texto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
+              >
+                {[1, 2, 3, 4, 5].map((nivel) => (
+                  <option key={nivel} value={nivel}>{`Nível ${nivel}`}</option>
+                ))}
+              </select>
+              <div className="ml-auto flex items-center gap-1">
+                <button
+                  type="button"
+                  aria-label={`Mover ${item.nome} para ${alternarTipo(item.tipo) === "sei" ? "Sei" : "Quero aprender"}`}
+                  onClick={() => onMover(item.id)}
+                  className="flex size-8 items-center justify-center rounded-full text-texto-2 transition-colors hover:bg-superficie hover:text-texto"
+                  title="Mover"
+                >
+                  <Icone nome="trocar" tamanho={16} />
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Remover ${item.nome}`}
+                  onClick={() => onRemover(item.id)}
+                  className="flex size-8 items-center justify-center rounded-full text-texto-2 transition-colors hover:bg-superficie hover:text-perigo"
+                  title="Remover"
+                >
+                  <Icone nome="fechar" tamanho={16} />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
