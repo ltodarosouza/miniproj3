@@ -35,7 +35,7 @@ Depois validem o ambiente:
 
 ```bash
 make check      # tudo precisa ficar verde
-make seed       # cria 3 usuários de exemplo
+make seed       # cria a rede de demo: 32 usuários, posts, follows e trocas (senha: senha-forte-123)
 make test       # deve mostrar "4 passed, 10 skipped"
 ```
 
