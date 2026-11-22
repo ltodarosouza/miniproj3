@@ -77,3 +77,58 @@ def test_sem_habilidades_devolve_vazio(client, pessoa):
 
 def test_matches_exige_login(client):
     assert client.get("/matches").status_code == 401
+
+
+def test_ordem_por_quantidade_e_depois_alfabetica_sem_acento(client, pessoa):
+    eu = pessoa("eus")
+    zeca = pessoa("zeca", "Zeca")
+    erica = pessoa("erica", "Érica")
+    bruno = pessoa("bruno", "Bruno")
+    marcar(eu, "React", "quero_aprender")
+    marcar(eu, "Cálculo 1", "quero_aprender")
+
+    marcar(zeca, "React", "sei")
+    marcar(zeca, "Cálculo 1", "sei")
+    marcar(erica, "React", "sei")
+    marcar(bruno, "Cálculo 1", "sei")
+
+    corpo = client.get("/matches", headers=eu).json()
+    assert usernames(corpo["pode_te_ensinar"]) == ["zeca", "bruno", "erica"]
+
+
+def test_desempate_alfabetico_na_troca(client, pessoa):
+    eu = pessoa("eus")
+    marcar(eu, "Python", "sei")
+    marcar(eu, "React", "quero_aprender")
+    for username, nome in [("zara", "Zara"), ("alice", "Álice"), ("caio", "caio")]:
+        outra = pessoa(username, nome)
+        marcar(outra, "React", "sei")
+        marcar(outra, "Python", "quero_aprender")
+
+    corpo = client.get("/matches", headers=eu).json()
+    assert usernames(corpo["troca"]) == ["alice", "caio", "zara"]
+    assert corpo["pode_te_ensinar"] == []
+
+
+def test_eu_nunca_apareco_e_candidato_que_sabe_e_quer_o_mesmo(client, pessoa):
+    eu = pessoa("eus")
+    bia = pessoa("bia")
+    marcar(eu, "React", "sei")
+    marcar(eu, "React", "quero_aprender")
+    marcar(bia, "React", "sei")
+    marcar(bia, "React", "quero_aprender")
+
+    corpo = client.get("/matches", headers=eu).json()
+    assert usernames(corpo["troca"]) == ["bia"]
+    assert [h["nome"] for h in corpo["troca"][0]["eu_ensino"]] == ["React"]
+    assert "eus" not in usernames(corpo["troca"]) + usernames(corpo["pode_te_ensinar"])
+
+
+def test_so_sei_e_nao_quero_nada_nao_tem_matches(client, pessoa):
+    eu = pessoa("eus")
+    bia = pessoa("bia")
+    marcar(eu, "Python", "sei")
+    marcar(bia, "Python", "quero_aprender")
+    marcar(bia, "React", "sei")
+
+    assert client.get("/matches", headers=eu).json() == {"troca": [], "pode_te_ensinar": []}

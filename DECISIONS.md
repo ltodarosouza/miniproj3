@@ -39,7 +39,8 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
   deixaria a maioria das pessoas sem nenhum resultado.
 - **Como ficou:** `GET /matches` devolve `troca` e `pode_te_ensinar`. Quem
   está na troca não se repete na outra lista. Dentro de cada grupo, vem
-  primeiro quem tem mais habilidades em comum comigo, com empate pelo nome. O
+  primeiro quem tem mais habilidades em comum comigo (o que a pessoa me ensina
+  mais o que eu ensino a ela), com empate pelo nome sem acento. O
   índice invertido de `core/matches.py` escolhe os candidatos, e o banco só
   completa nome e nível deles.
 
