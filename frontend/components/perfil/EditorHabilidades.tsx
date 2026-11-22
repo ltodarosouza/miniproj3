@@ -121,15 +121,12 @@ export function EditorHabilidades({
     setSalvando(true);
     setMensagem(null);
     try {
+      const enviada = assinatura(itens);
       const resposta = await salvarHabilidades(
-        itens.map(({ habilidade_id, tipo, nivel }) => ({
-          habilidade_id,
-          tipo,
-          nivel,
-        })),
+        itens.map(({ habilidade_id, tipo, nivel }) => ({ habilidade_id, tipo, nivel })),
       );
       const atualizados = converter(resposta);
-      setItens(atualizados);
+      setItens((atuais) => (assinatura(atuais) === enviada ? atualizados : atuais));
       setAssinaturaSalva(assinatura(atualizados));
       setMensagem({ texto: "Habilidades salvas.", erro: false });
       aoSalvar?.(resposta);
