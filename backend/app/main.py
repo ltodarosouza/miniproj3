@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -25,11 +26,35 @@ from app.routers import (
 from app.services.habilidades import garantir_catalogo
 
 
+ORIGEM_LOCAL = "http://localhost:3000"
+
+
+def origens_permitidas() -> list[str]:
+    extras = os.environ.get("CORS_ORIGINS", "")
+    origens = [ORIGEM_LOCAL]
+    for origem in extras.split(","):
+        origem = origem.strip().rstrip("/")
+        if origem and origem not in origens:
+            origens.append(origem)
+    return origens
+
+
+def semear_se_vazio(db) -> None:
+    if os.environ.get("SEED_ON_BOOT") != "true":
+        return
+    if db.scalar(select(User.id).limit(1)) is not None:
+        return
+    from scripts.seed import seed_fake
+
+    seed_fake(db)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
     with SessionLocal() as db:
         garantir_catalogo(db)
+        semear_se_vazio(db)
         usernames = list(db.scalars(select(User.username)))
         indice_matches.reconstruir(
             [
@@ -45,11 +70,18 @@ app = FastAPI(title="Rede Social da Trilha", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=origens_permitidas(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+
+@app.get("/saude", tags=["saude"])
+def saude() -> dict[str, bool]:
+    return {"ok": True}
+
 
 # 1 linha por feature — registre o seu router aqui.
 app.include_router(auth.router)
