@@ -8,6 +8,7 @@ import { logout } from "@/lib/api";
 import { limparSessao, temToken } from "@/lib/sessao";
 
 import { Botao } from "./Botao";
+import { BotaoTema } from "./BotaoTema";
 import { Icone, type NomeIcone } from "./Icone";
 
 const ITENS: { href: string; rotulo: string; icone: NomeIcone }[] = [
@@ -102,6 +103,7 @@ export function Navegacao({ nomeRede }: { nomeRede: string }) {
                 </li>
               ))}
             </ul>
+            <BotaoTema />
             <button
               type="button"
               onClick={sair}
@@ -114,6 +116,7 @@ export function Navegacao({ nomeRede }: { nomeRede: string }) {
 
         {logado === false && (
           <div className="flex items-center gap-1.5">
+            <BotaoTema />
             <Botao variante="fantasma" tamanho="sm" onClick={() => router.push("/login")}>
               Entrar
             </Botao>
