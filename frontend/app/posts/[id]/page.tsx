@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { CaixaComentario } from "@/components/posts/CaixaComentario";
@@ -16,6 +16,7 @@ import { meuId } from "@/lib/sessao";
 
 export default function PaginaPost() {
   const parametros = useParams<{ id: string }>();
+  const roteador = useRouter();
   const id = /^\d+$/.test(parametros.id) ? Number(parametros.id) : 0;
   const [post, setPost] = useState<Post | null>(null);
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
@@ -95,14 +96,13 @@ export default function PaginaPost() {
           <div className="h-24 animate-pulse rounded-cartao bg-superficie-2 motion-reduce:animate-none" />
         </div>
       ) : erro instanceof ErroApi && erro.status === 404 ? (
-        <div className="space-y-3">
-          <p className="text-sm text-texto-2">Esse post não existe mais.</p>
-          {voltar}
-        </div>
+        <p className="text-sm leading-relaxed text-texto-2">
+          Esse post não existe mais. Ele pode ter sido apagado por quem publicou.
+        </p>
       ) : erro ? (
         <div className="space-y-3">
           <p className="text-sm leading-relaxed text-texto-2">
-            {erro instanceof ErroApi ? erro.message : "Não consegui carregar este post. Confira se o backend está rodando e tente de novo."}
+            Não consegui carregar este post. Confira se o backend está rodando e tente de novo.
           </p>
           <Botao variante="secundario" tamanho="sm" onClick={() => void buscar()}>
             Tentar de novo
@@ -110,7 +110,7 @@ export default function PaginaPost() {
         </div>
       ) : post ? (
         <>
-          <CartaoPost key={post.id} post={post} />
+          <CartaoPost key={post.id} post={post} aoApagar={() => roteador.replace("/feed")} />
           <section id="comentarios" aria-labelledby="titulo-comentarios">
             <Cartao className="space-y-5 p-5">
               <h2 id="titulo-comentarios" className="text-lg font-semibold tracking-tight text-texto">

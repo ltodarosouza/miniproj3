@@ -1,19 +1,19 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
+import { Botao } from "@/components/ui/Botao";
 import { BotaoCurtir } from "@/components/ui/BotaoCurtir";
 import { Cartao } from "@/components/ui/Cartao";
 import { Icone } from "@/components/ui/Icone";
 import { TagHabilidade } from "@/components/ui/TagHabilidade";
-import { Botao } from "@/components/ui/Botao";
 import { formatarQuando } from "@/lib/datas";
 import {
+  apagarPost,
   curtirPost,
   descurtirPost,
-  apagarPost,
   formatarTempoEstudado,
   urlDaImagem,
   type Post,
@@ -30,12 +30,17 @@ export function CartaoPost({ post, podeEnsinar = false, aoApagar }: { post: Post
   const [apagado, setApagado] = useState(false);
   const [erroApagar, setErroApagar] = useState(false);
   const rodape = useRef<HTMLElement>(null);
+  const jaConfirmou = useRef(false);
   const perfil = `/perfil/${encodeURIComponent(post.autor.username)}`;
 
   useEffect(() => setSouAutor(meuId() === post.autor.id), [post.autor.id]);
 
   useEffect(() => {
-    if (!confirmando) return;
+    if (!confirmando) {
+      if (jaConfirmou.current) rodape.current?.querySelector<HTMLButtonElement>("[data-apagar]")?.focus();
+      return;
+    }
+    jaConfirmou.current = true;
     rodape.current?.querySelector<HTMLButtonElement>("[data-cancelar]")?.focus();
     function aoPressionar(evento: KeyboardEvent) {
       if (evento.key === "Escape") setConfirmando(false);
@@ -117,7 +122,7 @@ export function CartaoPost({ post, podeEnsinar = false, aoApagar }: { post: Post
             <span className="numeros">{post.comentarios}</span>
           </Link>
           {souAutor && !confirmando && (
-            <button type="button" aria-label="Apagar post" onClick={() => { setErroApagar(false); setConfirmando(true); }} className="ml-auto inline-flex size-8 items-center justify-center rounded-full text-texto-3 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 hover:text-perigo motion-reduce:transition-none">
+            <button data-apagar type="button" aria-label="Apagar post" onClick={() => { setErroApagar(false); setConfirmando(true); }} className="ml-auto inline-flex size-8 items-center justify-center rounded-full text-texto-3 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 hover:text-perigo motion-reduce:transition-none">
               <Icone nome="lixeira" tamanho={17} />
             </button>
           )}

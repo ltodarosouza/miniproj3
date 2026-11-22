@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
@@ -7,7 +7,7 @@ import { CartaoPost } from "@/components/posts/CartaoPost";
 import { FormNovoPost } from "@/components/posts/FormNovoPost";
 import { Botao } from "@/components/ui/Botao";
 import { Revelar } from "@/components/ui/Revelar";
-import { listarFeed, type ItemFeed } from "@/lib/posts";
+import { listarFeed, type ItemFeed, type Post } from "@/lib/posts";
 import { meuId } from "@/lib/sessao";
 
 const POR_PAGINA = 10;
@@ -57,7 +57,7 @@ export default function FeedPage() {
     void buscar(0);
   }
 
-  function aoPublicar(post: import("@/lib/posts").Post) {
+  function aoPublicar(post: Post) {
     setItens((atuais) => [{ ...post, motivo: "seguindo" }, ...atuais.filter((i) => i.id !== post.id)]);
     setTotal((t) => t + 1);
     if (erro && itens.length === 0) setErro(false);
