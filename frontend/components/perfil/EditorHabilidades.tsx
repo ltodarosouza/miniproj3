@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { AutocompleteHabilidade } from "@/components/perfil/AutocompleteHabilidade";
 import { Botao } from "@/components/ui/Botao";
 import { Icone } from "@/components/ui/Icone";
 import { QuadroArrastavel } from "@/components/ui/QuadroArrastavel";
 import { Selecao } from "@/components/ui/Campo";
 import { TagHabilidade } from "@/components/ui/TagHabilidade";
 import { ErroApi, type HabilidadeResumo } from "@/lib/api";
-import { habilidadesAgrupadas } from "@/lib/posts";
 import {
   LIMITE_HABILIDADES,
   salvarHabilidades,
@@ -16,6 +16,7 @@ import {
   type TipoHabilidade,
 } from "@/lib/perfil";
 import { meuId } from "@/lib/sessao";
+import { buscarAutocomplete, mapearHabilidade } from "@/lib/api";
 
 type ItemEditor = {
   id: string;
@@ -52,19 +53,13 @@ export function EditorHabilidades({
   aoSalvar?: (habilidades: HabilidadePerfil[]) => void;
 }) {
   const [itens, setItens] = useState(() => converter(iniciais));
-  const [catalogo, setCatalogo] = useState<{
-    tecnologia: HabilidadeResumo[];
-    disciplinas: HabilidadeResumo[];
-  }>({ tecnologia: [], disciplinas: [] });
-  const [carregando, setCarregando] = useState(true);
-  const [erroCatalogo, setErroCatalogo] = useState(false);
   const [logado, setLogado] = useState<boolean | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [mensagem, setMensagem] = useState<{
     texto: string;
     erro: boolean;
   } | null>(null);
-  const [habilidadeSelecionada, setHabilidadeSelecionada] = useState("");
+  const [textoHabilidade, setTextoHabilidade] = useState("");
   const [tipoSelecionado, setTipoSelecionado] = useState<TipoHabilidade>("sei");
   const [assinaturaSalva, setAssinaturaSalva] = useState(() =>
     assinatura(converter(iniciais)),
@@ -73,10 +68,6 @@ export function EditorHabilidades({
 
   useEffect(() => {
     setLogado(meuId() !== null);
-    habilidadesAgrupadas()
-      .then(setCatalogo)
-      .catch(() => setErroCatalogo(true))
-      .finally(() => setCarregando(false));
   }, []);
 
   function mover(itemId: string, _de: string, para: string) {
@@ -89,14 +80,10 @@ export function EditorHabilidades({
     setMensagem(null);
   }
 
-  function adicionar() {
-    const id = Number(habilidadeSelecionada);
-    const habilidade = [...catalogo.tecnologia, ...catalogo.disciplinas].find(
-      (item) => item.id === id,
-    );
+  function adicionar(habilidade: HabilidadeResumo) {
     if (
       !habilidade ||
-      itens.some((item) => item.habilidade_id === id) ||
+      itens.some((item) => item.habilidade_id === habilidade.id) ||
       itens.length >= LIMITE_HABILIDADES
     )
       return;
@@ -110,7 +97,7 @@ export function EditorHabilidades({
         nivel: 1,
       },
     ]);
-    setHabilidadeSelecionada("");
+    setTextoHabilidade("");
     setMensagem(null);
   }
 
@@ -144,11 +131,6 @@ export function EditorHabilidades({
     }
   }
 
-  const disponiveis = (lista: HabilidadeResumo[]) =>
-    lista.filter(
-      (habilidade) =>
-        !itens.some((item) => item.habilidade_id === habilidade.id),
-    );
   const colunas = [
     {
       id: "sei",
@@ -221,31 +203,19 @@ export function EditorHabilidades({
             )}
           />
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
             <div className="min-w-0 flex-1">
-              <Selecao
+              <AutocompleteHabilidade
                 rotulo="Habilidade"
-                value={habilidadeSelecionada}
-                onChange={(evento) =>
-                  setHabilidadeSelecionada(evento.target.value)
-                }
-              >
-                <option value="">Escolha uma habilidade</option>
-                <optgroup label="Tecnologia">
-                  {disponiveis(catalogo.tecnologia).map((habilidade) => (
-                    <option key={habilidade.id} value={habilidade.id}>
-                      {habilidade.nome}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Disciplinas">
-                  {disponiveis(catalogo.disciplinas).map((habilidade) => (
-                    <option key={habilidade.id} value={habilidade.id}>
-                      {habilidade.nome}
-                    </option>
-                  ))}
-                </optgroup>
-              </Selecao>
+                placeholder="Digite Python, React, Cálculo 1..."
+                value={textoHabilidade}
+                onChange={setTextoHabilidade}
+                onSelect={adicionar}
+                buscarSugestoes={buscarAutocomplete}
+                mapearTexto={mapearHabilidade}
+                habilidadesExistentes={itens.map((item) => item.habilidade_id)}
+                disabled={itens.length >= LIMITE_HABILIDADES}
+              />
             </div>
             <div className="sm:w-44">
               <Selecao
@@ -259,26 +229,7 @@ export function EditorHabilidades({
                 <option value="quero_aprender">Quero aprender</option>
               </Selecao>
             </div>
-            <Botao
-              variante="secundario"
-              onClick={adicionar}
-              disabled={
-                !habilidadeSelecionada || itens.length >= LIMITE_HABILIDADES
-              }
-            >
-              <Icone nome="mais" tamanho={16} />
-              Adicionar
-            </Botao>
           </div>
-
-          {carregando && (
-            <p className="text-sm text-texto-2">Carregando habilidades…</p>
-          )}
-          {erroCatalogo && (
-            <p role="alert" className="text-sm text-perigo">
-              Não consegui carregar o catálogo. Recarregue a página.
-            </p>
-          )}
 
           <div className="flex flex-wrap items-center gap-3">
             <Botao
