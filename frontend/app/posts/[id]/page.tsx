@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CaixaComentario } from "@/components/posts/CaixaComentario";
 import { CartaoPost } from "@/components/posts/CartaoPost";
@@ -20,6 +20,9 @@ export default function PaginaPost() {
   const id = /^\d+$/.test(parametros.id) ? Number(parametros.id) : 0;
   const [post, setPost] = useState<Post | null>(null);
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
+  const [totalComentarios, setTotalComentarios] = useState(0);
+  const idAtual = useRef(id);
+  idAtual.current = id;
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<unknown>(null);
   const [logado, setLogado] = useState(true);
@@ -40,6 +43,7 @@ export default function PaginaPost() {
       if (!ativo()) return;
       setPost(postEncontrado);
       setComentarios(paginaComentarios.items);
+      setTotalComentarios(paginaComentarios.total);
     } catch (falha) {
       if (!ativo()) return;
       setErro(falha);
@@ -65,8 +69,11 @@ export default function PaginaPost() {
   }, [buscar]);
 
   async function comentarioNovo(texto: string) {
-    const novo = await comentar(id, texto);
+    const idDoPost = id;
+    const novo = await comentar(idDoPost, texto);
+    if (idAtual.current !== idDoPost) return;
     setComentarios((atuais) => atuais.some((comentario) => comentario.id === novo.id) ? atuais : [...atuais, novo]);
+    setTotalComentarios((total) => total + 1);
     setPost((atual) => atual && { ...atual, comentarios: atual.comentarios + 1 });
   }
 
@@ -101,7 +108,7 @@ export default function PaginaPost() {
         </p>
       ) : erro ? (
         <div className="space-y-3">
-          <p className="text-sm leading-relaxed text-texto-2">
+          <p role="alert" className="text-sm leading-relaxed text-texto-2">
             Não consegui carregar este post. Confira se o backend está rodando e tente de novo.
           </p>
           <Botao variante="secundario" tamanho="sm" onClick={() => void buscar()}>
@@ -114,7 +121,7 @@ export default function PaginaPost() {
           <section id="comentarios" aria-labelledby="titulo-comentarios">
             <Cartao className="space-y-5 p-5">
               <h2 id="titulo-comentarios" className="text-lg font-semibold tracking-tight text-texto">
-                Comentários <span className="numeros font-normal text-texto-3">{comentarios.length}</span>
+                Comentários <span className="numeros font-normal text-texto-3">{totalComentarios}</span>
               </h2>
               <ListaComentarios comentarios={comentarios} />
               <div className="border-t border-linha pt-5">

@@ -135,6 +135,9 @@ export function CartaoPost({ post, podeEnsinar = false, aoApagar }: { post: Post
                 setErroApagar(false);
                 try {
                   await apagarPost(post.id);
+                  const item = rodape.current?.closest("li");
+                  const vizinho = item?.nextElementSibling ?? item?.previousElementSibling;
+                  vizinho?.querySelector<HTMLElement>("a, button")?.focus();
                   setApagado(true);
                   aoApagar?.(post.id);
                 } catch {

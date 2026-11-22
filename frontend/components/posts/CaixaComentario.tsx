@@ -55,7 +55,7 @@ export function CaixaComentario({ aoComentar }: { aoComentar: (texto: string) =>
     >
       <div ref={formulario}>
         <AreaTexto
-          rotulo="Comentar"
+          rotulo="Seu comentário"
           placeholder="Escreva um comentário"
           rows={2}
           maxLength={LIMITE_TEXTO_COMENTARIO}

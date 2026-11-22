@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 
 import { AreaTexto, Campo, Selecao } from "@/components/ui/Campo";
 import { Botao } from "@/components/ui/Botao";
@@ -19,7 +25,11 @@ import {
   type Post,
 } from "@/lib/posts";
 
-export function FormNovoPost({ aoPublicar }: { aoPublicar: (post: Post) => void }) {
+export function FormNovoPost({
+  aoPublicar,
+}: {
+  aoPublicar: (post: Post) => void;
+}) {
   const [texto, setTexto] = useState("");
   const [habilidadeId, setHabilidadeId] = useState("");
   const [minutos, setMinutos] = useState("");
@@ -33,23 +43,28 @@ export function FormNovoPost({ aoPublicar }: { aoPublicar: (post: Post) => void 
   const [foto, setFoto] = useState<File | null>(null);
   const [urlPrevia, setUrlPrevia] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [aberto, setAberto] = useState(false);
   const entradaFoto = useRef<HTMLInputElement>(null);
   const urlAtual = useRef("");
   const envioAtivo = useRef(false);
 
   useEffect(() => {
     let ativo = true;
-    void habilidadesAgrupadas().then((resultado) => {
-      if (ativo) {
-        setGrupos(resultado);
-        setHabilidadesCarregadas(true);
-      }
-    }).catch(() => {
-      if (ativo) {
-        setErroHabilidades("Não consegui carregar as habilidades. Você pode publicar sem habilidade.");
-        setHabilidadesCarregadas(true);
-      }
-    });
+    void habilidadesAgrupadas()
+      .then((resultado) => {
+        if (ativo) {
+          setGrupos(resultado);
+          setHabilidadesCarregadas(true);
+        }
+      })
+      .catch(() => {
+        if (ativo) {
+          setErroHabilidades(
+            "Não consegui carregar as habilidades. Você pode publicar sem habilidade.",
+          );
+          setHabilidadesCarregadas(true);
+        }
+      });
     return () => {
       ativo = false;
       if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
@@ -89,7 +104,11 @@ export function FormNovoPost({ aoPublicar }: { aoPublicar: (post: Post) => void 
       return;
     }
     const numero = Number(valor);
-    setErroMinutos(Number.isInteger(numero) && numero >= 1 && numero <= LIMITE_MINUTOS ? "" : "Informe um número inteiro entre 1 e 1440.");
+    setErroMinutos(
+      Number.isInteger(numero) && numero >= 1 && numero <= LIMITE_MINUTOS
+        ? ""
+        : "Informe um número inteiro entre 1 e 1440.",
+    );
   }
 
   async function publicar(evento: FormEvent<HTMLFormElement>) {
@@ -97,8 +116,14 @@ export function FormNovoPost({ aoPublicar }: { aoPublicar: (post: Post) => void 
     if (envioAtivo.current) return;
     const textoLimpo = texto.trim();
     const numeroMinutos = minutos ? Number(minutos) : null;
-    const minutosInvalidos = numeroMinutos !== null && (!Number.isInteger(numeroMinutos) || numeroMinutos < 1 || numeroMinutos > LIMITE_MINUTOS);
-    setErroMinutos(minutosInvalidos ? "Informe um número inteiro entre 1 e 1440." : "");
+    const minutosInvalidos =
+      numeroMinutos !== null &&
+      (!Number.isInteger(numeroMinutos) ||
+        numeroMinutos < 1 ||
+        numeroMinutos > LIMITE_MINUTOS);
+    setErroMinutos(
+      minutosInvalidos ? "Informe um número inteiro entre 1 e 1440." : "",
+    );
     if (!textoLimpo || minutosInvalidos) return;
     envioAtivo.current = true;
     setEnviando(true);
@@ -115,16 +140,23 @@ export function FormNovoPost({ aoPublicar }: { aoPublicar: (post: Post) => void 
         try {
           final = { ...post, imagem_url: await enviarImagem(post.id, foto) };
         } catch (erro) {
-          setAvisoFoto(`Seu post foi publicado, mas a foto não subiu: ${erro instanceof ErroApi ? erro.message : "tente de novo mais tarde."}`);
+          setAvisoFoto(
+            `Seu post foi publicado, mas a foto não subiu: ${erro instanceof ErroApi ? erro.message : "tente de novo mais tarde."}`,
+          );
         }
       }
       aoPublicar(final);
+      setAberto(false);
       setTexto("");
       setHabilidadeId("");
       setMinutos("");
       limparFoto();
     } catch (erro) {
-      setErroEnvio(erro instanceof ErroApi ? erro.message : "Não consegui publicar seu post. Tente de novo.");
+      setErroEnvio(
+        erro instanceof ErroApi
+          ? erro.message
+          : "Não consegui publicar seu post. Tente de novo.",
+      );
     } finally {
       envioAtivo.current = false;
       setEnviando(false);
@@ -135,7 +167,11 @@ export function FormNovoPost({ aoPublicar }: { aoPublicar: (post: Post) => void 
 
   return (
     <Cartao className="p-5">
-      <form onSubmit={publicar} className="space-y-4">
+      <form
+        onSubmit={publicar}
+        onFocus={() => setAberto(true)}
+        className="space-y-4"
+      >
         <AreaTexto
           rotulo="O que você estudou hoje?"
           required
@@ -147,49 +183,120 @@ export function FormNovoPost({ aoPublicar }: { aoPublicar: (post: Post) => void 
             setAvisoFoto("");
           }}
         />
-        {texto.length >= 900 && <p className="text-right text-xs text-texto-3"><span className="numeros">{texto.length}/1000</span></p>}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Selecao rotulo="Habilidade" value={habilidadeId} onChange={(evento) => setHabilidadeId(evento.target.value)} disabled={!habilidadesCarregadas} erro={erroHabilidades || undefined}>
-            {!habilidadesCarregadas ? <option value="">Carregando habilidades...</option> : <>
-              <option value="">Sem habilidade</option>
-              <optgroup label="Tecnologia">{grupos?.tecnologia.map((habilidade) => <option key={habilidade.id} value={habilidade.id}>{habilidade.nome}</option>)}</optgroup>
-              <optgroup label="Disciplinas">{grupos?.disciplinas.map((habilidade) => <option key={habilidade.id} value={habilidade.id}>{habilidade.nome}</option>)}</optgroup>
-            </>}
-          </Selecao>
-          <Campo
-            type="number"
-            rotulo="Tempo estudado (min)"
-            min={1}
-            max={LIMITE_MINUTOS}
-            inputMode="numeric"
-            value={minutos}
-            onChange={(evento) => alterarMinutos(evento.target.value)}
-            erro={erroMinutos || undefined}
-            dica={minutosValidos ? `${formatarTempoEstudado(minutosValidos)} de estudo` : undefined}
-          />
-        </div>
+        {texto.length >= 900 && (
+          <p className="text-right text-xs text-texto-3">
+            <span className="numeros">{texto.length}/1000</span>
+          </p>
+        )}
+        {(aberto || foto) && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Selecao
+              rotulo="Habilidade"
+              value={habilidadeId}
+              onChange={(evento) => setHabilidadeId(evento.target.value)}
+              disabled={!habilidadesCarregadas}
+              erro={erroHabilidades || undefined}
+            >
+              {!habilidadesCarregadas ? (
+                <option value="">Carregando habilidades...</option>
+              ) : (
+                <>
+                  <option value="">Sem habilidade</option>
+                  <optgroup label="Tecnologia">
+                    {grupos?.tecnologia.map((habilidade) => (
+                      <option key={habilidade.id} value={habilidade.id}>
+                        {habilidade.nome}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Disciplinas">
+                    {grupos?.disciplinas.map((habilidade) => (
+                      <option key={habilidade.id} value={habilidade.id}>
+                        {habilidade.nome}
+                      </option>
+                    ))}
+                  </optgroup>
+                </>
+              )}
+            </Selecao>
+            <Campo
+              type="number"
+              rotulo="Tempo estudado (min)"
+              min={1}
+              max={LIMITE_MINUTOS}
+              inputMode="numeric"
+              value={minutos}
+              onChange={(evento) => alterarMinutos(evento.target.value)}
+              erro={erroMinutos || undefined}
+              dica={
+                minutosValidos
+                  ? `${formatarTempoEstudado(minutosValidos)} de estudo`
+                  : undefined
+              }
+            />
+          </div>
+        )}
         <div className="space-y-2">
           {urlPrevia && (
             <div className="relative">
-              <img src={urlPrevia} alt="Prévia da foto" className="max-h-64 w-full rounded-controle object-cover ring-1 ring-linha" />
-              <Botao type="button" variante="fantasma" tamanho="sm" onClick={limparFoto} aria-label="Remover foto" className="absolute right-2 top-2 size-8 rounded-full bg-superficie px-0 text-texto shadow-cartao ring-1 ring-linha">
+              <img
+                src={urlPrevia}
+                alt="Prévia da foto"
+                className="max-h-64 w-full rounded-controle object-cover ring-1 ring-linha"
+              />
+              <button
+                type="button"
+                onClick={limparFoto}
+                aria-label="Remover foto"
+                className="absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-full bg-superficie text-texto shadow-cartao ring-1 ring-linha transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
+              >
                 <Icone nome="fechar" tamanho={16} />
-              </Botao>
+              </button>
             </div>
           )}
-          <input ref={entradaFoto} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={escolherFoto} />
+          <input
+            ref={entradaFoto}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+            onChange={escolherFoto}
+          />
           <div className="flex items-center justify-between gap-3">
-            <Botao type="button" variante="fantasma" tamanho="sm" onClick={() => entradaFoto.current?.click()}>
+            <Botao
+              type="button"
+              variante="fantasma"
+              tamanho="sm"
+              onClick={() => entradaFoto.current?.click()}
+            >
               <Icone nome="imagem" tamanho={17} />
               {foto ? "Trocar foto" : "Adicionar foto"}
             </Botao>
-            <Botao type="submit" magnetico carregando={enviando} disabled={!texto.trim()}>
+            <Botao
+              type="submit"
+              magnetico
+              carregando={enviando}
+              disabled={!texto.trim()}
+            >
               Publicar
             </Botao>
           </div>
-          {erroFoto && <p role="alert" className="text-sm text-perigo">{erroFoto}</p>}
-          {erroEnvio && <p role="alert" className="text-sm text-perigo">{erroEnvio}</p>}
-          {avisoFoto && <p role="alert" className="text-sm text-perigo">{avisoFoto}</p>}
+          {erroFoto && (
+            <p role="alert" className="text-sm text-perigo">
+              {erroFoto}
+            </p>
+          )}
+          {erroEnvio && (
+            <p role="alert" className="text-sm text-perigo">
+              {erroEnvio}
+            </p>
+          )}
+          {avisoFoto && (
+            <p role="alert" className="text-sm text-perigo">
+              {avisoFoto}
+            </p>
+          )}
         </div>
       </form>
     </Cartao>
