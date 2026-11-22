@@ -8,10 +8,10 @@ import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { Cartao } from "@/components/ui/Cartao";
 import { TagHabilidade } from "@/components/ui/TagHabilidade";
 import { ErroApi, listarMatches, type Match, type Matches } from "@/lib/api";
-import { meuId } from "@/lib/sessao";
+import { limparSessao, meuId } from "@/lib/sessao";
 
 const LINK_TEXTO =
-  "font-medium text-marca-forte underline-offset-2 hover:underline";
+  "font-medium text-marca-forte underline underline-offset-2";
 
 function CartaoMatch({ match, troca }: { match: Match; troca: boolean }) {
   const { usuario, me_ensina, eu_ensino } = match;
@@ -112,6 +112,7 @@ export default function Pagina() {
       setDados(await listarMatches());
     } catch (err) {
       if (err instanceof ErroApi && err.status === 401) {
+        limparSessao();
         setLogado(false);
         return;
       }
@@ -130,10 +131,15 @@ export default function Pagina() {
   }, [carregar]);
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-semibold tracking-tight text-texto">
-        Matches
-      </h1>
+    <div className="mx-auto w-full max-w-2xl space-y-8">
+      <header>
+        <h1 className="text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">
+          Matches
+        </h1>
+        <p className="mt-1 text-sm text-texto-2">
+          Quem pode te ensinar o que você quer aprender, e com quem dá para trocar.
+        </p>
+      </header>
 
       {logado === false && (
         <p className="text-sm leading-relaxed text-texto-2">
@@ -162,7 +168,7 @@ export default function Pagina() {
             {[0, 1, 2].map((i) => (
               <li
                 key={i}
-                className="h-28 animate-pulse rounded-cartao bg-superficie-2"
+                className="h-28 animate-pulse rounded-cartao bg-superficie-2 motion-reduce:animate-none"
               />
             ))}
           </ul>
