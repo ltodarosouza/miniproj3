@@ -216,9 +216,12 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
   seguidores/seguindo, streak de estudo, média e total de avaliações
   pós-troca, e os posts da pessoa paginados. O perfil também exibe as
   habilidades separadas em "Sei" e "Quero aprender" quando a pessoa já as
-  cadastrou — via seed ou pela implementação que será feita na Feature 3. A
-  edição de habilidades fica para a Feature 3, porque depende do catálogo,
-  trie, autocomplete e mapeamento por IA.
+  cadastrou. A edição entrou antes do resto da Feature 3, porque sem ela
+  uma conta nova não tinha matches: `/perfil/editar` tem um quadro "Sei" /
+  "Quero aprender" com nível, escolhendo do catálogo numa lista, e salva com
+  `PUT /usuarios/eu/habilidades` (lista completa, atualiza o índice de
+  matches na hora). Trie, autocomplete e mapeamento por IA continuam na
+  Feature 3 e entram no lugar da lista.
 - **Como ficou:**
   - `GET /usuarios/{username}` é público e devolve `PerfilOut` com `id`,
     `username`, `name`, `bio`, `avatar_url`, `created_at`, `seguidores`,
