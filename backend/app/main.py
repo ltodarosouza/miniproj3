@@ -1,9 +1,13 @@
+import logging
 import os
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
+
+load_dotenv()
 
 from app.core.contadores import contador_iniciais
 from app.core.matches import indice_matches
@@ -23,7 +27,12 @@ from app.routers import (
     trocas,
     users,
 )
-from app.services.habilidades import garantir_catalogo
+from app.services.habilidades import garantir_catalogo, reconstruir_trie
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
 
 
 ORIGEM_LOCAL = "http://localhost:3000"
@@ -54,6 +63,7 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
     with SessionLocal() as db:
         garantir_catalogo(db)
+        reconstruir_trie(db)
         semear_se_vazio(db)
         usernames = list(db.scalars(select(User.username)))
         indice_matches.reconstruir(
@@ -75,7 +85,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 
 @app.get("/saude", tags=["saude"])

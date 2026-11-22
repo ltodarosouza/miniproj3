@@ -223,6 +223,14 @@ export function listarHabilidades(): Promise<{ items: HabilidadeResumo[] }> {
   return apiGet("/habilidades");
 }
 
+export function buscarAutocomplete(prefixo: string): Promise<{ items: HabilidadeResumo[] }> {
+  return apiGet(`/habilidades/autocomplete?prefixo=${encodeURIComponent(prefixo)}`);
+}
+
+export function mapearHabilidade(texto: string): Promise<{ habilidade: HabilidadeResumo | null }> {
+  return apiPost("/habilidades/mapear", { texto });
+}
+
 export function listarTrocas(comUsername?: string): Promise<{ items: Troca[] }> {
   const filtro = comUsername ? `?com=${encodeURIComponent(comUsername)}` : "";
   return apiGet(`/trocas${filtro}`);

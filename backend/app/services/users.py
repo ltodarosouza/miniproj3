@@ -11,8 +11,8 @@ from app.models.user import User
 from app.models.user_habilidade import UserHabilidade
 from app.schemas.post import PostOut, PostPage
 from app.schemas.user import (
-    HabilidadePerfilOut,
     HabilidadeItem,
+    HabilidadePerfilOut,
     PerfilOut,
     PerfilUpdate,
     UserCreate,

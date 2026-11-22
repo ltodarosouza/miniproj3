@@ -13,8 +13,8 @@ from app.deps import get_current_user, get_current_user_opcional
 from app.models.user import User
 from app.schemas.post import PostPage
 from app.schemas.user import (
-    HabilidadePerfilOut,
     HabilidadeItem,
+    HabilidadePerfilOut,
     PerfilOut,
     PerfilUpdate,
     UserCreate,

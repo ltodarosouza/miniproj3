@@ -1,7 +1,15 @@
+import difflib
+import logging
+import unicodedata
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.catalogo import trie_habilidades
 from app.models.habilidade import Habilidade
+from app.services import ia_mapeador
+
+logger = logging.getLogger(__name__)
 
 CATALOGO = [
     ("Python", "tech"),
@@ -63,3 +71,59 @@ def garantir_catalogo(db: Session) -> None:
         if nome not in existentes
     )
     db.commit()
+
+
+def reconstruir_trie(db: Session) -> None:
+    habilidades = list(
+        db.execute(select(Habilidade.id, Habilidade.nome).order_by(Habilidade.nome))
+    )
+    trie_habilidades.reconstruir(
+        [(habilidade_id, nome) for habilidade_id, nome in habilidades]
+    )
+
+
+def autocomplete(db: Session, prefixo: str, limite: int = 10) -> list[Habilidade]:
+    sugestoes = trie_habilidades.buscar(prefixo, limite)
+    if not sugestoes:
+        return []
+    ids = [habilidade_id for habilidade_id, _ in sugestoes]
+    habilidades = {
+        h.id: h
+        for h in db.scalars(select(Habilidade).where(Habilidade.id.in_(ids)))
+    }
+    return [habilidades[habilidade_id] for habilidade_id, _ in sugestoes]
+
+
+def _sem_acento(texto: str) -> str:
+    decomposto = unicodedata.normalize("NFKD", texto)
+    return "".join(c for c in decomposto if not unicodedata.combining(c)).casefold()
+
+
+def mapear_texto(db: Session, texto: str) -> Habilidade | None:
+    nomes = list(db.scalars(select(Habilidade.nome)))
+    if not nomes:
+        return None
+
+    nome_mapeado = ia_mapeador.mapear(texto, nomes)
+    if nome_mapeado:
+        return db.scalar(select(Habilidade).where(Habilidade.nome == nome_mapeado))
+
+    normalizado_para_original = {_sem_acento(nome): nome for nome in nomes}
+    texto_normalizado = _sem_acento(texto)
+    proximos = difflib.get_close_matches(
+        texto_normalizado,
+        list(normalizado_para_original.keys()),
+        n=1,
+        cutoff=0.5,
+    )
+    if not proximos:
+        logger.info("Fallback difflib não encontrou correspondência para %r.", texto)
+        return None
+
+    nome_original = normalizado_para_original[proximos[0]]
+    logger.info("Fallback difflib mapeou %r -> %r", texto, nome_original)
+    return db.scalar(select(Habilidade).where(Habilidade.nome == nome_original))
+
+
+def buscar_por_id(db: Session, habilidade_id: int) -> Habilidade | None:
+    return db.scalar(select(Habilidade).where(Habilidade.id == habilidade_id))
