@@ -56,17 +56,39 @@ function Contador({
   );
 }
 
-function SecaoHabilidades({ habilidades }: { habilidades: Perfil["habilidades"] }) {
+function SecaoHabilidades({ habilidades, souEu }: { habilidades: Perfil["habilidades"]; souEu: boolean }) {
   const sei = habilidades.filter((h) => h.tipo === "sei");
   const quero = habilidades.filter((h) => h.tipo === "quero_aprender");
 
-  if (sei.length === 0 && quero.length === 0) return null;
+  if (sei.length === 0 && quero.length === 0) {
+    if (!souEu) return null;
+    return (
+      <div className="space-y-3 rounded-cartao border border-dashed border-linha-forte p-5">
+        <p className="text-sm text-texto-2">
+          Você ainda não disse o que sabe nem o que quer aprender. Sem isso, os matches ficam vazios.
+        </p>
+        <BotaoLink tamanho="sm" href="/perfil/editar#habilidades">
+          Adicionar habilidades
+        </BotaoLink>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       {sei.length > 0 && (
         <section>
-          <h2 className="mb-2 text-sm font-medium text-texto-2">Sei</h2>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-medium text-texto-2">Sei</h2>
+            {souEu && (
+              <Link
+                href="/perfil/editar#habilidades"
+                className="text-sm font-medium text-marca-forte hover:underline"
+              >
+                Editar habilidades
+              </Link>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
             {sei.map((h) => (
               <TagHabilidade key={h.id} nome={h.nome} tipo="sei" nivel={h.nivel} />
@@ -249,7 +271,7 @@ export default function PerfilPage() {
           </div>
         </Cartao>
 
-        <SecaoHabilidades habilidades={perfil.habilidades} />
+        <SecaoHabilidades habilidades={perfil.habilidades} souEu={souEu} />
 
         <section className="space-y-4">
           <h2 className="text-lg font-semibold tracking-tight text-texto">
