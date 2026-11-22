@@ -39,14 +39,28 @@ def test_seed_tem_conversas_e_trocas_avaliadas(client):
         assert db.scalar(select(func.count()).select_from(Avaliacao)) >= 10
 
 
+def retrato_do_seed():
+    from app.models.follow import Follow
+    from app.models.post import Post
+
+    rodar_seed()
+    with SessionLocal() as db:
+        return (
+            [(u.username, u.name, u.bio) for u in db.scalars(select(User).order_by(User.id))],
+            sorted((uh.usuario_id, uh.habilidade_id, uh.tipo, uh.nivel) for uh in db.scalars(select(UserHabilidade))),
+            [(p.autor_id, p.texto, p.habilidade_id) for p in db.scalars(select(Post).order_by(Post.id))],
+            sorted((f.seguidor_id, f.seguido_id) for f in db.scalars(select(Follow))),
+            [(t.proposta_por_id, t.com_id, t.status) for t in db.scalars(select(Troca).order_by(Troca.id))],
+        )
+
+
 def test_seed_e_deterministico(client):
-    primeira = [(u.username, u.name) for u in rodar_seed()]
     from app.db import Base, engine
 
+    primeira = retrato_do_seed()
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
-    segunda = [(u.username, u.name) for u in rodar_seed()]
-    assert primeira == segunda
+    assert retrato_do_seed() == primeira
 
 
 def test_usuario_do_seed_loga_e_ve_troca_no_endpoint(client):
@@ -56,3 +70,27 @@ def test_usuario_do_seed_loga_e_ve_troca_no_endpoint(client):
     token = r.json()["token"]
     corpo = client.get("/matches", headers={"Authorization": f"Bearer {token}"}).json()
     assert usuarios[1].username in [m["usuario"]["username"] for m in corpo["troca"]]
+
+
+def test_seed_tem_streak_de_varios_dias(client):
+    from app.services.streak import streak_do_usuario
+
+    usuarios = rodar_seed()
+    with SessionLocal() as db:
+        maior = max(streak_do_usuario(db, u.id) for u in usuarios)
+    assert maior >= 4
+
+
+def test_ninguem_curte_o_proprio_post(client):
+    from app.models.curtida import Curtida
+    from app.models.post import Post
+
+    rodar_seed()
+    with SessionLocal() as db:
+        proprias = db.scalar(
+            select(func.count())
+            .select_from(Curtida)
+            .join(Post, Post.id == Curtida.post_id)
+            .where(Post.autor_id == Curtida.usuario_id)
+        )
+    assert proprias == 0

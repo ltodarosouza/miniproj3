@@ -2,7 +2,7 @@ import random
 import re
 import sys
 import unicodedata
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -57,7 +57,7 @@ PARES_DE_TROCA = [
 ]
 
 BIOS = [
-    "calouro tentando sobreviver ao primeiro período",
+    "no primeiro período e tentando sobreviver",
     "estudando um pouco todo dia",
     "migrando de área, aprendendo do zero",
     "monitor nas horas vagas",
@@ -73,7 +73,7 @@ ROTINAS = [
     "Primeira vez que entendi de verdade uma parte de {hab}. Foram {min} min.",
     "{min} minutos de {hab} antes da aula. Pouco, mas todo dia conta.",
     "Lista de {hab} feita ({min} min). Alguém quer comparar as respostas?",
-    "Assisti uma aula de {hab} e refiz os exemplos sozinho, {min} minutos.",
+    "Assisti uma aula de {hab} e refiz os exemplos por conta própria, {min} minutos.",
     "Hoje o {hab} venceu: {min} minutos e ainda não entendi. Amanhã eu volto.",
 ]
 
@@ -188,6 +188,14 @@ def _criar_follows(db: Session, usuarios: list[User], sorteio: random.Random) ->
     )
 
 
+def _momento_do_dia(dia: int, sorteio: random.Random) -> datetime:
+    agora = agora_utc()
+    meia_noite = agora.replace(hour=0, minute=0, second=0, microsecond=0)
+    if dia == 0:
+        return meia_noite + (agora - meia_noite) / 2
+    return meia_noite - timedelta(days=dia) + timedelta(hours=sorteio.randint(8, 20))
+
+
 def _criar_posts(
     db: Session,
     usuarios: list[User],
@@ -195,7 +203,6 @@ def _criar_posts(
     nomes: dict[int, str],
     sorteio: random.Random,
 ) -> list[Post]:
-    agora = agora_utc()
     posts: list[Post] = []
     for indice, usuario in enumerate(usuarios):
         sei, quero = perfis[usuario.id]
@@ -212,7 +219,7 @@ def _criar_posts(
                     texto=sorteio.choice(ROTINAS).format(min=minutos, hab=nomes[habilidade_id]),
                     habilidade_id=habilidade_id,
                     minutos_estudados=minutos,
-                    created_at=agora - timedelta(days=dia, hours=sorteio.randint(0, 10)),
+                    created_at=_momento_do_dia(dia, sorteio),
                 )
             )
     db.add_all(posts)
@@ -225,7 +232,9 @@ def _criar_curtidas_e_comentarios(
 ) -> None:
     curtidas: set[tuple[int, int]] = set()
     while len(curtidas) < 120:
-        curtidas.add((sorteio.choice(usuarios).id, sorteio.choice(posts).id))
+        usuario, post = sorteio.choice(usuarios), sorteio.choice(posts)
+        if usuario.id != post.autor_id:
+            curtidas.add((usuario.id, post.id))
     por_id = {p.id: p for p in posts}
     db.add_all(
         Curtida(
@@ -268,7 +277,7 @@ def _criar_conversas_e_trocas(
             proposta_por_id=a.id,
             com_id=b.id,
             data_hora=inicio + timedelta(days=2) if ja_aconteceu else agora + timedelta(days=i - 3),
-            link_meet="https://meet.google.com/abc-defg-hij",
+            link_meet=f"https://meet.google.com/trl-{i:04d}-dmo",
             habilidade_ensino_id=ids[sabe],
             habilidade_aprendo_id=ids[quer],
             status="confirmada" if i != 7 else "proposta",
