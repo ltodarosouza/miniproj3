@@ -49,7 +49,11 @@ def _nivel_do_meu_lado(
     )
     return {
         usuario_id: sorted(
-            (h.model_copy(update={"nivel": meus_niveis.get(h.id, h.nivel)}) for h in itens),
+            (
+                h.model_copy(update={"nivel": meus_niveis[h.id]})
+                for h in itens
+                if h.id in meus_niveis
+            ),
             key=lambda h: (-h.nivel, h.nome),
         )
         for usuario_id, itens in ensinaveis.items()

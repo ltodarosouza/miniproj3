@@ -4,13 +4,10 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
-import { Botao } from "@/components/ui/Botao";
+import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { Cartao } from "@/components/ui/Cartao";
 import { TagHabilidade } from "@/components/ui/TagHabilidade";
 import { ErroApi, listarMatches, type Match, type Matches } from "@/lib/api";
-
-const LINK_CONVERSAR =
-  "inline-flex h-8 items-center rounded-controle px-3 text-sm font-medium transition-[background-color,border-color,color,filter] duration-[var(--rapido)] ease-saida focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca";
 
 const LINK_PERFIL =
   "font-medium text-marca-forte underline-offset-2 hover:underline";
@@ -18,24 +15,25 @@ const LINK_PERFIL =
 function CartaoMatch({ match, troca }: { match: Match; troca: boolean }) {
   const { usuario, me_ensina, eu_ensino } = match;
   return (
-    <Cartao className={`space-y-3 p-4 ${troca ? "ring-1 ring-troca" : ""}`}>
+    <Cartao
+      interativo
+      className={`space-y-3 p-4 ${troca ? "ring-1 ring-troca" : ""}`}
+    >
       <div className="flex items-center gap-3">
         <Avatar nome={usuario.name} url={usuario.avatar_url} />
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium text-texto">{usuario.name}</p>
           <p className="truncate text-sm text-texto-2">@{usuario.username}</p>
         </div>
-        <Link
+        <BotaoLink
           href={`/mensagens/${encodeURIComponent(usuario.username)}`}
           aria-label={`Conversar com ${usuario.name}`}
-          className={`${LINK_CONVERSAR} ${
-            troca
-              ? "bg-troca text-[oklch(0.22_0.04_50)] shadow-cartao hover:brightness-105"
-              : "border border-linha-forte bg-superficie text-texto hover:border-marca hover:text-marca-forte"
-          }`}
+          tamanho="sm"
+          variante={troca ? "troca" : "secundario"}
+          magnetico={troca}
         >
           Conversar
-        </Link>
+        </BotaoLink>
       </div>
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">

@@ -63,7 +63,7 @@ def test_matches_em_dois_niveis_e_ordem(client, pessoa):
 
     assert usernames(corpo["troca"]) == ["bia"]
     troca = corpo["troca"][0]
-    assert troca["me_ensina"] == [{"id": troca["me_ensina"][0]["id"], "nome": "React", "nivel": 5}]
+    assert [(h["nome"], h["nivel"]) for h in troca["me_ensina"]] == [("React", 5)]
     assert [(h["nome"], h["nivel"]) for h in troca["eu_ensino"]] == [("Python", 4)]
 
     assert usernames(corpo["pode_te_ensinar"]) == ["caio", "davi"]

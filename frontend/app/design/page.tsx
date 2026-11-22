@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
-import { Botao } from "@/components/ui/Botao";
+import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { BotaoCurtir } from "@/components/ui/BotaoCurtir";
 import { AreaTexto, Campo } from "@/components/ui/Campo";
 import { Cartao } from "@/components/ui/Cartao";
@@ -124,6 +124,9 @@ export default function DesignPage() {
             <Icone nome="troca" tamanho={18} />
             Propor troca
           </Botao>
+          <BotaoLink href="/matches" variante="secundario">
+            Link com cara de botão
+          </BotaoLink>
           <Botao variante="secundario">Seguir</Botao>
           <Botao variante="fantasma">Cancelar</Botao>
           <Botao carregando>Salvando</Botao>
