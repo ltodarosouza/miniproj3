@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 import { CartaoPost } from "@/components/posts/CartaoPost";
+import { FormNovoPost } from "@/components/posts/FormNovoPost";
 import { Botao } from "@/components/ui/Botao";
 import { Revelar } from "@/components/ui/Revelar";
 import { listarFeed, type ItemFeed } from "@/lib/posts";
@@ -22,7 +23,11 @@ export default function FeedPage() {
   const buscar = useCallback(async (offset: number) => {
     try {
       const pagina = await listarFeed(offset, POR_PAGINA);
-      setItens((atuais) => (offset === 0 ? pagina.items : [...atuais, ...pagina.items]));
+      setItens((atuais) => {
+        if (offset === 0) return pagina.items;
+        const ids = new Set(atuais.map((i) => i.id));
+        return [...atuais, ...pagina.items.filter((i) => !ids.has(i.id))];
+      });
       setTotal(pagina.total);
       setErro(false);
     } catch {
@@ -50,6 +55,17 @@ export default function FeedPage() {
   function tentarDeNovo() {
     setCarregando(true);
     void buscar(0);
+  }
+
+  function aoPublicar(post: import("@/lib/posts").Post) {
+    setItens((atuais) => [{ ...post, motivo: "seguindo" }, ...atuais.filter((i) => i.id !== post.id)]);
+    setTotal((t) => t + 1);
+    if (erro && itens.length === 0) setErro(false);
+  }
+
+  function aoApagar(id: number) {
+    setItens((atuais) => atuais.filter((i) => i.id !== id));
+    setTotal((t) => Math.max(0, t - 1));
   }
 
   let conteudo: ReactNode;
@@ -102,7 +118,7 @@ export default function FeedPage() {
           {itens.map((item, i) => (
             <li key={item.id}>
               <Revelar atraso={Math.min(i, 6) * 40}>
-                <CartaoPost post={item} podeEnsinar={item.motivo === "pode_te_ensinar"} />
+                <CartaoPost post={item} podeEnsinar={item.motivo === "pode_te_ensinar"} aoApagar={aoApagar} />
               </Revelar>
             </li>
           ))}
@@ -133,6 +149,7 @@ export default function FeedPage() {
           O que quem você segue e quem pode te ensinar estudou por aí.
         </p>
       </header>
+      {logado && !carregando && <FormNovoPost aoPublicar={aoPublicar} />}
       {conteudo}
     </div>
   );
