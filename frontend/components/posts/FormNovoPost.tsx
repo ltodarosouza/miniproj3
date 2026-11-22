@@ -110,28 +110,19 @@ export function FormNovoPost({ aoPublicar }: { aoPublicar: (post: Post) => void 
         habilidade_id: habilidadeId ? Number(habilidadeId) : null,
         minutos_estudados: numeroMinutos,
       });
+      let final = post;
       if (foto) {
         try {
-          const imagem_url = await enviarImagem(post.id, foto);
-          aoPublicar({ ...post, imagem_url });
-          setTexto("");
-          setHabilidadeId("");
-          setMinutos("");
-          limparFoto();
+          final = { ...post, imagem_url: await enviarImagem(post.id, foto) };
         } catch (erro) {
-          aoPublicar(post);
-          setTexto("");
-          setHabilidadeId("");
-          setMinutos("");
-          limparFoto();
-          setAvisoFoto(`Seu post foi publicado, mas a foto não subiu: ${erro instanceof ErroApi ? erro.message : "Tente escolher outra foto."}`);
+          setAvisoFoto(`Seu post foi publicado, mas a foto não subiu: ${erro instanceof ErroApi ? erro.message : "tente de novo mais tarde."}`);
         }
-      } else {
-        aoPublicar(post);
-        setTexto("");
-        setHabilidadeId("");
-        setMinutos("");
       }
+      aoPublicar(final);
+      setTexto("");
+      setHabilidadeId("");
+      setMinutos("");
+      limparFoto();
     } catch (erro) {
       setErroEnvio(erro instanceof ErroApi ? erro.message : "Não consegui publicar seu post. Tente de novo.");
     } finally {
@@ -151,27 +142,32 @@ export function FormNovoPost({ aoPublicar }: { aoPublicar: (post: Post) => void 
           maxLength={LIMITE_TEXTO_POST}
           placeholder="Conte um pouco sobre seus estudos..."
           value={texto}
-          onChange={(evento) => setTexto(evento.target.value)}
+          onChange={(evento) => {
+            setTexto(evento.target.value);
+            setAvisoFoto("");
+          }}
         />
         {texto.length >= 900 && <p className="text-right text-xs text-texto-3"><span className="numeros">{texto.length}/1000</span></p>}
-        <Selecao rotulo="Habilidade" value={habilidadeId} onChange={(evento) => setHabilidadeId(evento.target.value)} disabled={!habilidadesCarregadas} erro={erroHabilidades || undefined}>
-          {!habilidadesCarregadas ? <option value="">Carregando habilidades...</option> : <>
-            <option value="">Sem habilidade</option>
-            <optgroup label="Tecnologia">{grupos?.tecnologia.map((habilidade) => <option key={habilidade.id} value={habilidade.id}>{habilidade.nome}</option>)}</optgroup>
-            <optgroup label="Disciplinas">{grupos?.disciplinas.map((habilidade) => <option key={habilidade.id} value={habilidade.id}>{habilidade.nome}</option>)}</optgroup>
-          </>}
-        </Selecao>
-        <Campo
-          type="number"
-          rotulo="Tempo estudado (min)"
-          min={1}
-          max={LIMITE_MINUTOS}
-          inputMode="numeric"
-          value={minutos}
-          onChange={(evento) => alterarMinutos(evento.target.value)}
-          erro={erroMinutos || undefined}
-          dica={minutosValidos ? `${formatarTempoEstudado(minutosValidos)} de estudo` : undefined}
-        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Selecao rotulo="Habilidade" value={habilidadeId} onChange={(evento) => setHabilidadeId(evento.target.value)} disabled={!habilidadesCarregadas} erro={erroHabilidades || undefined}>
+            {!habilidadesCarregadas ? <option value="">Carregando habilidades...</option> : <>
+              <option value="">Sem habilidade</option>
+              <optgroup label="Tecnologia">{grupos?.tecnologia.map((habilidade) => <option key={habilidade.id} value={habilidade.id}>{habilidade.nome}</option>)}</optgroup>
+              <optgroup label="Disciplinas">{grupos?.disciplinas.map((habilidade) => <option key={habilidade.id} value={habilidade.id}>{habilidade.nome}</option>)}</optgroup>
+            </>}
+          </Selecao>
+          <Campo
+            type="number"
+            rotulo="Tempo estudado (min)"
+            min={1}
+            max={LIMITE_MINUTOS}
+            inputMode="numeric"
+            value={minutos}
+            onChange={(evento) => alterarMinutos(evento.target.value)}
+            erro={erroMinutos || undefined}
+            dica={minutosValidos ? `${formatarTempoEstudado(minutosValidos)} de estudo` : undefined}
+          />
+        </div>
         <div className="space-y-2">
           {urlPrevia && (
             <div className="relative">
@@ -181,10 +177,11 @@ export function FormNovoPost({ aoPublicar }: { aoPublicar: (post: Post) => void 
               </Botao>
             </div>
           )}
-          <input ref={entradaFoto} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={escolherFoto} />
+          <input ref={entradaFoto} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={escolherFoto} />
           <div className="flex items-center justify-between gap-3">
             <Botao type="button" variante="fantasma" tamanho="sm" onClick={() => entradaFoto.current?.click()}>
-              <Icone nome="mais" tamanho={16} />Adicionar foto
+              <Icone nome="imagem" tamanho={17} />
+              {foto ? "Trocar foto" : "Adicionar foto"}
             </Botao>
             <Botao type="submit" magnetico carregando={enviando} disabled={!texto.trim()}>
               Publicar

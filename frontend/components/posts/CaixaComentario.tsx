@@ -13,10 +13,12 @@ export function CaixaComentario({ aoComentar }: { aoComentar: (texto: string) =>
   const [enviando, setEnviando] = useState(false);
   const formulario = useRef<HTMLDivElement>(null);
   const compondo = useRef(false);
+  const enviandoAgora = useRef(false);
 
   async function enviar() {
     const conteudo = texto.trim();
-    if (!conteudo || enviando) return;
+    if (!conteudo || enviandoAgora.current) return;
+    enviandoAgora.current = true;
     setEnviando(true);
     setErro("");
     try {
@@ -26,6 +28,7 @@ export function CaixaComentario({ aoComentar }: { aoComentar: (texto: string) =>
     } catch (falha) {
       setErro(falha instanceof ErroApi ? falha.message : "Não deu para comentar. Tente de novo.");
     } finally {
+      enviandoAgora.current = false;
       setEnviando(false);
     }
   }
