@@ -41,3 +41,10 @@ class PostOut(BaseModel):
     curtidas: int = 0
     curtido: bool = False
     comentarios: int = 0
+
+
+class PostPage(BaseModel):
+    items: list[PostOut]
+    total: int
+    offset: int
+    limit: int

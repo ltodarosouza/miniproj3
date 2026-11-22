@@ -28,3 +28,33 @@ class UserPage(BaseModel):
     total: int
     offset: int
     limit: int
+
+
+class HabilidadePerfilOut(BaseModel):
+    id: int
+    nome: str
+    categoria: str
+    tipo: str
+    nivel: int
+
+
+class PerfilUpdate(BaseModel):
+    bio: str | None = Field(default=None, max_length=280)
+    avatar_url: str | None = Field(default=None, max_length=300)
+
+
+class PerfilOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    username: str
+    name: str
+    bio: str
+    avatar_url: str
+    created_at: datetime
+    seguidores: int
+    seguindo: int
+    streak: int
+    media_avaliacoes: float | None
+    total_avaliacoes: int
+    habilidades: list[HabilidadePerfilOut]

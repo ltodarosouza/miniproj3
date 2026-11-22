@@ -205,6 +205,30 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
 - **O que cortamos e por quê:** um seed totalmente aleatório. A cada execução
   a demo mudaria e poderia sair sem trocas.
 
+### 12. Perfil como currículo de troca
+
+- **Contexto:** a decisão de trocar com alguém depende do que a pessoa sabe,
+  do que quer aprender e se ela de fato estuda. O perfil precisa resumir isso
+  sem virar um currículo frio.
+- **Opções:** perfil mínimo (nome, bio e avatar); perfil completo com
+  contadores, streak, avaliações como professor, habilidades e posts.
+- **Escolha:** perfil completo. A página mostra bio, avatar,
+  seguidores/seguindo, streak de estudo, média e total de avaliações
+  pós-troca, e os posts da pessoa paginados. O perfil também exibe as
+  habilidades separadas em "Sei" e "Quero aprender" quando a pessoa já as
+  cadastrou — via seed ou pela implementação que será feita na Feature 3. A
+  edição de habilidades fica para a Feature 3, porque depende do catálogo,
+  trie, autocomplete e mapeamento por IA.
+- **Como ficou:**
+  - `GET /usuarios/{username}` é público e devolve `PerfilOut` com `id`,
+    `username`, `name`, `bio`, `avatar_url`, `created_at`, `seguidores`,
+    `seguindo`, `streak`, `media_avaliacoes`, `total_avaliacoes` e
+    `habilidades`.
+  - `PATCH /usuarios/eu` permite editar `bio` e `avatar_url` (exige login).
+  - `GET /usuarios/{username}/posts` devolve posts paginados (exige login).
+  - No frontend, `/perfil/{username}` mostra o perfil, `/perfil/eu`
+    redireciona para o perfil logado e `/perfil/editar` edita bio e avatar.
+
 ## Features
 
 | Feature | Dono | Por quê (1 frase) |
@@ -250,7 +274,8 @@ contra a versão que percorre todos os usuários.
   botão de seguir no navegador. Um subagente revisor apontou bugs no
   frontend (erro engolido, resposta velha na lista, hydration), que foram
   corrigidos antes do PR.
-- Frente A (auth): Claude Code planejou com o @italoosilva as decisões de
-  token, sessão e limites; escreveu models, schemas, service, rotas, testes e
-  as telas de login/cadastro, e revisou a integração com o follow antes do PR.
+- Frente A (auth e perfil): IA escreveu models, schemas, services, rotas,
+  testes e as telas de login/cadastro e perfil, revisou a integração com o
+  follow e realizou os testes (incluindo testes visuais no navegador) antes
+  do PR.
 - _(completem conforme usarem)_
