@@ -3,8 +3,8 @@
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-function headers(): HeadersInit {
-  const h: Record<string, string> = { "Content-Type": "application/json" };
+function headers(json = true): HeadersInit {
+  const h: Record<string, string> = json ? { "Content-Type": "application/json" } : {};
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("token");
     if (token) {
@@ -42,10 +42,11 @@ function camposDoErro(detail: unknown): Record<string, string> {
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const arquivo = body instanceof FormData;
   const res = await fetch(`${BASE}${path}`, {
     method,
-    headers: headers(),
-    body: body === undefined ? undefined : JSON.stringify(body),
+    headers: headers(!arquivo),
+    body: body === undefined ? undefined : arquivo ? body : JSON.stringify(body),
     cache: "no-store",
   });
 

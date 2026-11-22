@@ -278,4 +278,10 @@ contra a versão que percorre todos os usuários.
   testes e as telas de login/cadastro e perfil, revisou a integração com o
   follow e realizou os testes (incluindo testes visuais no navegador) antes
   do PR.
+- Frente B (posts e comentários, frontend): Claude Code escreveu o contrato
+  em `lib/posts.ts` e dividiu as telas em tarefas curtas para agentes do Codex
+  (GPT-6 Luna), em duas ondas e um dono por arquivo. Dois revisores Luna só de
+  leitura (lógica e design) apontaram achados; Claude fez a triagem, corrigiu
+  os reais e testou criar post com e sem foto, apagar, comentar e curtir no
+  navegador, em 375 px e nos dois temas.
 - _(completem conforme usarem)_
