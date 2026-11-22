@@ -11,7 +11,6 @@ type AutocompleteHabilidadeProps = {
   value: string;
   onChange: (value: string) => void;
   onSelect: (habilidade: HabilidadeResumo) => void;
-  onMapear?: (habilidade: HabilidadeResumo | null) => void;
   buscarSugestoes: (prefixo: string) => Promise<{ items: HabilidadeResumo[] }>;
   mapearTexto: (texto: string) => Promise<{ habilidade: HabilidadeResumo | null }>;
   habilidadesExistentes: number[];
@@ -22,11 +21,10 @@ type AutocompleteHabilidadeProps = {
 export function AutocompleteHabilidade({
   rotulo,
   dica,
-  placeholder = "Digite uma habilidade...",
+  placeholder = "Digite para buscar...",
   value,
   onChange,
   onSelect,
-  onMapear,
   buscarSugestoes,
   mapearTexto,
   habilidadesExistentes,
@@ -40,6 +38,7 @@ export function AutocompleteHabilidade({
   const [sugestaoMapeada, setSugestaoMapeada] = useState<HabilidadeResumo | null>(null);
   const [aberto, setAberto] = useState(false);
   const [indiceAtivo, setIndiceAtivo] = useState(-1);
+  const [buscou, setBuscou] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listboxRef = useRef<HTMLUListElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -67,9 +66,11 @@ export function AutocompleteHabilidade({
 
   async function buscar(prefixo: string) {
     setSugestaoMapeada(null);
+    setBuscou(false);
     if (prefixo.length < 2) {
       setSugestoes([]);
       setAberto(false);
+      setBuscou(true);
       return;
     }
 
@@ -86,9 +87,6 @@ export function AutocompleteHabilidade({
         const { habilidade } = await mapearTexto(prefixo);
         if (habilidade && !habilidadesExistentes.includes(habilidade.id)) {
           setSugestaoMapeada(habilidade);
-          onMapear?.(habilidade);
-        } else {
-          onMapear?.(null);
         }
       }
     } catch (err) {
@@ -97,6 +95,7 @@ export function AutocompleteHabilidade({
       setAberto(false);
     } finally {
       setCarregando(false);
+      setBuscou(true);
     }
   }
 
@@ -104,6 +103,7 @@ export function AutocompleteHabilidade({
     const novo = evento.target.value;
     onChange(novo);
     setSugestaoMapeada(null);
+    setBuscou(false);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => buscar(novo), 200);
   }
@@ -139,32 +139,59 @@ export function AutocompleteHabilidade({
     setSugestaoMapeada(null);
     setAberto(false);
     setIndiceAtivo(-1);
+    setBuscou(false);
     inputRef.current?.focus();
   }
+
+  const mostrarForaDaLista =
+    buscou &&
+    !carregando &&
+    !aberto &&
+    !sugestaoMapeada &&
+    value.length >= 2 &&
+    sugestoes.length === 0;
 
   return (
     <div className="relative">
       <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-texto">
         {rotulo}
       </label>
-      <input
-        ref={inputRef}
-        id={id}
-        type="text"
-        value={value}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        onFocus={() => value.length >= 2 && sugestoes.length > 0 && setAberto(true)}
-        placeholder={placeholder}
-        disabled={disabled}
-        autoComplete="off"
-        aria-autocomplete="list"
-        aria-controls={`${id}-sugestoes`}
-        aria-activedescendant={
-          indiceAtivo >= 0 ? `${id}-opcao-${indiceAtivo}` : undefined
-        }
-        className="w-full rounded-controle border border-linha-forte bg-superficie px-3 py-2 text-[0.9375rem] text-texto placeholder:text-texto-3 transition-[border-color,box-shadow] duration-[var(--rapido)] ease-saida focus:outline-none focus:border-marca focus:shadow-[0_0_0_4px_var(--brilho)] disabled:opacity-50"
-      />
+      <div className="relative">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-texto-3">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+        </span>
+        <input
+          ref={inputRef}
+          id={id}
+          type="text"
+          value={value}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          onFocus={() => value.length >= 2 && sugestoes.length > 0 && setAberto(true)}
+          placeholder={placeholder}
+          disabled={disabled}
+          autoComplete="off"
+          aria-autocomplete="list"
+          aria-controls={`${id}-sugestoes`}
+          aria-activedescendant={
+            indiceAtivo >= 0 ? `${id}-opcao-${indiceAtivo}` : undefined
+          }
+          className="w-full rounded-controle border border-linha-forte bg-superficie py-2 pl-10 pr-3 text-[0.9375rem] text-texto placeholder:text-texto-3 transition-[border-color,box-shadow] duration-[var(--rapido)] ease-saida focus:outline-none focus:border-marca focus:shadow-[0_0_0_4px_var(--brilho)] disabled:opacity-50"
+        />
+      </div>
       {dica && !erro && <p className="mt-1.5 text-sm text-texto-3">{dica}</p>}
       {erro && (
         <p role="alert" className="mt-1.5 text-sm text-perigo">
@@ -216,15 +243,11 @@ export function AutocompleteHabilidade({
         </p>
       )}
 
-      {!carregando &&
-        !aberto &&
-        !sugestaoMapeada &&
-        value.length >= 2 &&
-        sugestoes.length === 0 && (
-          <p className="mt-2 text-sm text-texto-3">
-            Escolha uma habilidade da lista.
-          </p>
-        )}
+      {mostrarForaDaLista && (
+        <p className="mt-2 text-sm text-texto-3">
+          Escolha uma habilidade da lista.
+        </p>
+      )}
     </div>
   );
 }
