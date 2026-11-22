@@ -360,7 +360,7 @@ function ColunaHabilidades({
                   className="flex size-8 items-center justify-center rounded-full text-texto-2 transition-colors hover:bg-superficie hover:text-texto"
                   title="Mover"
                 >
-                  <Icone nome="trocar" tamanho={16} />
+                  <Icone nome="troca" tamanho={16} />
                 </button>
                 <button
                   type="button"
