@@ -14,6 +14,7 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(80))
     bio: Mapped[str] = mapped_column(String(280), default="")
     avatar_url: Mapped[str] = mapped_column(String(300), default="")
+    password_hash: Mapped[str] = mapped_column(String(100), default="")
     created_at: Mapped[datetime] = mapped_column(
         default=lambda: datetime.now(timezone.utc)
     )

@@ -39,3 +39,5 @@ class PostOut(BaseModel):
     imagem_url: str | None
     created_at: DataHoraUtc
     curtidas: int = 0
+    curtido: bool = False
+    comentarios: int = 0

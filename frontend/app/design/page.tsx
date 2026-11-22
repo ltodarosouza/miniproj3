@@ -47,6 +47,7 @@ function Secao({ titulo, descricao, children }: { titulo: string; descricao: str
 export default function DesignPage() {
   const [curtido, setCurtido] = useState(false);
   const [nota, setNota] = useState(0);
+  const [senhaVisivel, setSenhaVisivel] = useState(false);
   const [colunas, setColunas] = useState<Coluna<Habilidade>[]>([
     {
       id: "sei",
@@ -142,6 +143,22 @@ export default function DesignPage() {
         <div className="grid max-w-xl gap-4">
           <Campo rotulo="Usuário" placeholder="ana_dev" dica="Letras minúsculas, números e _" />
           <Campo rotulo="Senha" type="password" defaultValue="123" erro="A senha precisa de pelo menos 8 caracteres." />
+          <Campo
+            rotulo="Senha com ação"
+            type={senhaVisivel ? "text" : "password"}
+            defaultValue="senha-forte-123"
+            dica="De 8 a 32 caracteres"
+            acao={
+              <button
+                type="button"
+                onClick={() => setSenhaVisivel((atual) => !atual)}
+                aria-pressed={senhaVisivel}
+                className="rounded-controle px-2 py-1 text-sm font-medium text-texto-2 transition-colors hover:text-texto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca"
+              >
+                {senhaVisivel ? "Ocultar" : "Mostrar"}
+              </button>
+            }
+          />
           <AreaTexto rotulo="O que você estudou hoje?" placeholder="Conte sua rotina de estudos..." />
         </div>
       </Secao>

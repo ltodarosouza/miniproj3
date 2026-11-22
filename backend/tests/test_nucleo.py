@@ -16,7 +16,6 @@ SENHA = "senha-forte-123"
 # ---------- AUTH (guia 01 — um passo do guia por teste) ----------
 
 
-@pytest.mark.skip(reason="Remova ao implementar POST /auth/registro (núcleo; guia 01, Passo 1)")
 def test_auth_registro(client):
     r = client.post(
         "/auth/registro", json={"username": "ana", "name": "Ana", "password": SENHA}
@@ -33,7 +32,6 @@ def test_auth_registro(client):
     assert r.status_code == 409
 
 
-@pytest.mark.skip(reason="Remova ao implementar POST /auth/login (núcleo; guia 01, Passo 2)")
 def test_auth_login(client):
     client.post(
         "/auth/registro", json={"username": "ana", "name": "Ana", "password": SENHA}
@@ -47,7 +45,6 @@ def test_auth_login(client):
     assert r.status_code == 401
 
 
-@pytest.mark.skip(reason="Remova ao implementar GET /auth/eu + get_current_user real (núcleo; guia 01, Passo 3)")
 def test_auth_eu(client, logar):
     headers = logar("ana", "Ana")
 

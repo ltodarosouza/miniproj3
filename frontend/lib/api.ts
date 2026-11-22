@@ -5,10 +5,14 @@ const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 function headers(): HeadersInit {
   const h: Record<string, string> = { "Content-Type": "application/json" };
-  // Parte 2 do guia 01: leia o token salvo no login e envie em Authorization.
   if (typeof window !== "undefined") {
-    const usuarioId = localStorage.getItem("usuario_id");
-    if (usuarioId) h["X-User-Id"] = usuarioId;
+    const token = localStorage.getItem("token");
+    if (token) {
+      h["Authorization"] = `Bearer ${token}`;
+    } else {
+      const usuarioId = localStorage.getItem("usuario_id");
+      if (usuarioId) h["X-User-Id"] = usuarioId;
+    }
   }
   return h;
 }
@@ -17,9 +21,24 @@ export class ErroApi extends Error {
   constructor(
     message: string,
     public status: number,
+    public campos: Record<string, string> = {},
   ) {
     super(message);
   }
+}
+
+function camposDoErro(detail: unknown): Record<string, string> {
+  const campos: Record<string, string> = {};
+  if (!Array.isArray(detail)) return campos;
+
+  for (const item of detail) {
+    if (!item || typeof item !== "object") continue;
+    const { loc, msg } = item as { loc?: unknown; msg?: unknown };
+    if (!Array.isArray(loc) || typeof msg !== "string") continue;
+    const campo = loc[loc.length - 1];
+    if (typeof campo === "string") campos[campo] = msg;
+  }
+  return campos;
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -34,14 +53,21 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   // servidor do deploy reiniciou). Joga o token fora e volta para o login.
   if (res.status === 401 && typeof window !== "undefined" && localStorage.getItem("token")) {
     localStorage.removeItem("token");
+    localStorage.removeItem("usuario_id");
     if (window.location.pathname !== "/login") window.location.href = "/login";
   }
 
   if (!res.ok) {
     // 422 = corpo inválido; 409 = conflito (ex.: username repetido). Ver guia 04.
     const erro = await res.json().catch(() => null);
-    const detail = typeof erro?.detail === "string" ? erro.detail : null;
-    throw new ErroApi(detail ?? `${method} ${path} → ${res.status}`, res.status);
+    const detail = erro?.detail;
+    const campos = camposDoErro(detail);
+    const primeira = Object.values(campos)[0];
+    const mensagem =
+      typeof detail === "string"
+        ? detail
+        : primeira ?? `${method} ${path} → ${res.status}`;
+    throw new ErroApi(mensagem, res.status, campos);
   }
 
   // 204 No Content (seguir, curtir, apagar...) não tem corpo: não há JSON para ler.
@@ -82,6 +108,31 @@ export type Page<T> = {
   offset: number;
   limit: number;
 };
+
+export type Credenciais = {
+  username: string;
+  password: string;
+};
+
+export type DadosRegistro = Credenciais & {
+  name: string;
+};
+
+export function registrar(dados: DadosRegistro): Promise<User> {
+  return apiPost<User>("/auth/registro", dados);
+}
+
+export function login(dados: Credenciais): Promise<{ token: string }> {
+  return apiPost<{ token: string }>("/auth/login", dados);
+}
+
+export function eu(): Promise<User> {
+  return apiGet<User>("/auth/eu");
+}
+
+export function logout(): Promise<void> {
+  return apiPost<void>("/auth/logout");
+}
 
 
 export type Mensagem = {
