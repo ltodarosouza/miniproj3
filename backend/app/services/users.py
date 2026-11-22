@@ -4,21 +4,35 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.contadores import contador_iniciais
+from app.core.matches import indice_matches
 from app.models.habilidade import Habilidade
 from app.models.post import Post
 from app.models.user import User
 from app.models.user_habilidade import UserHabilidade
 from app.schemas.post import PostOut, PostPage
-from app.schemas.user import HabilidadePerfilOut, PerfilOut, PerfilUpdate, UserCreate
+from app.schemas.user import (
+    HabilidadePerfilOut,
+    HabilidadeItem,
+    PerfilOut,
+    PerfilUpdate,
+    UserCreate,
+)
 from app.services import avaliacoes, follows, posts, streak
 
 
-def listar(db: Session, offset: int, limit: int) -> tuple[list[User], int]:
-    total = db.scalar(select(func.count()).select_from(User)) or 0
-    users = list(
-        db.scalars(
-            select(User).order_by(User.username).offset(offset).limit(limit)
+def listar(
+    db: Session, offset: int, limit: int, busca: str | None = None
+) -> tuple[list[User], int]:
+    consulta = select(User)
+    termo = (busca or "").strip().lower()
+    if termo:
+        consulta = consulta.where(
+            func.lower(User.username).contains(termo, autoescape=True)
+            | func.lower(User.name).contains(termo, autoescape=True)
         )
+    total = db.scalar(select(func.count()).select_from(consulta.subquery())) or 0
+    users = list(
+        db.scalars(consulta.order_by(User.username).offset(offset).limit(limit))
     )
     return users, total
 
@@ -141,3 +155,49 @@ def posts_do_usuario(
     return PostPage(
         items=items, total=total, offset=offset, limit=limit
     )
+
+
+MAX_HABILIDADES = 40
+
+
+def salvar_habilidades(
+    db: Session, usuario: User, itens: list[HabilidadeItem]
+) -> list[HabilidadePerfilOut]:
+    if len(itens) > MAX_HABILIDADES:
+        raise HTTPException(status_code=422, detail="no máximo 40 habilidades")
+    vistos: dict[int, str] = {}
+    for item in itens:
+        if item.habilidade_id in vistos:
+            raise HTTPException(
+                status_code=422,
+                detail="cada habilidade entra uma vez só: em Sei ou em Quero aprender",
+            )
+        vistos[item.habilidade_id] = item.tipo
+    existentes = set(
+        db.scalars(select(Habilidade.id).where(Habilidade.id.in_(vistos)))
+    )
+    if existentes != set(vistos):
+        raise HTTPException(status_code=422, detail="habilidade fora do catálogo")
+
+    antigas = list(
+        db.scalars(select(UserHabilidade).where(UserHabilidade.usuario_id == usuario.id))
+    )
+    for relacao in antigas:
+        db.delete(relacao)
+    db.flush()
+    db.add_all(
+        UserHabilidade(
+            usuario_id=usuario.id,
+            habilidade_id=item.habilidade_id,
+            tipo=item.tipo,
+            nivel=item.nivel,
+        )
+        for item in itens
+    )
+    db.commit()
+
+    for relacao in antigas:
+        indice_matches.remover(usuario.id, relacao.habilidade_id, relacao.tipo)
+    for item in itens:
+        indice_matches.adicionar(usuario.id, item.habilidade_id, item.tipo)
+    return _habilidades_do_usuario(db, usuario.id)

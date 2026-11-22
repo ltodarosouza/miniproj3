@@ -1,13 +1,23 @@
-import { apiGet, apiPatch, type Page, type User } from "@/lib/api";
+import { apiGet, apiPatch, apiPut, type Page, type User } from "@/lib/api";
 import { type Post } from "@/lib/posts";
+
+export type TipoHabilidade = "sei" | "quero_aprender";
 
 export type HabilidadePerfil = {
   id: number;
   nome: string;
   categoria: string;
-  tipo: string;
+  tipo: TipoHabilidade;
   nivel: number;
 };
+
+export type ItemHabilidade = {
+  habilidade_id: number;
+  tipo: TipoHabilidade;
+  nivel: number;
+};
+
+export const LIMITE_HABILIDADES = 40;
 
 export type Perfil = User & {
   seguidores: number;
@@ -39,4 +49,8 @@ export function listarPostsDoUsuario(
   return apiGet<Page<Post>>(
     `/usuarios/${encodeURIComponent(username)}/posts?offset=${offset}&limit=${limit}`,
   );
+}
+
+export function salvarHabilidades(itens: ItemHabilidade[]): Promise<HabilidadePerfil[]> {
+  return apiPut<HabilidadePerfil[]>("/usuarios/eu/habilidades", itens);
 }
