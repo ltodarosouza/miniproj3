@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, type InputHTMLAttributes, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
+import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 
 const BASE =
   "w-full rounded-controle border bg-superficie px-3 text-[0.9375rem] text-texto placeholder:text-texto-3 transition-[border-color,box-shadow] duration-[var(--rapido)] ease-saida focus:outline-none focus:border-marca focus:shadow-[0_0_0_4px_var(--brilho)]";
@@ -41,19 +41,30 @@ export function Campo({
   rotulo,
   dica,
   erro,
+  acao,
   className = "",
   ...resto
-}: InputHTMLAttributes<HTMLInputElement> & { rotulo: string; dica?: string; erro?: string }) {
+}: InputHTMLAttributes<HTMLInputElement> & {
+  rotulo: string;
+  dica?: string;
+  erro?: string;
+  acao?: ReactNode;
+}) {
   const id = useId();
   return (
     <Rotulo id={id} rotulo={rotulo} dica={dica} erro={erro}>
-      <input
-        id={id}
-        aria-invalid={erro ? true : undefined}
-        aria-describedby={erro || dica ? `${id}-msg` : undefined}
-        className={`${BASE} h-10 ${erro ? "border-perigo" : "border-linha-forte"} ${className}`}
-        {...resto}
-      />
+      <span className="relative block">
+        <input
+          id={id}
+          aria-invalid={erro ? true : undefined}
+          aria-describedby={erro || dica ? `${id}-msg` : undefined}
+          className={`${BASE} h-10 ${acao ? "pr-20" : ""} ${erro ? "border-perigo" : "border-linha-forte"} ${className}`}
+          {...resto}
+        />
+        {acao && (
+          <span className="absolute right-2 top-1/2 -translate-y-1/2">{acao}</span>
+        )}
+      </span>
     </Rotulo>
   );
 }

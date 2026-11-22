@@ -3,13 +3,12 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { Navegacao } from "@/components/ui/Navegacao";
 import { AvisoAvaliacao } from "@/components/avaliacoes/AvisoAvaliacao";
+import { NOME_REDE } from "@/lib/marca";
 
 import "./globals.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--fonte-geist" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--fonte-geist-mono" });
-
-const NOME_REDE = "Troca";
 
 export const metadata: Metadata = {
   title: NOME_REDE,
