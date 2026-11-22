@@ -3,8 +3,8 @@
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-function headers(): HeadersInit {
-  const h: Record<string, string> = { "Content-Type": "application/json" };
+function headers(json = true): HeadersInit {
+  const h: Record<string, string> = json ? { "Content-Type": "application/json" } : {};
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("token");
     if (token) {
@@ -42,10 +42,11 @@ function camposDoErro(detail: unknown): Record<string, string> {
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const arquivo = body instanceof FormData;
   const res = await fetch(`${BASE}${path}`, {
     method,
-    headers: headers(),
-    body: body === undefined ? undefined : JSON.stringify(body),
+    headers: headers(!arquivo),
+    body: body === undefined ? undefined : arquivo ? body : JSON.stringify(body),
     cache: "no-store",
   });
 
@@ -87,6 +88,10 @@ export function apiPatch<T>(path: string, body: unknown): Promise<T> {
   return request<T>("PATCH", path, body);
 }
 
+export function apiPut<T>(path: string, body: unknown): Promise<T> {
+  return request<T>("PUT", path, body);
+}
+
 export function apiDelete<T = void>(path: string): Promise<T> {
   return request<T>("DELETE", path);
 }
@@ -117,6 +122,11 @@ export type Credenciais = {
 export type DadosRegistro = Credenciais & {
   name: string;
 };
+
+export function buscarUsuarios(busca: string, offset = 0, limit = 20): Promise<Page<User>> {
+  const filtro = busca.trim() ? `&q=${encodeURIComponent(busca.trim())}` : "";
+  return apiGet<Page<User>>(`/usuarios?offset=${offset}&limit=${limit}${filtro}`);
+}
 
 export function registrar(dados: DadosRegistro): Promise<User> {
   return apiPost<User>("/auth/registro", dados);

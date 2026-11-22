@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Navegacao } from "@/components/ui/Navegacao";
 import { AvisoAvaliacao } from "@/components/avaliacoes/AvisoAvaliacao";
 import { NOME_REDE } from "@/lib/marca";
+import { SCRIPT_TEMA } from "@/lib/tema";
 
 import "./globals.css";
 
@@ -17,7 +18,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR" className={`${geist.variable} ${geistMono.variable}`}>
+    <html lang="pt-BR" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
+      </head>
       <body className="min-h-screen font-sans">
         <Navegacao nomeRede={NOME_REDE} />
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>

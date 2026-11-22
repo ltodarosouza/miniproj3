@@ -175,7 +175,22 @@ export default function Pagina() {
         </div>
       )}
 
-      {logado && dados && (
+      {logado && dados && dados.troca.length === 0 && dados.pode_te_ensinar.length === 0 && (
+        <Cartao className="flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold tracking-tight text-texto">Comece pelo seu perfil</h2>
+            <p className="max-w-[52ch] text-sm leading-relaxed text-texto-2">
+              Diga o que você sabe e o que quer aprender. É com isso que a gente encontra quem pode te
+              ensinar e com quem dá para trocar.
+            </p>
+          </div>
+          <BotaoLink href="/perfil/editar#habilidades" magnetico className="shrink-0">
+            Adicionar habilidades
+          </BotaoLink>
+        </Cartao>
+      )}
+
+      {logado && dados && (dados.troca.length > 0 || dados.pode_te_ensinar.length > 0) && (
         <>
           <Secao
             titulo="Match de troca"
@@ -185,7 +200,7 @@ export default function Pagina() {
             vazio={
               <>
                 Nenhuma troca ainda.{" "}
-                <Link href="/perfil/eu" className={LINK_TEXTO}>
+                <Link href="/perfil/editar#habilidades" className={LINK_TEXTO}>
                   Adicione o que você sabe no perfil
                 </Link>
                 .
@@ -200,7 +215,7 @@ export default function Pagina() {
             vazio={
               <>
                 Ninguém sabe o que você quer aprender ainda.{" "}
-                <Link href="/perfil/eu" className={LINK_TEXTO}>
+                <Link href="/perfil/editar#habilidades" className={LINK_TEXTO}>
                   Adicione mais habilidades no perfil
                 </Link>
                 .

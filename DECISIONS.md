@@ -216,9 +216,12 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
   seguidores/seguindo, streak de estudo, média e total de avaliações
   pós-troca, e os posts da pessoa paginados. O perfil também exibe as
   habilidades separadas em "Sei" e "Quero aprender" quando a pessoa já as
-  cadastrou — via seed ou pela implementação que será feita na Feature 3. A
-  edição de habilidades fica para a Feature 3, porque depende do catálogo,
-  trie, autocomplete e mapeamento por IA.
+  cadastrou. A edição entrou antes do resto da Feature 3, porque sem ela
+  uma conta nova não tinha matches: `/perfil/editar` tem um quadro "Sei" /
+  "Quero aprender" com nível, escolhendo do catálogo numa lista, e salva com
+  `PUT /usuarios/eu/habilidades` (lista completa, atualiza o índice de
+  matches na hora). Trie, autocomplete e mapeamento por IA continuam na
+  Feature 3 e entram no lugar da lista.
 - **Como ficou:**
   - `GET /usuarios/{username}` é público e devolve `PerfilOut` com `id`,
     `username`, `name`, `bio`, `avatar_url`, `created_at`, `seguidores`,
@@ -228,6 +231,29 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
   - `GET /usuarios/{username}/posts` devolve posts paginados (exige login).
   - No frontend, `/perfil/{username}` mostra o perfil, `/perfil/eu`
     redireciona para o perfil logado e `/perfil/editar` edita bio e avatar.
+
+### 13. Deploy: front na Vercel, back no Render com SQLite
+
+- **Contexto:** o bônus de deploy pede uma URL pública que a banca usa. O
+  backend é FastAPI com SQLite e guarda o índice de matches em memória.
+- **Opções:** tudo na Vercel com o backend em funções serverless e um
+  Postgres externo (Supabase); front na Vercel e back no Render.
+- **Escolha:** front na Vercel e back no Render (guia 08). Na Vercel rodariam
+  várias cópias do backend, cada uma com seu índice de matches em memória, e
+  elas se desencontrariam; trocar SQLite por Postgres também sairia da stack
+  do projeto.
+- **O que aceitamos:** no Render free o disco zera a cada deploy ou
+  reinício, e o serviço dorme sem tráfego. O banco volta populado pelo seed
+  no boot, e um pinger externo chama `GET /saude` a cada 10 minutos para o
+  serviço não dormir na semana da banca. Contas criadas na URL somem no
+  próximo deploy.
+- **Como ficou:**
+  - Render: `SEED_ON_BOOT=true` roda o seed fake no boot quando o banco está
+    vazio, antes de montar o índice de matches; `CORS_ORIGINS` recebe a URL
+    da Vercel (várias separadas por vírgula). Nunca `DEBUG`.
+  - Vercel: Root Directory `frontend` e `NEXT_PUBLIC_API_URL` com a URL do
+    Render.
+  - `GET /saude` responde `{"ok": true}` sem login e sem tocar no banco.
 
 ## Features
 
@@ -278,4 +304,10 @@ contra a versão que percorre todos os usuários.
   testes e as telas de login/cadastro e perfil, revisou a integração com o
   follow e realizou os testes (incluindo testes visuais no navegador) antes
   do PR.
+- Frente B (posts e comentários, frontend): Claude Code escreveu o contrato
+  em `lib/posts.ts` e dividiu as telas em tarefas curtas para agentes do Codex
+  (GPT-6 Luna), em duas ondas e um dono por arquivo. Dois revisores Luna só de
+  leitura (lógica e design) apontaram achados; Claude fez a triagem, corrigiu
+  os reais e testou criar post com e sem foto, apagar, comentar e curtir no
+  navegador, em 375 px e nos dois temas.
 - _(completem conforme usarem)_

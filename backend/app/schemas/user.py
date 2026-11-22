@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -36,6 +37,12 @@ class HabilidadePerfilOut(BaseModel):
     categoria: str
     tipo: str
     nivel: int
+
+
+class HabilidadeItem(BaseModel):
+    habilidade_id: int
+    tipo: Literal["sei", "quero_aprender"]
+    nivel: int = Field(default=1, ge=1, le=5)
 
 
 class PerfilUpdate(BaseModel):

@@ -12,7 +12,15 @@ from app.db import get_db
 from app.deps import get_current_user, get_current_user_opcional
 from app.models.user import User
 from app.schemas.post import PostPage
-from app.schemas.user import PerfilOut, PerfilUpdate, UserCreate, UserOut, UserPage
+from app.schemas.user import (
+    HabilidadeItem,
+    HabilidadePerfilOut,
+    PerfilOut,
+    PerfilUpdate,
+    UserCreate,
+    UserOut,
+    UserPage,
+)
 from app.services import users as service
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
@@ -22,9 +30,10 @@ router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 def listar_usuarios(
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=20, ge=1, le=100),
+    q: str | None = Query(default=None, max_length=50),
     db: Session = Depends(get_db),
 ):
-    users, total = service.listar(db, offset, limit)
+    users, total = service.listar(db, offset, limit, q)
     return UserPage(items=users, total=total, offset=offset, limit=limit)
 
 
@@ -41,6 +50,15 @@ def editar_meu_perfil(
     eu: User = Depends(get_current_user),
 ):
     return service.atualizar_perfil(db, eu, dados)
+
+
+@router.put("/eu/habilidades", response_model=list[HabilidadePerfilOut])
+def salvar_minhas_habilidades(
+    itens: list[HabilidadeItem],
+    db: Session = Depends(get_db),
+    eu: User = Depends(get_current_user),
+):
+    return service.salvar_habilidades(db, eu, itens)
 
 
 @router.get("/{username}", response_model=PerfilOut)
