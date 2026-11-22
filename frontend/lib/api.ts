@@ -88,6 +88,10 @@ export function apiPatch<T>(path: string, body: unknown): Promise<T> {
   return request<T>("PATCH", path, body);
 }
 
+export function apiPut<T>(path: string, body: unknown): Promise<T> {
+  return request<T>("PUT", path, body);
+}
+
 export function apiDelete<T = void>(path: string): Promise<T> {
   return request<T>("DELETE", path);
 }
@@ -118,6 +122,11 @@ export type Credenciais = {
 export type DadosRegistro = Credenciais & {
   name: string;
 };
+
+export function buscarUsuarios(busca: string, offset = 0, limit = 20): Promise<Page<User>> {
+  const filtro = busca.trim() ? `&q=${encodeURIComponent(busca.trim())}` : "";
+  return apiGet<Page<User>>(`/usuarios?offset=${offset}&limit=${limit}${filtro}`);
+}
 
 export function registrar(dados: DadosRegistro): Promise<User> {
   return apiPost<User>("/auth/registro", dados);

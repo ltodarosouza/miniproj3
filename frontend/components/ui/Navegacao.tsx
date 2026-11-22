@@ -11,7 +11,7 @@ import { Botao } from "./Botao";
 import { Icone, type NomeIcone } from "./Icone";
 
 const ITENS: { href: string; rotulo: string; icone: NomeIcone }[] = [
-  { href: "/", rotulo: "Feed", icone: "feed" },
+  { href: "/feed", rotulo: "Feed", icone: "feed" },
   { href: "/matches", rotulo: "Matches", icone: "troca" },
   { href: "/mensagens", rotulo: "Mensagens", icone: "mensagem" },
   { href: "/perfil/eu", rotulo: "Perfil", icone: "perfil" },
@@ -31,8 +31,8 @@ export function Navegacao({ nomeRede }: { nomeRede: string }) {
 
   const ativo =
     ITENS.find((item) =>
-      item.href === "/"
-        ? caminho === "/"
+      item.href === "/feed"
+        ? caminho === "/feed" || caminho.startsWith("/posts")
         : caminho.startsWith(item.href.replace("/eu", "")),
     )?.href ?? null;
   const alvo = sobre ?? ativo;
