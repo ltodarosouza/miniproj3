@@ -22,7 +22,7 @@ export default function LoginPage() {
   const [carregando, setCarregando] = useState(false);
 
   useEffect(() => {
-    if (temToken()) router.replace("/");
+    if (temToken()) router.replace("/feed");
   }, [router]);
 
   async function enviar(e: React.FormEvent) {
@@ -33,11 +33,11 @@ export default function LoginPage() {
 
     try {
       await entrar(username.trim().toLowerCase(), password);
-      router.replace("/");
+      router.replace("/feed");
       router.refresh();
     } catch (err) {
       if (err instanceof ErroApi) {
-        if (err.status === 401) setErro("usuário ou senha inválidos");
+        if (err.status === 401) setErro("Usuário ou senha inválidos.");
         else if (err.status === 422) setCampos(err.campos);
         else setErro(err.message);
       } else {

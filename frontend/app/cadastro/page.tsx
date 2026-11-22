@@ -34,7 +34,7 @@ export default function CadastroPage() {
   const [carregando, setCarregando] = useState(false);
 
   useEffect(() => {
-    if (temToken()) router.replace("/");
+    if (temToken()) router.replace("/feed");
   }, [router]);
 
   function limparErro(campo: keyof Erros) {
@@ -91,7 +91,7 @@ export default function CadastroPage() {
     try {
       await registrar(dados);
       await entrar(dados.username, dados.password);
-      router.replace("/");
+      router.replace("/perfil/editar#habilidades");
       router.refresh();
     } catch (err) {
       if (err instanceof ErroApi) {
