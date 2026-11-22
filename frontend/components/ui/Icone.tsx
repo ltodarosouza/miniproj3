@@ -16,6 +16,8 @@ const CAMINHOS = {
   link: "M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1.1 1.1M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.1-1.1",
   voltar: "M19 12H5m0 0 6-6m-6 6 6 6",
   arrastar: "M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01",
+  lixeira: "M4.5 7h15M10 4.5h4M6.5 7l.8 11.6a1.5 1.5 0 0 0 1.5 1.4h6.4a1.5 1.5 0 0 0 1.5-1.4L17.5 7M10 11v5M14 11v5",
+  imagem: "M5 4.5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-13a1 1 0 0 1 1-1zM4 16l4.5-4.5L13 16m-1.5-1.5 2.5-2.5 6 6M15.5 9h.01",
 } as const;
 
 export type NomeIcone = keyof typeof CAMINHOS;
