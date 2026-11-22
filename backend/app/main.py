@@ -17,6 +17,7 @@ from app.routers import (
     feed,
     follows,
     habilidades,
+    matches,
     posts,
     trocas,
     users,
@@ -58,5 +59,6 @@ app.include_router(dms.router)
 app.include_router(avaliacoes.router)
 app.include_router(trocas.router)
 app.include_router(follows.router)
+app.include_router(matches.router)
 app.include_router(posts.router)
 app.include_router(feed.router)

@@ -275,3 +275,24 @@ export function listarConexoes(
     `/usuarios/${encodeURIComponent(username)}/${tipo}?offset=${offset}&limit=${limit}`,
   );
 }
+
+export type HabilidadeComNivel = {
+  id: number;
+  nome: string;
+  nivel: number;
+};
+
+export type Match = {
+  usuario: User;
+  me_ensina: HabilidadeComNivel[];
+  eu_ensino: HabilidadeComNivel[];
+};
+
+export type Matches = {
+  troca: Match[];
+  pode_te_ensinar: Match[];
+};
+
+export function listarMatches(): Promise<Matches> {
+  return apiGet<Matches>("/matches");
+}
