@@ -49,7 +49,7 @@ export default function EncontrarPessoasPage() {
         const ids = new Set(anteriores.map((usuario) => usuario.id));
         return [...anteriores, ...novos.filter((usuario) => !ids.has(usuario.id))];
       });
-      setTotal(pagina.total - (offset === 0 && pagina.items.some((usuario) => usuario.id === idMeuUsuario) ? 1 : 0));
+      setTotal(pagina.total);
       setProximoOffset(pagina.offset + pagina.items.length);
     } catch (falha) {
       if (atual === requisicao.current) {
@@ -96,18 +96,21 @@ export default function EncontrarPessoasPage() {
         </p>
       </header>
 
-      <BotaoLink variante="secundario" tamanho="sm" href="/matches">
-        <Icone nome="troca" />
-        Ver quem pode te ensinar
-      </BotaoLink>
-
-      <Campo
-        rotulo="Buscar"
-        type="search"
-        placeholder="Nome ou @usuário"
-        value={termo}
-        onChange={(evento) => setTermo(evento.target.value)}
-      />
+      {logado !== false && (
+        <div className="space-y-4">
+          <BotaoLink variante="secundario" tamanho="sm" href="/matches">
+            <Icone nome="troca" tamanho={16} />
+            Ver quem pode te ensinar
+          </BotaoLink>
+          <Campo
+            rotulo="Buscar"
+            type="search"
+            placeholder="Nome ou @usuário"
+            value={termo}
+            onChange={(evento) => setTermo(evento.target.value)}
+          />
+        </div>
+      )}
 
       {logado === false && (
         <p className="text-sm leading-relaxed text-texto-2">
@@ -165,7 +168,7 @@ export default function EncontrarPessoasPage() {
               </li>
             ))}
           </ul>
-          {usuarios.length < total && (
+          {proximoOffset < total && (
             <div className="flex justify-center">
               <Botao variante="secundario" carregando={carregandoMais} onClick={carregarMais}>
                 Carregar mais
