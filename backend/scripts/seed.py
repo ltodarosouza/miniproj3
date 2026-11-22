@@ -230,6 +230,7 @@ def _criar_posts(
 def _criar_curtidas_e_comentarios(
     db: Session, usuarios: list[User], posts: list[Post], sorteio: random.Random
 ) -> None:
+    agora = agora_utc()
     curtidas: set[tuple[int, int]] = set()
     while len(curtidas) < 120:
         usuario, post = sorteio.choice(usuarios), sorteio.choice(posts)
@@ -238,7 +239,9 @@ def _criar_curtidas_e_comentarios(
     por_id = {p.id: p for p in posts}
     db.add_all(
         Curtida(
-            usuario_id=u, post_id=p, created_at=por_id[p].created_at + timedelta(minutes=30)
+            usuario_id=u,
+            post_id=p,
+            created_at=min(por_id[p].created_at + timedelta(minutes=30), agora),
         )
         for u, p in sorted(curtidas)
     )
@@ -249,7 +252,7 @@ def _criar_curtidas_e_comentarios(
                 post_id=post.id,
                 autor_id=autor.id,
                 texto=sorteio.choice(COMENTARIOS),
-                created_at=post.created_at + timedelta(hours=1),
+                created_at=min(post.created_at + timedelta(hours=1), agora),
             )
         )
 
