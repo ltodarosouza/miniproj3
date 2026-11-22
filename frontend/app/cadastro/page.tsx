@@ -107,7 +107,7 @@ export default function CadastroPage() {
           setErroGeral(err.message);
         }
       } else {
-        setErroGeral("não consegui falar com o servidor — ele está rodando?");
+        setErroGeral("Não consegui falar com o servidor. Tente de novo em alguns segundos.");
       }
     } finally {
       setCarregando(false);

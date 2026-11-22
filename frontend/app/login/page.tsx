@@ -41,7 +41,7 @@ export default function LoginPage() {
         else if (err.status === 422) setCampos(err.campos);
         else setErro(err.message);
       } else {
-        setErro("não consegui falar com o servidor — ele está rodando?");
+        setErro("Não consegui falar com o servidor. Tente de novo em alguns segundos.");
       }
     } finally {
       setCarregando(false);
