@@ -250,7 +250,7 @@ contra a versão que percorre todos os usuários.
   botão de seguir no navegador. Um subagente revisor apontou bugs no
   frontend (erro engolido, resposta velha na lista, hydration), que foram
   corrigidos antes do PR.
-- Frente A (auth): Claude Code planejou com o @italoosilva as decisões de
-  token, sessão e limites; escreveu models, schemas, service, rotas, testes e
-  as telas de login/cadastro, e revisou a integração com o follow antes do PR.
+- Frente A (auth): IA escreveu models, schemas, service, rotas, testes e as
+  telas de login/cadastro, revisou a integração com o follow e realizou os
+  testes (incluindo testes visuais no navegador) antes do PR.
 - _(completem conforme usarem)_
