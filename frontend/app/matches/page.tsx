@@ -8,8 +8,9 @@ import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { Cartao } from "@/components/ui/Cartao";
 import { TagHabilidade } from "@/components/ui/TagHabilidade";
 import { ErroApi, listarMatches, type Match, type Matches } from "@/lib/api";
+import { meuId } from "@/lib/sessao";
 
-const LINK_PERFIL =
+const LINK_TEXTO =
   "font-medium text-marca-forte underline-offset-2 hover:underline";
 
 function CartaoMatch({ match, troca }: { match: Match; troca: boolean }) {
@@ -103,12 +104,17 @@ function Secao({
 export default function Pagina() {
   const [dados, setDados] = useState<Matches | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [logado, setLogado] = useState<boolean | null>(null);
 
   const carregar = useCallback(async () => {
     setErro(null);
     try {
       setDados(await listarMatches());
     } catch (err) {
+      if (err instanceof ErroApi && err.status === 401) {
+        setLogado(false);
+        return;
+      }
       setErro(
         err instanceof ErroApi
           ? err.message
@@ -118,7 +124,9 @@ export default function Pagina() {
   }, []);
 
   useEffect(() => {
-    carregar();
+    const temSessao = meuId() !== null;
+    setLogado(temSessao);
+    if (temSessao) carregar();
   }, [carregar]);
 
   return (
@@ -127,7 +135,16 @@ export default function Pagina() {
         Matches
       </h1>
 
-      {erro && (
+      {logado === false && (
+        <p className="text-sm leading-relaxed text-texto-2">
+          Entre na sua conta para ver seus matches.{" "}
+          <Link href="/login" className={LINK_TEXTO}>
+            Entrar
+          </Link>
+        </p>
+      )}
+
+      {logado && erro && (
         <Cartao className="flex items-center justify-between gap-3 p-3">
           <p role="alert" className="text-sm text-texto-2">
             {erro}
@@ -138,7 +155,7 @@ export default function Pagina() {
         </Cartao>
       )}
 
-      {!dados && !erro && (
+      {logado && !dados && !erro && (
         <div role="status" aria-busy="true">
           <span className="sr-only">Carregando matches</span>
           <ul className="space-y-2" aria-hidden>
@@ -152,7 +169,7 @@ export default function Pagina() {
         </div>
       )}
 
-      {dados && (
+      {logado && dados && (
         <>
           <Secao
             titulo="Match de troca"
@@ -162,7 +179,7 @@ export default function Pagina() {
             vazio={
               <>
                 Nenhuma troca ainda.{" "}
-                <Link href="/perfil/eu" className={LINK_PERFIL}>
+                <Link href="/perfil/eu" className={LINK_TEXTO}>
                   Adicione o que você sabe no perfil
                 </Link>
                 .
@@ -177,7 +194,7 @@ export default function Pagina() {
             vazio={
               <>
                 Ninguém sabe o que você quer aprender ainda.{" "}
-                <Link href="/perfil/eu" className={LINK_PERFIL}>
+                <Link href="/perfil/eu" className={LINK_TEXTO}>
                   Adicione mais habilidades no perfil
                 </Link>
                 .
