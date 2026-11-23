@@ -135,7 +135,12 @@ export default function PaginaConversa() {
 
   const aplicarLidasAte = useCallback((id: number | null | undefined) => {
     if (id == null) return;
-    setMensagens((atuais) => atuais.map((mensagem) => mensagem.de_username !== username && mensagem.id <= id ? { ...mensagem, entregue_em: mensagem.entregue_em ?? mensagem.em, lida_em: mensagem.lida_em ?? new Date().toISOString() } : mensagem));
+    setMensagens((atuais) => {
+      const pendente = (mensagem: MensagemLocal) => mensagem.de_username !== username && mensagem.id > 0 && mensagem.id <= id && !mensagem.lida_em;
+      if (!atuais.some(pendente)) return atuais;
+      const agora = new Date().toISOString();
+      return atuais.map((mensagem) => pendente(mensagem) ? { ...mensagem, entregue_em: mensagem.entregue_em ?? mensagem.em, lida_em: agora } : mensagem);
+    });
   }, [username]);
 
   const marcarLidas = useCallback(() => {
