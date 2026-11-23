@@ -33,9 +33,9 @@ export function Streak({
     <Link
       href={postouHoje ? "/perfil/eu" : HREF_PUBLICAR}
       aria-label={dica}
-      className={`group relative inline-flex h-9 items-center gap-1 rounded-controle px-2 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 ${postouHoje ? "text-texto" : "text-texto-3"} ${className ?? ""}`}
+      className={`group relative inline-flex h-9 items-center gap-1 rounded-controle px-2 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 ${postouHoje ? "text-texto" : "text-texto-2"} ${className ?? ""}`}
     >
-      <Icone nome="chama" tamanho={18} preenchido={postouHoje} className={postouHoje ? "text-troca" : undefined} />
+      <Icone nome="chama" tamanho={18} preenchido={postouHoje} className={postouHoje ? "text-troca" : "text-texto-3"} />
       <span className="text-sm font-semibold numeros">{dias}</span>
       <span
         role="tooltip"

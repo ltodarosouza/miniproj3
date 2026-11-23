@@ -106,7 +106,7 @@ export function AvisoAvaliacao() {
   if (usuarioId === null || !troca || !outraPessoa) return null;
 
   return (
-    <div className={`fixed inset-x-3 bottom-3 z-50 transition-[opacity,translate] duration-[var(--lento)] ease-saida motion-reduce:transition-none md:inset-x-auto md:right-6 md:bottom-6 md:w-[22rem] ${visivel ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}>
+    <div className={`fixed inset-x-3 bottom-[calc(0.75rem+var(--altura-barra-inferior))] z-50 transition-[opacity,translate] duration-[var(--lento)] ease-saida motion-reduce:transition-none md:inset-x-auto md:right-6 md:bottom-[calc(1.5rem+var(--altura-barra-inferior))] md:w-[22rem] ${visivel ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}>
       <Cartao role="dialog" aria-labelledby="titulo-avaliacao" className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-5 shadow-alta">
         {sucesso ? (
           <div className="flex items-start gap-3 py-2" aria-live="polite">

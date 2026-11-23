@@ -180,8 +180,8 @@ a {
 
 @media (min-width: 64rem) {
   .area-principal {
-    padding: 2rem 2rem 3rem;
-    padding-left: calc(2rem + var(--largura-lateral));
+    padding: 2rem 1.5rem 3rem;
+    padding-left: calc(1.5rem + var(--largura-lateral));
   }
 }
 

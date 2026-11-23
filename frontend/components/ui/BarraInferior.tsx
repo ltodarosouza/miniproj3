@@ -16,7 +16,7 @@ export function BarraInferior() {
   return (
     <nav
       aria-label="Principal"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-linha bg-[color-mix(in_oklch,var(--fundo)_88%,transparent)] pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-linha bg-[color-mix(in_oklch,var(--fundo)_88%,transparent)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] backdrop-blur-md lg:hidden"
     >
       <ul className="mx-auto grid h-16 max-w-lg grid-cols-5">
         {itens.slice(0, 2).map((item) => {

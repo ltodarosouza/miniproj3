@@ -3,7 +3,7 @@
 import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 
 const BASE =
-  "w-full rounded-controle border bg-superficie px-3 text-base sm:text-[0.9375rem] text-texto placeholder:text-texto-3 transition-[border-color,box-shadow] duration-[var(--rapido)] ease-saida focus:outline-none focus:border-marca focus:shadow-[0_0_0_4px_var(--brilho)]";
+  "w-full rounded-controle border bg-superficie px-3 text-base md:text-[0.9375rem] text-texto placeholder:text-texto-3 transition-[border-color,box-shadow] duration-[var(--rapido)] ease-saida focus:outline-none focus:border-marca focus:shadow-[0_0_0_4px_var(--brilho)]";
 
 function Rotulo({
   id,
@@ -58,7 +58,7 @@ export function Campo({
           id={id}
           aria-invalid={erro ? true : undefined}
           aria-describedby={erro || dica ? `${id}-msg` : undefined}
-          className={`${BASE} h-11 sm:h-10 ${acao ? "pr-20" : ""} ${erro ? "border-perigo" : "border-linha-forte"} ${className}`}
+          className={`${BASE} h-11 md:h-10 ${acao ? "pr-20" : ""} ${erro ? "border-perigo" : "border-linha-forte"} ${className}`}
           {...resto}
         />
         {acao && (
@@ -106,7 +106,7 @@ export function Selecao({
           id={id}
           aria-invalid={erro ? true : undefined}
           aria-describedby={erro || dica ? `${id}-msg` : undefined}
-          className={`${BASE} h-11 sm:h-10 appearance-none pr-10 ${erro ? "border-perigo" : "border-linha-forte"} ${className}`}
+          className={`${BASE} h-11 md:h-10 appearance-none pr-10 ${erro ? "border-perigo" : "border-linha-forte"} ${className}`}
           {...resto}
         >
           {children}

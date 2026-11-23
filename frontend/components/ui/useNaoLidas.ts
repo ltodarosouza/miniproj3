@@ -15,6 +15,8 @@ export function useNaoLidas(): NaoLidas {
   const mensagensIndisponiveis = useRef(false);
   const notificacoesIndisponiveis = useRef(false);
   const montado = useRef(false);
+  const ultimaMensagens = useRef(0);
+  const ultimaNotificacoes = useRef(0);
 
   const consultar = useCallback(async () => {
     if (meuId() === null) {
@@ -24,23 +26,25 @@ export function useNaoLidas(): NaoLidas {
 
     const consultarMensagens = async () => {
       if (mensagensIndisponiveis.current) return;
+      const pedido = ++ultimaMensagens.current;
       try {
         const resposta = await apiGet<TotalNaoLidas>("/dms/nao-lidas");
-        if (montado.current) setNaoLidas((atual) => ({ ...atual, mensagens: resposta.total }));
+        if (montado.current && pedido === ultimaMensagens.current) setNaoLidas((atual) => ({ ...atual, mensagens: resposta.total }));
       } catch (erro) {
         if (erro instanceof ErroApi && erro.status === 404) mensagensIndisponiveis.current = true;
-        if (montado.current) setNaoLidas((atual) => ({ ...atual, mensagens: null }));
+        if (montado.current && pedido === ultimaMensagens.current) setNaoLidas((atual) => ({ ...atual, mensagens: null }));
       }
     };
 
     const consultarNotificacoes = async () => {
       if (notificacoesIndisponiveis.current) return;
+      const pedido = ++ultimaNotificacoes.current;
       try {
         const resposta = await apiGet<TotalNaoLidas>("/notificacoes/nao-lidas");
-        if (montado.current) setNaoLidas((atual) => ({ ...atual, notificacoes: resposta.total }));
+        if (montado.current && pedido === ultimaNotificacoes.current) setNaoLidas((atual) => ({ ...atual, notificacoes: resposta.total }));
       } catch (erro) {
         if (erro instanceof ErroApi && erro.status === 404) notificacoesIndisponiveis.current = true;
-        if (montado.current) setNaoLidas((atual) => ({ ...atual, notificacoes: null }));
+        if (montado.current && pedido === ultimaNotificacoes.current) setNaoLidas((atual) => ({ ...atual, notificacoes: null }));
       }
     };
 

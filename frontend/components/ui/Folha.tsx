@@ -58,6 +58,7 @@ export function Folha({
     if (estado.dy < 4) {
       elemento.style.transform = "";
       elemento.style.transition = "";
+      aoFechar();
       return;
     }
 
@@ -100,11 +101,17 @@ export function Folha({
       <button
         type="button"
         className="-mt-5 flex h-11 w-full touch-none items-center justify-center sm:hidden"
-        aria-label="Arraste para baixo para fechar"
+        aria-label="Fechar"
         onPointerDown={iniciarArraste}
         onPointerMove={moverArraste}
         onPointerUp={finalizarArraste}
         onPointerCancel={finalizarArraste}
+        onKeyDown={(evento) => {
+          if (evento.key === "Enter" || evento.key === " ") {
+            evento.preventDefault();
+            aoFechar();
+          }
+        }}
       >
         <span aria-hidden="true" className="h-1 w-10 rounded-full bg-linha-forte" />
       </button>

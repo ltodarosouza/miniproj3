@@ -83,15 +83,22 @@ export function PuxarParaAtualizar({
       definirDistancia(0, true);
     }
 
+    function aoCancelar() {
+      if (inicioRef.current === null || atualizandoRef.current) return;
+      inicioRef.current = null;
+      distanciaRef.current = 0;
+      definirDistancia(0, true);
+    }
+
     wrapper.addEventListener("touchstart", aoIniciar, { passive: true });
     wrapper.addEventListener("touchmove", aoMover, { passive: false });
     wrapper.addEventListener("touchend", aoFinalizar);
-    wrapper.addEventListener("touchcancel", aoFinalizar);
+    wrapper.addEventListener("touchcancel", aoCancelar);
     return () => {
       wrapper.removeEventListener("touchstart", aoIniciar);
       wrapper.removeEventListener("touchmove", aoMover);
       wrapper.removeEventListener("touchend", aoFinalizar);
-      wrapper.removeEventListener("touchcancel", aoFinalizar);
+      wrapper.removeEventListener("touchcancel", aoCancelar);
     };
   }, []);
 

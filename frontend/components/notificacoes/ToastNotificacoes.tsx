@@ -34,7 +34,7 @@ export function ToastNotificacoes() {
   }
 
   return (
-    <div role="status" aria-live="polite" className="fixed inset-x-4 bottom-4 z-50 sm:inset-x-auto sm:right-4 sm:top-20 sm:bottom-auto sm:w-80">
+    <div role="status" aria-live="polite" className="fixed inset-x-4 bottom-[calc(1rem+var(--altura-barra-inferior))] z-50 sm:inset-x-auto sm:right-4 sm:top-20 sm:bottom-auto sm:w-80">
       {ultimaNova && (
         <div
           onMouseEnter={() => setPausado(true)}

@@ -28,13 +28,22 @@ export function CabecalhoCelular({
     setFolhaAberta(false);
   }, [caminho]);
 
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 64rem)");
+    const aoMudar = () => {
+      if (desktop.matches) setFolhaAberta(false);
+    };
+    desktop.addEventListener("change", aoMudar);
+    return () => desktop.removeEventListener("change", aoMudar);
+  }, []);
+
   const linkAtivo = (href: string) => rotaAtiva(caminho, href);
   const rotuloComContagem = (rotulo: string, total: number | null) =>
     `${rotulo}${total !== null && total > 0 ? `, ${total} não lidas` : ""}`;
 
   return (
     <header className="sticky top-0 z-40 lg:hidden border-b border-linha bg-[color-mix(in_oklch,var(--fundo)_88%,transparent)] backdrop-blur-md pt-[env(safe-area-inset-top)]">
-      <div className="flex h-14 items-center justify-between gap-2 pl-4 pr-1.5">
+      <div className="flex h-14 items-center justify-between gap-2 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(0.375rem,env(safe-area-inset-right))]">
         <Link href="/feed" className="inline-flex min-w-0 items-center gap-2 text-texto">
           <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-marca text-marca-texto">
             <Icone nome="troca" tamanho={16} />
