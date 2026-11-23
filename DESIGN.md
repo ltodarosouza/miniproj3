@@ -14,11 +14,11 @@ Linear (detalhes finos, movimento suave).
   iniciante não pode se sentir avaliado.
 - **Limpa:** neutros com um toque de verde-azulado e uma cor de destaque só.
   Muito espaço, pouca borda.
-- **Fluida:** as coisas reagem ao mouse e assentam com suavidade. Movimento
-  sempre com propósito, nunca enfeite.
+- **Fluida:** as coisas respondem ao que você faz (tocar, curtir, enviar,
+  arrastar) e assentam com suavidade. Nada segue o mouse.
 
 O nome "Troca" na navegação é provisório: troque a constante `NOME_REDE` em
-`frontend/app/layout.tsx` quando o time escolher o nome.
+`frontend/lib/marca.ts` quando o time escolher o nome.
 
 ## Cores
 
@@ -34,16 +34,17 @@ tokens, que mudam sozinhos no tema escuro.
 | `linha` / `linha-forte` | `border-linha` | Bordas e divisórias |
 | `texto` / `texto-2` / `texto-3` | `text-texto` | Principal, secundário, apagado |
 | `marca` / `marca-forte` / `marca-suave` | `bg-marca` | Verde-azulado: ações principais, link ativo, "sei" |
-| `troca` / `troca-suave` | `bg-troca` | Laranja: **só** o que fecha um match de troca |
+| `troca` / `troca-suave` | `bg-troca` | Laranja: o que fecha um match de troca e a chama da sequência |
 | `estrela` | `text-estrela` | Avaliações |
 | `perigo` / `sucesso` | `text-perigo` | Erros e confirmações |
 
 Regras:
 
 - Uma ação primária (`marca`) por tela.
-- O laranja (`troca`) é raro de propósito: aparece só no "Match de troca", no
-  botão "Propor troca" e na habilidade que fecha a troca. Se aparecer em todo
-  lugar, perde o significado.
+- O laranja (`troca`) é raro de propósito: aparece no "Match de troca", no
+  botão "Propor troca", na habilidade que fecha a troca e na chama da
+  sequência, por ser a cor natural do fogo. Se aparecer em todo lugar, perde
+  o significado.
 - O tema segue o sistema. Os dois temas têm contraste AA.
 
 ## Tipografia
@@ -65,7 +66,7 @@ Pesos: 400, 500 e 600. Nada de negrito 700+ nem itálico decorativo.
 - Raio: `rounded-cartao` (14px) para cartões e quadros, `rounded-controle`
   (10px) para botões e campos, `rounded-full` para tags e avatares.
 - Sombra: `shadow-cartao` em repouso, `shadow-alta` em destaque ou hover.
-- Largura do conteúdo: `max-w-5xl` (já no layout). Feed e textos longos em
+- Cada página escolhe a própria largura. Feed e textos longos podem usar
   `max-w-2xl`.
 - Espaço: grupos apertados (`gap-2`/`gap-3`), seções bem separadas (`gap-8`
   ou mais). Mais espaço acima de um título do que abaixo.
@@ -77,9 +78,9 @@ Todos em `frontend/components/ui/`. Importe com `@/components/ui/<Nome>`.
 
 | Componente | Para quê | Propriedades principais |
 |---|---|---|
-| `Botao` | Qualquer ação | `variante`: `primario`, `secundario`, `fantasma`, `troca`; `tamanho`: `sm`, `md`; `carregando`; `magnetico` |
+| `Botao` | Qualquer ação | `variante`: `primario`, `secundario`, `fantasma`, `troca`; `tamanho`: `sm`, `md`; `carregando`; `magnetico` é aceito, mas sem efeito |
 | `Campo`, `AreaTexto` | Formulários | `rotulo` (obrigatório), `dica`, `erro` |
-| `Cartao` | Post, match, perfil | `interativo` liga holofote e elevação no hover |
+| `Cartao` | Post, match, perfil | `interativo` reforça borda e sombra no hover, sem mover |
 | `Avatar` | Foto ou iniciais | `nome`, `url`, `tamanho`: `sm`, `md`, `lg`; `online` |
 | `TagHabilidade` | Habilidade | `nome`, `tipo`: `sei`, `quero_aprender`, `neutra`; `nivel` (1–5); `destaque` (fecha troca) |
 | `Estrelas` | Nota | `valor`; com `aoMudar` vira interativa |
@@ -88,6 +89,18 @@ Todos em `frontend/components/ui/`. Importe com `@/components/ui/<Nome>`.
 | `Revelar` | Aparecer ao rolar | `atraso` (ms) para escalonar listas |
 | `Navegacao` | Barra do topo | já está no layout |
 | `Icone` | Ícones | `nome`, `tamanho`, `preenchido` |
+| `Folha` | Opções em painel inferior | Alça de arraste; janela centralizada no computador |
+| `ToqueDuplo` | Curtir foto com dois toques | Mostra um coração grande |
+| `Celebrar` | Confete leve | `celebrar()` ao concluir uma ação |
+| `PuxarParaAtualizar` | Atualizar lista no celular | Envolve uma lista atualizável |
+| `Esqueleto`, `EsqueletoPost`, `EsqueletoLista` | Carregamento | Esqueleto com brilho |
+| `SeloContador` | Contador pequeno | Badge numérico |
+| `Streak` | Sequência de estudo | Chama e número de dias |
+| `NavegacaoLateral` | Navegação no computador | Painel lateral flutuante |
+| `CabecalhoCelular` | Navegação no celular | Cabeçalho fino com sequência e avisos |
+| `BarraInferior` | Navegação no celular | Cinco destinos fixos |
+| `useNaoLidas` | Badges de mensagens e notificações | Polling com aba visível |
+| `useStreak` | Sequência de estudo | Carrega sequência e último post |
 
 Exemplos de uso de cada um estão em `frontend/app/design/page.tsx`.
 
@@ -97,26 +110,30 @@ traço (24×24, linha 1.7, pontas arredondadas). Nada de emoji no lugar de
 
 ## Movimento
 
-O movimento é o que deixa a rede com cara de produto caprichado. Ele já está
-pronto nos componentes: **usem os componentes e não inventem animações
-soltas.**
+O movimento é o que deixa a rede com cara de produto caprichado. Movimento
+responde a ação, nunca à posição do mouse. Ele já está pronto nos componentes:
+**usem os componentes e não inventem animações soltas.**
 
 | Efeito | Onde já está | Quando usar |
 |---|---|---|
 | Página entra com leve subida e desfoque | `app/template.tsx`, automático | Toda navegação |
-| Holofote que segue o mouse | `Cartao interativo` | Posts, matches, qualquer cartão clicável |
-| Botão magnético (puxa em direção ao mouse) | `Botao magnetico` | Só CTAs principais: Publicar, Propor troca, Conversar |
-| Pílula que desliza entre os links | `Navegacao` | Automático |
 | Arrastar com inclinação e assentamento com mola | `QuadroArrastavel` | Editor de habilidades (Sei / Quero aprender) |
 | Aparecer ao rolar | `Revelar` | Listas do feed, seções do perfil, matches |
 | Coração que pulsa | `BotaoCurtir` | Curtidas |
+| Partículas da curtida | `BotaoCurtir` | Ao curtir |
+| Contador animado | `BotaoCurtir` | Ao mudar o total de curtidas |
+| Toque duplo e coração grande | `ToqueDuplo` | Foto de post |
+| Folha que sobe | `Folha` | Opções no celular |
+| Confete leve | `Celebrar` / `celebrar()` | Ações concluídas |
+| Puxar para atualizar | `PuxarParaAtualizar` | Listas no celular |
+| Brilho do esqueleto | `Esqueleto`, `EsqueletoPost`, `EsqueletoLista` | Conteúdo carregando |
+| Vibração curta | `vibrar()` em `lib/movimento.ts` | Curtir, seguir e toque duplo; troca ao confirmar |
 | Estrelas que acendem em sequência | `Estrelas` interativa | Avaliação pós-troca |
 
 Regras:
 
 - Curva padrão: `ease-saida` (desacelera suave). A curva `ease-mola`, com um
-  leve passar do ponto, fica só para elementos pequenos (coração, estrelas,
-  volta do botão magnético).
+  leve passar do ponto, fica só para elementos pequenos (coração e estrelas).
 - Durações: `--rapido` (160ms) para cor e hover, `--medio` (320ms) para
   posição, `--lento` (640ms) para entradas.
 - Um efeito de destaque por tela. Se tudo se mexe, nada chama atenção.
@@ -125,14 +142,52 @@ Regras:
 - Conteúdo nunca depende da animação para existir: se o JavaScript falhar,
   tudo continua visível.
 
+## Navegação e celular
+
+No computador (a partir de 1024 px), a casca usa um painel lateral flutuante à
+esquerda, com logo, sequência, Feed, Buscar, Matches, Mensagens, Notificações,
+Perfil, Publicar, tema e Sair. Entre 1024 e 1279 px, mostra só ícones; a partir
+de 1280 px, ícones e rótulos. O item ativo fica verde-azulado, com marcador na
+borda do painel. A área central tem pelo menos 960 px a partir de 1280 px.
+
+No celular (abaixo de 1024 px), há um cabeçalho fino com logo, sequência,
+notificações, mensagens e "Mais opções". Esse botão abre uma `Folha` com tema
+e sair. A barra inferior fixa e plana tem Feed, Buscar, Publicar (+), Matches
+e Perfil, e respeita a área segura do iPhone. Publicar e + levam a
+`/feed?publicar=1`.
+
+As variáveis da casca são `--altura-navegacao` (3,5 rem no celular, 0 no
+computador logado), `--altura-barra-inferior` (4 rem mais área segura no
+celular, 0 no computador) e `--largura-lateral`. Valem quando `<html
+data-logado="sim">`; um script no `<head>` define esse atributo antes da
+pintura. Exemplo: `h-[calc(100dvh-var(--altura-navegacao)-var(--altura-barra-inferior))]`.
+
+Mensagens usam `GET /dms/nao-lidas` (C1) e notificações usam
+`GET /notificacoes/nao-lidas` (C2). Os badges consultam a cada 15 s com a aba
+visível e ao trocar de rota. Erro ou 404 remove o badge e interrompe consultas
+àquele endpoint até recarregar.
+
+A sequência fica sempre visível, com chama e número na lateral e no cabeçalho
+do celular. Vem de `GET /usuarios/{eu}` (`streak`) e do último post, contado
+em UTC como no backend. A chama fica laranja quando a pessoa já postou hoje e
+cinza quando falta; o número usa a cor do texto para manter contraste AA. A
+dica é "Poste hoje para manter sua sequência de N dias". Clicar leva para
+Publicar.
+
+O app é instalável como PWA, com `display: standalone`, ícones 192, 512,
+maskable e `apple-touch-icon`, `viewport-fit=cover` e `theme-color` claro ou
+escuro. Campos têm 16 px no celular para evitar zoom no iOS e altura de 44 px.
+`Botao tamanho="sm"` também mantém alvo de toque de 44 px no celular.
+
 ## Telas: padrão sugerido
 
-- **Feed:** coluna `max-w-2xl`, formulário de novo post no topo, posts em
-  `Cartao interativo` dentro de `Revelar` com `atraso={i * 60}` (máximo 6
-  itens escalonados).
+- **Feed:** coluna `max-w-2xl`, formulário de novo post no topo, use
+  `EsqueletoLista` ao carregar, `PuxarParaAtualizar` na lista e `ToqueDuplo`
+  na foto. Posts em `Cartao interativo` dentro de `Revelar` com
+  `atraso={i * 60}` (máximo 6 itens escalonados).
 - **Matches:** seção "Match de troca" primeiro, em destaque com o laranja;
   depois "Pode te ensinar". Cada pessoa num `Cartao interativo` com
-  `Botao variante="troca" magnetico` para conversar.
+  `Botao variante="troca"` para conversar.
 - **Perfil:** cabeçalho com `Avatar tamanho="lg"`, contadores com `numeros`,
   nota com `Estrelas`, habilidades em `TagHabilidade`. Edição de habilidades
   com `QuadroArrastavel`.
@@ -149,4 +204,5 @@ Regras:
 - Rótulo pequeno em maiúsculas acima de títulos.
 - Emoji como ícone.
 - Animação nova fora dos componentes sem combinar com o time.
+- Efeito que segue o mouse (holofote, botão magnético, pílula que persegue o ponteiro).
 - Cartão dentro de cartão.

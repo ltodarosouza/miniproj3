@@ -22,7 +22,7 @@ const VARIANTES: Record<Variante, string> = {
 };
 
 const TAMANHOS: Record<Tamanho, string> = {
-  sm: "h-8 px-3 text-sm gap-1.5",
+  sm: "h-8 px-3 text-sm gap-1.5 relative after:absolute after:-inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-[''] md:after:hidden",
   md: "h-10 px-4 text-[0.9375rem] gap-2",
 };
 

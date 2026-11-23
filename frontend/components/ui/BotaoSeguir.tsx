@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Botao } from "@/components/ui/Botao";
 import { deixarDeSeguir, ErroApi, estadoFollow, seguir, type EstadoFollow } from "@/lib/api";
 import { meuId } from "@/lib/sessao";
+import { vibrar } from "@/lib/movimento";
 
 function naoAutenticado(err: unknown): boolean {
   return err instanceof ErroApi && err.status === 401;
@@ -83,6 +84,7 @@ export function BotaoSeguir({
     setErro(null);
     try {
       const estado = seguindo ? await deixarDeSeguir(username) : await seguir(username);
+      if (!seguindo) vibrar(10);
       setSeguindo(estado.seguindo);
       aoMudar?.(estado);
     } catch (err) {

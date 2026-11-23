@@ -21,6 +21,9 @@ const CAMINHOS = {
   sol: "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 3v1.5M12 19.5V21M3 12h1.5M19.5 12H21M5.6 5.6l1.1 1.1M17.3 17.3l1.1 1.1M5.6 18.4l1.1-1.1M17.3 6.7l1.1-1.1",
   lua: "M19.5 14.5A7.5 7.5 0 0 1 9.5 4.5a7.5 7.5 0 1 0 10 10z",
   busca: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zm9 2-4-4",
+  sino: "M6.5 16.5V11a5.5 5.5 0 1 1 11 0v5.5l1.5 2h-14zM10 20.5h4",
+  sair: "M14 4.5h4a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-4M10 16l-4-4 4-4M6 12h9",
+  opcoes: "M5.5 12h.01M12 12h.01M18.5 12h.01",
 } as const;
 
 export type NomeIcone = keyof typeof CAMINHOS;
@@ -43,7 +46,7 @@ export function Icone({
       viewBox="0 0 24 24"
       fill={preenchido ? "currentColor" : "none"}
       stroke="currentColor"
-      strokeWidth={nome === "arrastar" ? 2.6 : 1.7}
+      strokeWidth={nome === "arrastar" || nome === "opcoes" ? 2.6 : 1.7}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"

@@ -7,63 +7,8 @@ export function prefereMenosMovimento(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function useHolofote<T extends HTMLElement>(): RefObject<T | null> {
-  const ref = useRef<T>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || prefereMenosMovimento()) return;
-
-    function mover(e: PointerEvent) {
-      const caixa = el!.getBoundingClientRect();
-      el!.style.setProperty("--mx", `${e.clientX - caixa.left}px`);
-      el!.style.setProperty("--my", `${e.clientY - caixa.top}px`);
-    }
-    const entrar = () => el.style.setProperty("--holofote", "1");
-    const sair = () => el.style.setProperty("--holofote", "0");
-
-    el.addEventListener("pointermove", mover);
-    el.addEventListener("pointerenter", entrar);
-    el.addEventListener("pointerleave", sair);
-    return () => {
-      el.removeEventListener("pointermove", mover);
-      el.removeEventListener("pointerenter", entrar);
-      el.removeEventListener("pointerleave", sair);
-    };
-  }, []);
-
-  return ref;
-}
-
-export function useMagnetico<T extends HTMLElement>(forca = 0.25): RefObject<T | null> {
-  const ref = useRef<T>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || prefereMenosMovimento()) return;
-    if (!window.matchMedia("(pointer: fine)").matches) return;
-
-    function mover(e: PointerEvent) {
-      const caixa = el!.getBoundingClientRect();
-      const dx = e.clientX - (caixa.left + caixa.width / 2);
-      const dy = e.clientY - (caixa.top + caixa.height / 2);
-      el!.style.transition = "transform 120ms var(--ease-saida)";
-      el!.style.transform = `translate(${dx * forca}px, ${dy * forca}px)`;
-    }
-    function sair() {
-      el!.style.transition = "transform 520ms var(--ease-mola)";
-      el!.style.transform = "translate(0, 0)";
-    }
-
-    el.addEventListener("pointermove", mover);
-    el.addEventListener("pointerleave", sair);
-    return () => {
-      el.removeEventListener("pointermove", mover);
-      el.removeEventListener("pointerleave", sair);
-    };
-  }, [forca]);
-
-  return ref;
+export function useMagnetico<T extends HTMLElement>(_forca = 0.25): RefObject<T | null> {
+  return useRef<T>(null);
 }
 
 export function useVisivel<T extends HTMLElement>(): [RefObject<T | null>, boolean] {
@@ -133,4 +78,9 @@ export function animarMola(
 
   quadro = requestAnimationFrame(passo);
   return () => cancelAnimationFrame(quadro);
+}
+
+export function vibrar(ms = 10): void {
+  if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") return;
+  navigator.vibrate(ms);
 }

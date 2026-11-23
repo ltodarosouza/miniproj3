@@ -107,6 +107,31 @@
   --ease-mola: var(--ease-mola);
 }
 
+:root {
+  --altura-navegacao: 3.5rem;
+  --altura-barra-inferior: 0px;
+  --largura-lateral: 0px;
+}
+
+:root[data-logado="sim"] {
+  --altura-navegacao: calc(3.5rem + env(safe-area-inset-top));
+  --altura-barra-inferior: calc(4rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 64rem) {
+  :root[data-logado="sim"] {
+    --altura-navegacao: 0px;
+    --altura-barra-inferior: 0px;
+    --largura-lateral: 5.25rem;
+  }
+}
+
+@media (min-width: 80rem) {
+  :root[data-logado="sim"] {
+    --largura-lateral: 15.75rem;
+  }
+}
+
 html {
   background: var(--fundo);
   -webkit-font-smoothing: antialiased;
@@ -148,6 +173,18 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
+.area-principal {
+  padding: 1.5rem 1rem calc(2rem + var(--altura-barra-inferior));
+  padding-left: calc(1rem + var(--largura-lateral));
+}
+
+@media (min-width: 64rem) {
+  .area-principal {
+    padding: 2rem 1.5rem 3rem;
+    padding-left: calc(1.5rem + var(--largura-lateral));
+  }
+}
+
 @keyframes entrar-pagina {
   from {
     opacity: 0;
@@ -161,6 +198,26 @@ a {
   35% { transform: scale(1.32); }
   65% { transform: scale(0.92); }
   100% { transform: scale(1); }
+}
+
+@keyframes subir-folha {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes brilho-esqueleto {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+.esqueleto {
+  background: linear-gradient(90deg, var(--superficie-2) 30%, color-mix(in oklch, var(--superficie-2) 55%, var(--superficie)) 50%, var(--superficie-2) 70%) 0 0 / 200% 100%;
+  animation: brilho-esqueleto 1.4s linear infinite;
 }
 
 @keyframes aparecer-escala {
@@ -189,27 +246,6 @@ a {
   opacity: 0;
   transform: translateY(18px);
   filter: blur(8px);
-}
-
-.holofote {
-  position: relative;
-  isolation: isolate;
-}
-
-.holofote::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: radial-gradient(
-    380px circle at var(--mx, 50%) var(--my, 50%),
-    var(--brilho),
-    transparent 65%
-  );
-  opacity: var(--holofote, 0);
-  transition: opacity var(--medio) var(--ease-saida);
-  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
