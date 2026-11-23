@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import type { MensagemLocal } from "@/components/mensagens/mensagemLocal";
 import { formatarHora } from "@/lib/datas";
+import { EstadoMensagem } from "@/components/mensagens/EstadoMensagem";
 
 export function BalaoMensagem({
   mensagem,
@@ -35,7 +36,7 @@ export function BalaoMensagem({
           {mensagem.texto}
         </p>
         {(mostrarHora || mensagem.estado === "enviando" || mensagem.estado === "falhou") && <div className={`mt-1 flex items-center gap-1 px-1 text-[0.6875rem] ${mensagem.estado === "falhou" ? "text-perigo" : "text-texto-3"}`}>
-          {minha && mensagem.estado === "enviando" && <><svg aria-hidden="true" className="size-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6" /><path d="M8 4.5V8l2.2 1.4" /></svg><span className="sr-only">Enviando</span></>}
+          {minha && (mostrarHora || mensagem.estado === "enviando" || mensagem.estado === "falhou") && <EstadoMensagem mensagem={mensagem} />}
           <time className="numeros">{formatarHora(mensagem.em)}</time>
           {minha && mensagem.estado === "falhou" && <button type="button" className="underline underline-offset-2 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-perigo" onClick={() => mensagem.idLocal !== undefined && aoTentarDeNovo?.(mensagem.idLocal)}>Não enviada · Tentar de novo</button>}
         </div>}
