@@ -404,7 +404,8 @@ contra a versão que percorre todos os usuários.
   `leitura_conversas` guarda até quando cada pessoa abriu uma conversa, então
   uma proposta recebida conta como não lida até a conversa ser aberta. A lista
   de conversas combina mensagens e trocas, e `/dms/nao-lidas` é o contrato C1.
-  O chat usa polling de 1,5 s, com envio otimista no front.
+  O chat usa polling de 1,5 s, com envio otimista no front. O `cliente_id`
+  torna o envio idempotente e é a chave de reconciliação da mensagem otimista.
 - **O que cortamos e por quê:** tabela de notificações por mensagem ou troca;
   mensagens e propostas existentes já permitem derivar o contador, enquanto a
   leitura por conversa preserva o estado da proposta sem alterar o modelo de

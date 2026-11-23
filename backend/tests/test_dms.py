@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 
 def test_enviar_mensagem(client, pessoa):
@@ -12,6 +12,73 @@ def test_enviar_mensagem(client, pessoa):
     assert resposta.json()["para_username"] == "bia"
     assert resposta.json()["texto"] == "Oi, tudo bem?"
     assert resposta.json()["em"].endswith("Z")
+
+
+def test_cliente_id_repetido_retorna_mensagem_existente(client, pessoa):
+    from app.db import SessionLocal
+    from app.models.mensagem import Mensagem
+
+    ana = pessoa("ana")
+    pessoa("bia")
+    dados = {"texto": "Oi", "cliente_id": "uuid-1"}
+    primeira = client.post("/dms/bia", json=dados, headers=ana)
+    segunda = client.post("/dms/bia", json=dados, headers=ana)
+
+    assert primeira.status_code == 201
+    assert segunda.status_code == 201
+    assert segunda.json()["id"] == primeira.json()["id"]
+    assert segunda.json()["cliente_id"] == "uuid-1"
+    with SessionLocal() as db:
+        assert db.scalar(
+            select(func.count(Mensagem.id)).where(
+                Mensagem.de_id == int(ana["X-User-Id"]),
+                Mensagem.cliente_id == "uuid-1",
+            )
+        ) == 1
+
+
+def test_sem_cliente_id_continua_criando_duas_mensagens(client, pessoa):
+    ana = pessoa("ana")
+    pessoa("bia")
+    dados = {"texto": "Oi"}
+    primeira = client.post("/dms/bia", json=dados, headers=ana)
+    segunda = client.post("/dms/bia", json=dados, headers=ana)
+
+    assert primeira.status_code == 201
+    assert segunda.status_code == 201
+    assert primeira.json()["id"] != segunda.json()["id"]
+    assert primeira.json()["cliente_id"] is None
+
+
+def test_cliente_id_nao_pode_ser_reutilizado_para_outro_destinatario(client, pessoa):
+    ana = pessoa("ana")
+    pessoa("bia")
+    pessoa("caio")
+    dados = {"texto": "Oi", "cliente_id": "uuid-1"}
+    assert client.post("/dms/bia", json=dados, headers=ana).status_code == 201
+
+    resposta = client.post("/dms/caio", json=dados, headers=ana)
+
+    assert resposta.status_code == 409
+    assert resposta.json()["detail"] == "cliente_id já usado"
+
+
+def test_cursor_entregues_e_cliente_id_no_get(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    enviada = client.post(
+        "/dms/bia",
+        json={"texto": "Oi", "cliente_id": "uuid-1"},
+        headers=ana,
+    ).json()
+
+    antes = client.get("/dms/bia", headers=ana).json()
+    assert antes["entregues_ate_id"] is None
+    assert antes["items"][0]["cliente_id"] == "uuid-1"
+    assert client.get("/dms/ana", headers=bia).status_code == 200
+    depois = client.get("/dms/bia", headers=ana).json()
+    assert depois["entregues_ate_id"] == enviada["id"]
+    assert depois["items"][0]["cliente_id"] == "uuid-1"
 
 
 def test_erros_ao_enviar_mensagem(client, pessoa):
@@ -26,6 +93,15 @@ def test_erros_ao_enviar_mensagem(client, pessoa):
 
     pessoa("bia")
     resposta = client.post("/dms/bia", json={"texto": "   "}, headers=ana)
+    assert resposta.status_code == 422
+
+    resposta = client.post(
+        "/dms/bia", json={"texto": "oi", "cliente_id": " "}, headers=ana
+    )
+    assert resposta.status_code == 422
+    resposta = client.post(
+        "/dms/bia", json={"texto": "oi", "cliente_id": "x" * 65}, headers=ana
+    )
     assert resposta.status_code == 422
 
     resposta = client.post("/dms/bia", json={"texto": "oi"})
