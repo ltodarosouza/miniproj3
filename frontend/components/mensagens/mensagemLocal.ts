@@ -20,7 +20,7 @@ export function reconciliarMensagens(atuais: MensagemLocal[], recebidas: Mensage
     const indice = porId >= 0 ? porId : porCliente;
     if (indice >= 0) {
       const existente = resultado[indice];
-      resultado[indice] = { ...existente, ...recebida, idLocal: existente.idLocal };
+      resultado[indice] = { ...existente, ...recebida, estado: undefined, entregue_em: recebida.entregue_em ?? existente.entregue_em, lida_em: recebida.lida_em ?? existente.lida_em, idLocal: existente.idLocal };
     } else {
       resultado.push(recebida);
     }
