@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
+from app.core.limite import limitador_mapear
+from app.deps import get_current_user
 from app.models.habilidade import Habilidade
+from app.models.user import User
 from app.schemas.habilidade import (
     HabilidadeMapearIn,
     HabilidadeMapearOut,
@@ -31,6 +34,12 @@ def autocomplete_habilidades(
 
 
 @router.post("/mapear", response_model=HabilidadeMapearOut)
-def mapear_habilidade(dados: HabilidadeMapearIn, db: Session = Depends(get_db)):
+def mapear_habilidade(
+    dados: HabilidadeMapearIn,
+    db: Session = Depends(get_db),
+    usuario: User = Depends(get_current_user),
+):
+    if not limitador_mapear.permitir(usuario.id):
+        raise HTTPException(status_code=429, detail="Muitas buscas seguidas. Espere um pouco e tente de novo.")
     habilidade = service.mapear_texto(db, dados.texto)
     return HabilidadeMapearOut(habilidade=habilidade)

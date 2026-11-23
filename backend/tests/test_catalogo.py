@@ -1,6 +1,15 @@
 import unicodedata
+import pytest
 
 from app.core.catalogo import TrieDeHabilidades, trie_habilidades
+from app.core.limite import limitador_mapear
+
+
+@pytest.fixture(autouse=True)
+def limpar_limitador_mapear():
+    limitador_mapear.limpar()
+    yield
+    limitador_mapear.limpar()
 
 
 def _sem_acento(texto: str) -> str:
@@ -66,14 +75,16 @@ def test_autocomplete_limite_e_ordem_alfabetica(client):
     assert nomes == sorted(nomes, key=_sem_acento)
 
 
-def test_mapear_habilidade_existente(client):
-    r = client.post("/habilidades/mapear", json={"texto": "pyton"})
+def test_mapear_habilidade_existente(client, logar):
+    usuario = logar("mapear_existente", "Mapear existente")
+    r = client.post("/habilidades/mapear", json={"texto": "pyton"}, headers=usuario)
     assert r.status_code == 200
     assert r.json()["habilidade"]["nome"] == "Python"
 
 
-def test_mapear_habilidade_inexistente(client):
-    r = client.post("/habilidades/mapear", json={"texto": "cozinhar batatas fritas"})
+def test_mapear_habilidade_inexistente(client, logar):
+    usuario = logar("mapear_inexistente", "Mapear inexistente")
+    r = client.post("/habilidades/mapear", json={"texto": "cozinhar batatas fritas"}, headers=usuario)
     assert r.status_code == 200
     assert r.json()["habilidade"] is None
 
