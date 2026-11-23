@@ -18,3 +18,4 @@ class MatchOut(BaseModel):
 class Matches(BaseModel):
     troca: list[MatchOut]
     pode_te_ensinar: list[MatchOut]
+    em_andamento: list[MatchOut]

@@ -2,6 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.schemas.match import HabilidadeComNivel
 from app.schemas.tempo import DataHoraEntrada, DataHoraUtc
 from app.schemas.user import UserOut
 
@@ -19,7 +20,6 @@ class HabilidadeResumo(BaseModel):
 class TrocaCreate(BaseModel):
     com_username: str = Field(min_length=1, max_length=30)
     data_hora: DataHoraEntrada
-    link_meet: str = Field(default="", max_length=300, pattern=r"^(https://\S+)?$")
     habilidade_ensino_id: int | None = None
     habilidade_aprendo_id: int | None = None
 
@@ -28,6 +28,11 @@ class TrocaCreate(BaseModel):
         if self.habilidade_ensino_id is None and self.habilidade_aprendo_id is None:
             raise ValueError("escolha ao menos uma habilidade para a troca")
         return self
+
+
+class OpcoesTroca(BaseModel):
+    eu_ensino: list[HabilidadeComNivel]
+    eu_aprendo: list[HabilidadeComNivel]
 
 
 class TrocaOut(BaseModel):

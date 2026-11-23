@@ -9,7 +9,9 @@ from app.core.tempo import agora_utc, como_utc
 from app.models.habilidade import Habilidade
 from app.models.troca import Troca
 from app.models.user import User
-from app.schemas.troca import HabilidadeResumo, TrocaCreate, TrocaOut
+from app.models.user_habilidade import UserHabilidade
+from app.schemas.match import HabilidadeComNivel
+from app.schemas.troca import HabilidadeResumo, OpcoesTroca, TrocaCreate, TrocaOut
 from app.schemas.user import UserOut
 
 
@@ -29,11 +31,11 @@ def link_google_agenda(
     detalhes = []
     if habilidade_ensino:
         detalhes.append(
-            f"{proposta_por.username} ensina {habilidade_ensino.nome} para {com.username}"
+            f"@{proposta_por.username} ensina {habilidade_ensino.nome} para @{com.username}"
         )
     if habilidade_aprendo:
         detalhes.append(
-            f"{com.username} ensina {habilidade_aprendo.nome} para {proposta_por.username}"
+            f"@{com.username} ensina {habilidade_aprendo.nome} para @{proposta_por.username}"
         )
     if troca.link_meet:
         detalhes.append(f"Meet: {troca.link_meet}")
@@ -143,7 +145,6 @@ def criar(db: Session, pessoa: User, dados: TrocaCreate) -> TrocaOut:
         proposta_por_id=pessoa.id,
         com_id=com.id,
         data_hora=dados.data_hora,
-        link_meet=dados.link_meet,
         habilidade_ensino_id=dados.habilidade_ensino_id,
         habilidade_aprendo_id=dados.habilidade_aprendo_id,
         status="proposta",
@@ -199,3 +200,40 @@ def listar(db: Session, pessoa: User, com_username: str | None) -> list[TrocaOut
         )
     )
     return para_saidas(db, [*futuras, *passadas])
+
+
+def _habilidades_por_tipo(db: Session, usuario_id: int) -> dict[str, dict[int, tuple[str, int]]]:
+    por_tipo: dict[str, dict[int, tuple[str, int]]] = {"sei": {}, "quero_aprender": {}}
+    linhas = db.execute(
+        select(UserHabilidade.tipo, Habilidade.id, Habilidade.nome, UserHabilidade.nivel)
+        .join(Habilidade, Habilidade.id == UserHabilidade.habilidade_id)
+        .where(UserHabilidade.usuario_id == usuario_id)
+    )
+    for tipo, habilidade_id, nome, nivel in linhas:
+        por_tipo[tipo][habilidade_id] = (nome, nivel)
+    return por_tipo
+
+
+def _em_comum(
+    quem_sabe: dict[int, tuple[str, int]], quem_quer: dict[int, tuple[str, int]]
+) -> list[HabilidadeComNivel]:
+    itens = [
+        HabilidadeComNivel(id=habilidade_id, nome=nome, nivel=nivel)
+        for habilidade_id, (nome, nivel) in quem_sabe.items()
+        if habilidade_id in quem_quer
+    ]
+    return sorted(itens, key=lambda h: (-h.nivel, h.nome))
+
+
+def opcoes(db: Session, pessoa: User, com_username: str) -> OpcoesTroca:
+    com = db.scalar(select(User).where(User.username == com_username))
+    if com is None:
+        raise HTTPException(status_code=404, detail="pessoa não encontrada")
+    if com.id == pessoa.id:
+        raise HTTPException(status_code=422, detail="não é possível propor para si")
+    minhas = _habilidades_por_tipo(db, pessoa.id)
+    dela = _habilidades_por_tipo(db, com.id)
+    return OpcoesTroca(
+        eu_ensino=_em_comum(minhas["sei"], dela["quero_aprender"]),
+        eu_aprendo=_em_comum(dela["sei"], minhas["quero_aprender"]),
+    )

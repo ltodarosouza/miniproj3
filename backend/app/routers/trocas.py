@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.deps import get_current_user
 from app.models.user import User
-from app.schemas.troca import TrocaCreate, TrocaOut, TrocaPage
+from app.schemas.troca import OpcoesTroca, TrocaCreate, TrocaOut, TrocaPage
 from app.services import trocas as service
 
 router = APIRouter(prefix="/trocas", tags=["trocas"])
@@ -17,6 +17,15 @@ def propor_troca(
     pessoa: User = Depends(get_current_user),
 ):
     return service.criar(db, pessoa, dados)
+
+
+@router.get("/opcoes/{username}", response_model=OpcoesTroca)
+def opcoes_da_troca(
+    username: str,
+    db: Session = Depends(get_db),
+    pessoa: User = Depends(get_current_user),
+):
+    return service.opcoes(db, pessoa, username)
 
 
 @router.post("/{troca_id}/confirmar", response_model=TrocaOut)
