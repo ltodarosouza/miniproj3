@@ -50,6 +50,33 @@ export function jaPassou(iso: string): boolean {
   return new Date(iso).getTime() <= Date.now();
 }
 
+const DATA_POR_EXTENSO = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+const DIA_E_MES = new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
+
+export function dataLocal(data: Date): string {
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}-${String(data.getDate()).padStart(2, "0")}`;
+}
+
+export function resumoDoHorario(data: string, hora: string): string {
+  const texto = `${DATA_POR_EXTENSO.format(new Date(`${data}T${hora}`))}, às ${hora}`;
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+export function quantoFalta(iso: string): string {
+  const minutos = Math.floor((new Date(iso).getTime() - Date.now()) / 60000);
+  if (minutos < 1) return "agora";
+  if (minutos < 60) return `daqui a ${minutos} min`;
+  const horas = Math.floor(minutos / 60);
+  if (horas < 24) return `daqui a ${horas} ${horas === 1 ? "hora" : "horas"}`;
+  const dias = Math.floor(horas / 24);
+  return `daqui a ${dias} ${dias === 1 ? "dia" : "dias"}`;
+}
+
+export function dataCompleta(iso: string): string {
+  const data = new Date(iso);
+  return `${DIA_E_MES.format(data).replace(".", "")} às ${HORA.format(data)}`;
+}
+
 export function formatarPreviaTroca(iso: string): string {
   const data = new Date(iso);
   const dia = new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" }).format(data).replace(".", "");

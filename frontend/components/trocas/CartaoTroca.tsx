@@ -1,18 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Botao } from "@/components/ui/Botao";
 import { Cartao } from "@/components/ui/Cartao";
 import { Icone } from "@/components/ui/Icone";
 import { TagHabilidade } from "@/components/ui/TagHabilidade";
-import { formatarDataHora, formatarQuando, jaPassou } from "@/lib/datas";
+import { dataCompleta, formatarQuando, jaPassou, quantoFalta } from "@/lib/datas";
 import { confirmarTroca, recusarTroca, type Troca } from "@/lib/api";
 import { meuId } from "@/lib/sessao";
 
 export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar: (troca: Troca) => void }) {
   const [carregando, setCarregando] = useState<"confirmar" | "recusar" | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [, setAgora] = useState(0);
+  useEffect(() => {
+    const intervalo = setInterval(() => setAgora(Date.now()), 60000);
+    return () => clearInterval(intervalo);
+  }, []);
   const usuarioId = meuId();
   const propus = usuarioId === troca.proposta_por.id;
   const outraPessoa = propus ? troca.com : troca.proposta_por;
@@ -58,7 +63,10 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="font-medium text-texto">{titulo}</h3>
-          <p className="numeros text-sm text-texto-2">{formatarDataHora(troca.data_hora)}</p>
+          <p className="numeros text-sm text-texto-2">
+            {dataCompleta(troca.data_hora)}
+            {!passou && troca.status === "proposta" && ` · ${quantoFalta(troca.data_hora)}`}
+          </p>
         </div>
       </div>
 
@@ -79,18 +87,11 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
         </div>
       )}
 
-      {troca.link_meet && (
-        <a href={troca.link_meet} target="_blank" rel="noopener noreferrer" className="inline-flex min-w-0 items-center gap-2 text-sm text-marca-forte hover:underline">
-          <Icone nome="link" tamanho={16} />
-          <span className="truncate">{new URL(troca.link_meet).host}</span>
-        </a>
-      )}
-
       {troca.status === "proposta" && (
         propus ? (
           <p className="flex items-center gap-2 text-sm text-texto-2">
             <span className="size-2 rounded-full bg-marca animate-pulse motion-reduce:animate-none" />
-            Esperando {nomeOutraPessoa} confirmar
+            Aguardando @{outraPessoa.username} confirmar
           </p>
         ) : (
           <div className="flex flex-wrap gap-2">
@@ -112,16 +113,14 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
           <p className="text-sm text-texto-2">A troca já aconteceu</p>
         ) : (
           <div className="flex flex-col gap-2">
-            {troca.link_meet && (
-              <a href={troca.link_meet} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 w-full select-none items-center justify-center gap-1.5 rounded-controle bg-marca px-3 text-sm font-medium text-marca-texto shadow-cartao transition-[background-color,border-color,color,box-shadow,scale] duration-[var(--rapido)] ease-saida active:scale-[0.97] hover:bg-marca-forte motion-reduce:transition-none">
-                <Icone nome="link" tamanho={16} />
-                Entrar na chamada
-              </a>
-            )}
-            <a href={troca.link_google_agenda} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 w-full select-none items-center justify-center gap-1.5 rounded-controle border border-linha-forte bg-superficie px-3 text-sm font-medium text-texto transition-[background-color,border-color,color,box-shadow,scale] duration-[var(--rapido)] ease-saida active:scale-[0.97] hover:border-marca hover:text-marca-forte motion-reduce:transition-none">
+            <p className="numeros text-sm font-medium text-texto">Começa {quantoFalta(troca.data_hora)}</p>
+            <a href={troca.link_google_agenda} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 w-full select-none items-center justify-center gap-1.5 rounded-controle bg-marca px-3 text-sm font-medium text-marca-texto shadow-cartao transition-[background-color,border-color,color,box-shadow,scale] duration-[var(--rapido)] ease-saida active:scale-[0.97] hover:bg-marca-forte motion-reduce:transition-none">
               <Icone nome="calendario" tamanho={16} />
-              Adicionar ao Google Agenda
+              Agendar no Google Agenda
             </a>
+            <p className="text-xs leading-relaxed text-texto-2">
+              No Google Agenda, clique em <strong className="font-medium text-texto">Adicionar videoconferência do Google Meet</strong> e salve.
+            </p>
           </div>
         )
       )}

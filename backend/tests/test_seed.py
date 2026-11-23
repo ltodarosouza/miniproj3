@@ -69,7 +69,8 @@ def test_usuario_do_seed_loga_e_ve_troca_no_endpoint(client):
     assert r.status_code == 200
     token = r.json()["token"]
     corpo = client.get("/matches", headers={"Authorization": f"Bearer {token}"}).json()
-    assert usuarios[1].username in [m["usuario"]["username"] for m in corpo["troca"]]
+    par = next(m for m in corpo["troca"] + corpo["em_andamento"] if m["usuario"]["username"] == usuarios[1].username)
+    assert par["eu_ensino"]
 
 
 def test_seed_tem_streak_de_varios_dias(client):

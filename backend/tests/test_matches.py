@@ -72,7 +72,7 @@ def test_matches_em_dois_niveis_e_ordem(client, pessoa):
 
 def test_sem_habilidades_devolve_vazio(client, pessoa):
     eu = pessoa("ana")
-    assert client.get("/matches", headers=eu).json() == {"troca": [], "pode_te_ensinar": []}
+    assert client.get("/matches", headers=eu).json() == {"troca": [], "pode_te_ensinar": [], "em_andamento": []}
 
 
 def test_matches_exige_login(client):
@@ -131,4 +131,49 @@ def test_so_sei_e_nao_quero_nada_nao_tem_matches(client, pessoa):
     marcar(bia, "Python", "quero_aprender")
     marcar(bia, "React", "sei")
 
-    assert client.get("/matches", headers=eu).json() == {"troca": [], "pode_te_ensinar": []}
+    assert client.get("/matches", headers=eu).json() == {"troca": [], "pode_te_ensinar": [], "em_andamento": []}
+
+
+def test_quem_ja_conversa_ou_tem_troca_vai_para_em_andamento(client, pessoa):
+    eu = pessoa("ana")
+    bia = pessoa("bia")
+    caio = pessoa("caio")
+    davi = pessoa("davi")
+    marcar(eu, "Python", "sei")
+    marcar(eu, "React", "quero_aprender")
+    for outra in (bia, caio, davi):
+        marcar(outra, "React", "sei")
+    marcar(bia, "Python", "quero_aprender")
+
+    client.post("/dms/bia", json={"texto": "oi"}, headers=eu)
+    react = client.get("/habilidades").json()["items"]
+    react_id = next(h["id"] for h in react if h["nome"] == "React")
+    r = client.post(
+        "/trocas",
+        json={"com_username": "ana", "data_hora": "2030-01-10T10:00:00Z", "habilidade_ensino_id": react_id},
+        headers=caio,
+    )
+    assert r.status_code == 201
+
+    corpo = client.get("/matches", headers=eu).json()
+    assert usernames(corpo["troca"]) == []
+    assert usernames(corpo["pode_te_ensinar"]) == ["davi"]
+    assert usernames(corpo["em_andamento"]) == ["bia", "caio"]
+
+
+def test_troca_recusada_nao_conta_como_em_andamento(client, pessoa):
+    eu = pessoa("ana")
+    bia = pessoa("bia")
+    marcar(eu, "React", "quero_aprender")
+    marcar(bia, "React", "sei")
+    react_id = next(h["id"] for h in client.get("/habilidades").json()["items"] if h["nome"] == "React")
+    troca = client.post(
+        "/trocas",
+        json={"com_username": "bia", "data_hora": "2030-01-10T10:00:00Z", "habilidade_aprendo_id": react_id},
+        headers=eu,
+    ).json()
+    client.post(f"/trocas/{troca['id']}/recusar", headers=bia)
+
+    corpo = client.get("/matches", headers=eu).json()
+    assert usernames(corpo["pode_te_ensinar"]) == ["bia"]
+    assert corpo["em_andamento"] == []

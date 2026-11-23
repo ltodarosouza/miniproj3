@@ -1,10 +1,12 @@
 import unicodedata
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.core.matches import indice_matches
 from app.models.habilidade import Habilidade
+from app.models.mensagem import Mensagem
+from app.models.troca import Troca
 from app.models.user import User
 from app.models.user_habilidade import UserHabilidade
 from app.schemas.match import HabilidadeComNivel, Matches, MatchOut
@@ -72,10 +74,35 @@ def _ordenar(itens: list[MatchOut]) -> list[MatchOut]:
     )
 
 
+def _em_andamento(db: Session, eu: int, candidatos: set[int]) -> set[int]:
+    por_mensagem = db.execute(
+        select(Mensagem.de_id, Mensagem.para_id)
+        .where(
+            or_(
+                (Mensagem.de_id == eu) & Mensagem.para_id.in_(candidatos),
+                (Mensagem.para_id == eu) & Mensagem.de_id.in_(candidatos),
+            )
+        )
+        .distinct()
+    )
+    por_troca = db.execute(
+        select(Troca.proposta_por_id, Troca.com_id)
+        .where(
+            or_(
+                (Troca.proposta_por_id == eu) & Troca.com_id.in_(candidatos),
+                (Troca.com_id == eu) & Troca.proposta_por_id.in_(candidatos),
+            ),
+            Troca.status != "recusada",
+        )
+        .distinct()
+    )
+    return {id for par in [*por_mensagem, *por_troca] for id in par} - {eu}
+
+
 def listar(db: Session, eu: User) -> Matches:
     candidatos = indice_matches.pode_me_ensinar(eu.id)
     if not candidatos:
-        return Matches(troca=[], pode_te_ensinar=[])
+        return Matches(troca=[], pode_te_ensinar=[], em_andamento=[])
     troca_ids = indice_matches.match_de_troca(eu.id)
 
     usuarios = {u.id: u for u in db.scalars(select(User).where(User.id.in_(candidatos)))}
@@ -90,6 +117,8 @@ def listar(db: Session, eu: User) -> Matches:
 
     troca: list[MatchOut] = []
     pode_te_ensinar: list[MatchOut] = []
+    em_andamento: list[MatchOut] = []
+    ja_conversam = _em_andamento(db, eu.id, set(usuarios))
     for usuario_id, usuario in usuarios.items():
         if not me_ensinam[usuario_id]:
             continue
@@ -98,5 +127,12 @@ def listar(db: Session, eu: User) -> Matches:
             me_ensina=me_ensinam[usuario_id],
             eu_ensino=querem_de_mim.get(usuario_id, []),
         )
-        (troca if item.eu_ensino else pode_te_ensinar).append(item)
-    return Matches(troca=_ordenar(troca), pode_te_ensinar=_ordenar(pode_te_ensinar))
+        if usuario_id in ja_conversam:
+            em_andamento.append(item)
+        else:
+            (troca if item.eu_ensino else pode_te_ensinar).append(item)
+    return Matches(
+        troca=_ordenar(troca),
+        pode_te_ensinar=_ordenar(pode_te_ensinar),
+        em_andamento=_ordenar(em_andamento),
+    )

@@ -4,6 +4,7 @@ from urllib.parse import parse_qs, urlparse
 from app.core.tempo import agora_utc
 from app.db import SessionLocal
 from app.models.troca import Troca
+from tests.test_matches import marcar
 
 
 def habilidades(client):
@@ -15,7 +16,6 @@ def proposta(ids, com="bia", data_hora="2030-01-10T10:00:00-03:00"):
     return {
         "com_username": com,
         "data_hora": data_hora,
-        "link_meet": "https://meet.google.com/abc-defg-hij",
         "habilidade_ensino_id": ids["React"],
         "habilidade_aprendo_id": ids["Cálculo 1"],
     }
@@ -44,8 +44,10 @@ def test_cria_troca_com_link_google_agenda_e_utc(client, pessoa):
     assert consulta["action"] == ["TEMPLATE"]
     assert consulta["dates"] == ["20300110T130000Z/20300110T140000Z"]
     assert consulta["text"] == ["Troca: React ↔ Cálculo 1"]
-    assert "ana ensina React para bia" in consulta["details"][0]
-    assert consulta["location"] == ["https://meet.google.com/abc-defg-hij"]
+    assert "@ana ensina React para @bia" in consulta["details"][0]
+    assert "@bia ensina Cálculo 1 para @ana" in consulta["details"][0]
+    assert "location" not in consulta
+    assert troca["link_meet"] == ""
 
 
 def test_cria_troca_com_uma_habilidade(client, pessoa):
@@ -119,3 +121,77 @@ def test_lista_ordena_futuras_e_passadas_e_filtra_por_pessoa(client, pessoa):
     assert len(filtrada.json()["items"]) == 4
     assert client.get("/trocas?com=ausente", headers=ana).status_code == 404
     assert client.get("/trocas?com=caio", headers=ana).json()["items"] == []
+
+
+def test_link_vindo_do_formulario_e_ignorado(client, pessoa):
+    ana = pessoa("ana")
+    pessoa("bia")
+    dados = proposta(habilidades(client))
+    dados["link_meet"] = "https://exemplo.com/sala"
+
+    resposta = criar(client, ana, dados)
+
+    assert resposta.status_code == 201
+    assert resposta.json()["link_meet"] == ""
+
+
+def nomes(itens):
+    return [(h["nome"], h["nivel"]) for h in itens]
+
+
+def test_opcoes_para_par_de_troca(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    marcar(ana, "Python", "sei", 4)
+    marcar(ana, "Git", "sei", 2)
+    marcar(ana, "React", "quero_aprender")
+    marcar(bia, "Python", "quero_aprender")
+    marcar(bia, "React", "sei", 5)
+    marcar(bia, "Cálculo 1", "sei", 3)
+
+    corpo = client.get("/trocas/opcoes/bia", headers=ana).json()
+
+    assert nomes(corpo["eu_ensino"]) == [("Python", 4)]
+    assert nomes(corpo["eu_aprendo"]) == [("React", 5)]
+
+
+def test_opcoes_para_quem_so_pode_me_ensinar(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    marcar(ana, "Python", "sei", 4)
+    marcar(ana, "React", "quero_aprender")
+    marcar(bia, "React", "sei", 5)
+
+    corpo = client.get("/trocas/opcoes/bia", headers=ana).json()
+
+    assert corpo["eu_ensino"] == []
+    assert nomes(corpo["eu_aprendo"]) == [("React", 5)]
+
+
+def test_opcoes_sem_nada_em_comum_e_pessoa_inexistente(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    marcar(ana, "Python", "sei")
+    marcar(bia, "Git", "sei")
+
+    assert client.get("/trocas/opcoes/bia", headers=ana).json() == {"eu_ensino": [], "eu_aprendo": []}
+    assert client.get("/trocas/opcoes/ninguem", headers=ana).status_code == 404
+
+
+def test_opcoes_com_mesma_habilidade_em_sei_e_quero(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    marcar(ana, "React", "sei", 2)
+    marcar(ana, "React", "quero_aprender")
+    marcar(bia, "React", "sei", 5)
+    marcar(bia, "React", "quero_aprender")
+
+    corpo = client.get("/trocas/opcoes/bia", headers=ana).json()
+
+    assert nomes(corpo["eu_ensino"]) == [("React", 2)]
+    assert nomes(corpo["eu_aprendo"]) == [("React", 5)]
+
+
+def test_opcoes_comigo_mesmo(client, pessoa):
+    ana = pessoa("ana")
+    assert client.get("/trocas/opcoes/ana", headers=ana).status_code == 422
