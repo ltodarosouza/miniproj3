@@ -1,6 +1,7 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -11,7 +12,7 @@ load_dotenv()
 
 from app.core.contadores import contador_iniciais
 from app.core.matches import indice_matches
-from app.db import Base, SessionLocal, engine
+from app.db import EH_SQLITE, Base, SessionLocal, engine
 import app.models  # noqa: F401
 from app.models.user import User
 from app.models.user_habilidade import UserHabilidade
@@ -58,9 +59,21 @@ def semear_se_vazio(db) -> None:
     seed_fake(db)
 
 
+def preparar_banco() -> None:
+    if EH_SQLITE:
+        Base.metadata.create_all(engine)
+        return
+    from alembic import command
+    from alembic.config import Config
+
+    config = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+    config.attributes["configurar_log"] = False
+    command.upgrade(config, "head")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(engine)
+    preparar_banco()
     with SessionLocal() as db:
         garantir_catalogo(db)
         reconstruir_trie(db)

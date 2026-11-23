@@ -1,3 +1,4 @@
+from conftest import zerar_banco
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 
@@ -35,7 +36,7 @@ def test_cors_sem_variavel_fica_so_no_localhost(monkeypatch):
 
 def test_seed_on_boot_popula_banco_vazio_e_monta_o_indice(monkeypatch):
     monkeypatch.setenv("SEED_ON_BOOT", "true")
-    Base.metadata.drop_all(engine)
+    zerar_banco()
     with TestClient(app):
         assert contar(User) >= 30
         assert contar(Post) > 0
@@ -46,7 +47,7 @@ def test_seed_on_boot_popula_banco_vazio_e_monta_o_indice(monkeypatch):
 
 def test_seed_on_boot_nao_duplica_banco_com_dados(monkeypatch):
     monkeypatch.setenv("SEED_ON_BOOT", "true")
-    Base.metadata.drop_all(engine)
+    zerar_banco()
     with TestClient(app):
         antes = contar(User)
     with TestClient(app):
@@ -55,6 +56,6 @@ def test_seed_on_boot_nao_duplica_banco_com_dados(monkeypatch):
 
 def test_sem_seed_on_boot_o_banco_fica_vazio(monkeypatch):
     monkeypatch.delenv("SEED_ON_BOOT", raising=False)
-    Base.metadata.drop_all(engine)
+    zerar_banco()
     with TestClient(app):
         assert contar(User) == 0

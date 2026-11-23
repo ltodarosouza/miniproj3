@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 # banco descartável POR SESSÃO de teste, antes de qualquer import de app.*
 _tmp_db = Path(tempfile.mkdtemp(prefix="trilha-test-")) / "test.db"
-os.environ["DATABASE_URL"] = f"sqlite:///{_tmp_db}"
+os.environ["DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL") or f"sqlite:///{_tmp_db}"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
@@ -26,13 +26,20 @@ MSG_AUTH = (
 SENHA_PADRAO = "senha-forte-123"
 
 
+def zerar_banco() -> None:
+    from app.db import Base, engine
+
+    Base.metadata.drop_all(engine)
+    with engine.begin() as conexao:
+        conexao.exec_driver_sql("DROP TABLE IF EXISTS alembic_version")
+
+
 @pytest.fixture()
 def client():
     """Client com banco zerado por teste. O lifespan roda (cria tabelas + core/)."""
-    from app.db import Base, engine
     from app.main import app
 
-    Base.metadata.drop_all(engine)
+    zerar_banco()
     with TestClient(app) as c:
         yield c
 
