@@ -164,11 +164,8 @@ export function EditorHabilidades({
     (habilidade) => !idsSelecionados.includes(habilidade.id),
   );
 
-  const filtradas = textoHabilidade.length >= 1
-    ? disponiveis.filter((habilidade) =>
-        habilidade.nome.toLowerCase().includes(textoHabilidade.toLowerCase()),
-      )
-    : disponiveis;
+  const tecnologia = disponiveis.filter((habilidade) => habilidade.categoria === "tech");
+  const disciplinas = disponiveis.filter((habilidade) => habilidade.categoria !== "tech");
 
   const sei = itens.filter((item) => item.tipo === "sei");
   const quero = itens.filter((item) => item.tipo === "quero_aprender");
@@ -200,11 +197,11 @@ export function EditorHabilidades({
             />
           </div>
 
-          <div className="rounded-cartao border border-linha-forte bg-superficie p-4 space-y-4">
+          <div className="space-y-4 border-t border-linha pt-5">
             <div className="flex flex-col gap-1">
               <h3 className="text-sm font-semibold text-texto">Adicionar habilidade</h3>
               <p className="text-sm text-texto-3">
-                Clique em uma habilidade ou busque pelo nome.
+                Busque pelo nome ou toque numa sugestão abaixo.
               </p>
             </div>
 
@@ -222,17 +219,18 @@ export function EditorHabilidades({
                   disabled={itens.length >= LIMITE_HABILIDADES}
                 />
               </div>
-              <div className="sm:w-44">
-                <label className="mb-1.5 block text-sm font-medium text-texto">
+              <div className="sm:w-60">
+                <p id="rotulo-tipo-habilidade" className="mb-1.5 block text-sm font-medium text-texto">
                   Vai para
-                </label>
-                <div className="flex rounded-controle border border-linha-forte bg-superficie p-1">
+                </p>
+                <div role="group" aria-labelledby="rotulo-tipo-habilidade" className="flex rounded-controle border border-linha-forte bg-superficie p-1">
                   <button
                     type="button"
+                    aria-pressed={tipoSelecionado === "sei"}
                     onClick={() => setTipoSelecionado("sei")}
-                    className={`flex-1 rounded-[8px] py-1.5 text-sm font-medium transition-colors ${
+                    className={`flex-1 rounded-controle py-1.5 text-sm font-medium transition-colors duration-[var(--rapido)] ease-saida motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca ${
                       tipoSelecionado === "sei"
-                        ? "bg-marca text-white"
+                        ? "bg-marca text-marca-texto"
                         : "text-texto-2 hover:bg-superficie-2"
                     }`}
                   >
@@ -240,14 +238,15 @@ export function EditorHabilidades({
                   </button>
                   <button
                     type="button"
+                    aria-pressed={tipoSelecionado === "quero_aprender"}
                     onClick={() => setTipoSelecionado("quero_aprender")}
-                    className={`flex-1 rounded-[8px] py-1.5 text-sm font-medium transition-colors ${
+                    className={`flex-1 rounded-controle py-1.5 text-sm font-medium transition-colors duration-[var(--rapido)] ease-saida motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca ${
                       tipoSelecionado === "quero_aprender"
-                        ? "bg-marca text-white"
+                        ? "bg-marca text-marca-texto"
                         : "text-texto-2 hover:bg-superficie-2"
                     }`}
                   >
-                    Quero
+                    Quero aprender
                   </button>
                 </div>
               </div>
@@ -260,28 +259,34 @@ export function EditorHabilidades({
                 Não consegui carregar o catálogo. Recarregue a página.
               </p>
             ) : (
-              <div className="flex flex-wrap gap-2">
-                {filtradas.length === 0 ? (
-                  <p className="text-sm text-texto-3">
-                    {textoHabilidade
-                      ? "Nenhuma habilidade encontrada."
-                      : "Todas as habilidades já foram adicionadas."}
-                  </p>
-                ) : (
-                  filtradas.slice(0, 30).map((habilidade) => (
-                    <button
-                      key={habilidade.id}
-                      type="button"
-                      onClick={() => adicionar(habilidade)}
-                      disabled={itens.length >= LIMITE_HABILIDADES}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-linha-forte bg-superficie-2 px-3 py-1.5 text-sm text-texto transition-colors duration-[var(--rapido)] hover:border-marca hover:text-marca disabled:opacity-50 motion-reduce:transition-none"
-                    >
-                      <Icone nome="mais" tamanho={14} />
-                      {habilidade.nome}
-                    </button>
-                  ))
-                )}
-              </div>
+              disponiveis.length === 0 ? (
+                <p className="text-sm text-texto-3">Você já adicionou todas as habilidades do catálogo.</p>
+              ) : (
+                <div className="space-y-3">
+                  {[{ titulo: "Tecnologia", habilidades: tecnologia }, { titulo: "Disciplinas", habilidades: disciplinas }].map((grupo) => grupo.habilidades.length > 0 && (
+                    <div key={grupo.titulo} className="space-y-2">
+                      <h4 className="text-xs text-texto-3">{grupo.titulo}</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {grupo.habilidades.map((habilidade) => (
+                          <button
+                            key={habilidade.id}
+                            type="button"
+                            onClick={() => adicionar(habilidade)}
+                            disabled={itens.length >= LIMITE_HABILIDADES}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-linha-forte bg-superficie-2 px-3 py-1.5 text-sm text-texto transition-colors duration-[var(--rapido)] ease-saida hover:border-marca hover:text-marca-forte disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca motion-reduce:transition-none"
+                          >
+                            <Icone nome="mais" tamanho={14} />
+                            {habilidade.nome}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
+            )}
+            {itens.length >= LIMITE_HABILIDADES && (
+              <p className="text-sm text-texto-3">Limite de 40 habilidades atingido.</p>
             )}
           </div>
 
@@ -291,6 +296,7 @@ export function EditorHabilidades({
               carregando={salvando}
               onClick={salvar}
               disabled={assinatura(itens) === assinaturaSalva}
+              className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
             >
               Salvar habilidades
             </Botao>
@@ -325,7 +331,7 @@ function ColunaHabilidades({
   onNivel: (id: string, nivel: number) => void;
 }) {
   return (
-    <div className="rounded-cartao border border-linha-forte bg-superficie p-4">
+    <div className="rounded-controle bg-superficie-2 p-4">
       <div className="mb-3">
         <h3 className="text-sm font-semibold text-texto">{titulo}</h3>
         <p className="text-xs text-texto-3">{descricao}</p>
@@ -339,25 +345,27 @@ function ColunaHabilidades({
           {itens.map((item) => (
             <li
               key={item.id}
-              className="flex items-center gap-2 rounded-controle border border-linha-forte bg-fundo p-2"
+              className="flex flex-wrap items-center gap-2 rounded-controle bg-superficie p-2"
             >
-              <TagHabilidade nome={item.nome} tipo={item.tipo} />
+              <span className="min-w-0 flex-1 truncate">
+                <TagHabilidade nome={item.nome} tipo={item.tipo} />
+              </span>
               <select
                 aria-label={`Nível em ${item.nome}`}
                 value={item.nivel}
                 onChange={(evento) => onNivel(item.id, Number(evento.target.value))}
-                className="h-8 rounded-controle border border-linha-forte bg-superficie px-2 text-sm text-texto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
+                className="h-8 min-w-0 rounded-controle border border-linha-forte bg-superficie px-2 text-sm text-texto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
               >
                 {[1, 2, 3, 4, 5].map((nivel) => (
                   <option key={nivel} value={nivel}>{`Nível ${nivel}`}</option>
                 ))}
               </select>
-              <div className="ml-auto flex items-center gap-1">
+              <div className="ml-auto flex shrink-0 items-center gap-1">
                 <button
                   type="button"
                   aria-label={`Mover ${item.nome} para ${alternarTipo(item.tipo) === "sei" ? "Sei" : "Quero aprender"}`}
                   onClick={() => onMover(item.id)}
-                  className="flex size-8 items-center justify-center rounded-full text-texto-2 transition-colors hover:bg-superficie hover:text-texto"
+                  className="flex size-8 items-center justify-center rounded-full text-texto-2 transition-colors duration-[var(--rapido)] ease-saida hover:bg-superficie hover:text-texto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca motion-reduce:transition-none"
                   title="Mover"
                 >
                   <Icone nome="troca" tamanho={16} />
@@ -366,7 +374,7 @@ function ColunaHabilidades({
                   type="button"
                   aria-label={`Remover ${item.nome}`}
                   onClick={() => onRemover(item.id)}
-                  className="flex size-8 items-center justify-center rounded-full text-texto-2 transition-colors hover:bg-superficie hover:text-perigo"
+                  className="flex size-8 items-center justify-center rounded-full text-texto-2 transition-colors duration-[var(--rapido)] ease-saida hover:bg-superficie hover:text-perigo focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca motion-reduce:transition-none"
                   title="Remover"
                 >
                   <Icone nome="fechar" tamanho={16} />

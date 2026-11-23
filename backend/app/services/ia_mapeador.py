@@ -1,8 +1,8 @@
 import logging
 import os
-import unicodedata
 
 import httpx
+from app.core.catalogo import normalizar
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +22,6 @@ PROVIDERS = {
 }
 
 
-def _sem_acento(texto: str) -> str:
-    decomposto = unicodedata.normalize("NFKD", texto)
-    return "".join(c for c in decomposto if not unicodedata.combining(c)).casefold()
-
-
 def _prompt(catalogo: list[str], texto: str) -> str:
     return (
         "Você recebe um catálogo de habilidades e um texto digitado por um usuário. "
@@ -39,7 +34,7 @@ def _prompt(catalogo: list[str], texto: str) -> str:
 
 
 def _resposta_esta_no_catalogo(resposta: str, catalogo: set[str]) -> bool:
-    return _sem_acento(resposta) in {_sem_acento(nome) for nome in catalogo}
+    return normalizar(resposta) in {normalizar(nome) for nome in catalogo}
 
 
 def _chamar_openai_compativel(
@@ -79,7 +74,7 @@ def _chamar_gemini(
     catalogo: list[str],
     texto: str,
 ) -> str | None:
-    url = f"{base_url}/models/{model}:generateContent?key={api_key}"
+    url = f"{base_url}/models/{model}:generateContent"
     payload = {
         "contents": [
             {
@@ -95,18 +90,13 @@ def _chamar_gemini(
     }
 
     with httpx.Client(timeout=10.0) as client:
-        r = client.post(url, json=payload)
+        r = client.post(url, headers={"x-goog-api-key": api_key}, json=payload)
         r.raise_for_status()
         data = r.json()
         return data["candidates"][0]["content"]["parts"][0]["text"].strip()
 
 
 def mapear(texto: str, catalogo: list[str]) -> str | None:
-    """Tenta mapear o texto para uma habilidade do catálogo usando IA.
-
-    Se a chave não estiver configurada ou a chamada falhar, retorna None.
-    A resposta da IA só é aceita se for um nome EXATO do catálogo.
-    """
     provider = os.getenv("IA_PROVIDER", "groq").lower().strip()
     api_key = os.getenv("IA_API_KEY", "").strip()
 
@@ -123,7 +113,7 @@ def mapear(texto: str, catalogo: list[str]) -> str | None:
     if not model:
         model = config["default_model"]
 
-    logger.info("Chamando IA: provider=%s model=%s texto=%r", provider, model, texto)
+    logger.debug("Chamando IA: provider=%s model=%s texto=%r", provider, model, texto)
     try:
         if provider == "gemini":
             resposta = _chamar_gemini(api_key, config["base_url"], model, catalogo, texto)
@@ -132,7 +122,13 @@ def mapear(texto: str, catalogo: list[str]) -> str | None:
                 api_key, config["base_url"], model, catalogo, texto
             )
     except Exception as exc:
-        logger.warning("Falha na chamada da IA: %s", exc)
+        status_code = exc.response.status_code if isinstance(exc, httpx.HTTPStatusError) else None
+        logger.warning(
+            "Falha na chamada da IA: provider=%s tipo=%s status=%s",
+            provider,
+            type(exc).__name__,
+            status_code,
+        )
         return None
 
     if resposta is None:
@@ -147,5 +143,5 @@ def mapear(texto: str, catalogo: list[str]) -> str | None:
         logger.warning("IA respondeu %r, mas não está no catálogo.", resposta)
         return None
 
-    logger.info("IA mapeou %r -> %r", texto, resposta)
-    return resposta
+    logger.debug("IA mapeou %r -> %r", texto, resposta)
+    return next(nome for nome in catalogo if normalizar(nome) == normalizar(resposta))

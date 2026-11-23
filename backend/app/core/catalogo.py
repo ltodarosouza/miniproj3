@@ -1,6 +1,11 @@
 import unicodedata
 
 
+def normalizar(texto: str) -> str:
+    decomposto = unicodedata.normalize("NFKD", texto)
+    return "".join(c for c in decomposto if not unicodedata.combining(c)).casefold()
+
+
 class _NoTrie:
     def __init__(self) -> None:
         self.filhos: dict[str, "_NoTrie"] = {}
@@ -9,21 +14,12 @@ class _NoTrie:
 
 
 class TrieDeHabilidades:
-    """Trie casefold e sem acento para nomes de habilidades.
-
-    Inserção: O(L), onde L é o comprimento do nome.
-    Busca por prefixo: O(P + K log K), onde P é o comprimento do prefixo
-    e K é o número de resultados encontrados (limitado a 10).
-    """
-
     def __init__(self) -> None:
         self.raiz = _NoTrie()
         self._nomes: dict[int, str] = {}
 
     def _normalizar(self, texto: str) -> str:
-        decomposto = unicodedata.normalize("NFKD", texto)
-        sem_acento = "".join(c for c in decomposto if not unicodedata.combining(c))
-        return sem_acento.casefold()
+        return normalizar(texto)
 
     def reconstruir(self, habilidades: list[tuple[int, str]]) -> None:
         self.raiz = _NoTrie()
@@ -41,14 +37,11 @@ class TrieDeHabilidades:
 
     def _coletar(self, no: _NoTrie, limite: int) -> list[tuple[int, str]]:
         resultados: list[tuple[int, str]] = []
-        if len(resultados) >= limite:
-            return resultados
         pilha = [no]
         while pilha and len(resultados) < limite:
             atual = pilha.pop()
             if atual.habilidade_id is not None:
                 resultados.append((atual.habilidade_id, atual.nome))  # type: ignore[arg-type]
-            # ordem alfabética: filhos em ordem reversa na pilha sai na ordem certa
             for chave in sorted(atual.filhos.keys(), reverse=True):
                 pilha.append(atual.filhos[chave])
         return resultados
