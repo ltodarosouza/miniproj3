@@ -1,7 +1,10 @@
 from datetime import timedelta
 
+from sqlalchemy import select
+
 from app.core.tempo import agora_utc
 from app.db import SessionLocal
+from app.models.curtida import Curtida
 from app.models.troca import Troca
 
 
@@ -56,6 +59,24 @@ def test_curtidas_no_mesmo_dia_sao_agrupadas(client, pessoa):
     assert len(itens) == 1
     assert itens[0]["texto_curto"] == "Duda e mais 2 curtiram seu post"
     assert itens[0]["ator"]["username"] == "duda"
+
+
+def test_nao_lidas_informa_ultima_notificacao_agrupada(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    caio = pessoa("caio")
+    assert client.get("/notificacoes/nao-lidas", headers=ana).json()["ultima_em"] is None
+    post_id = client.post("/posts", json={"texto": "oi"}, headers=ana).json()["id"]
+    client.post(f"/posts/{post_id}/curtir", headers=bia)
+    primeira = client.get("/notificacoes/nao-lidas", headers=ana).json()
+    with SessionLocal() as db:
+        curtida = db.scalar(select(Curtida).where(Curtida.post_id == post_id))
+        curtida.created_at = curtida.created_at - timedelta(seconds=10)
+        db.commit()
+    client.post(f"/posts/{post_id}/curtir", headers=caio)
+    ultima = client.get("/notificacoes/nao-lidas", headers=ana).json()
+    assert primeira["total"] == ultima["total"] == 1
+    assert ultima["ultima_em"] > primeira["ultima_em"]
 
 
 def test_acoes_no_proprio_post_nao_notificam(client, pessoa):
@@ -146,12 +167,13 @@ def test_marcar_lidas_atualiza_contagem_e_novas_acoes(client, pessoa):
     post_id = client.post("/posts", json={"texto": "oi"}, headers=ana).json()["id"]
     client.post(f"/posts/{post_id}/curtir", headers=bia)
 
-    assert client.get("/notificacoes/nao-lidas", headers=ana).json() == {"total": 1}
+    assert client.get("/notificacoes/nao-lidas", headers=ana).json()["total"] == 1
     assert client.post("/notificacoes/lidas", headers=ana).status_code == 204
-    assert client.get("/notificacoes/nao-lidas", headers=ana).json() == {"total": 0}
+    assert client.get("/notificacoes/nao-lidas", headers=ana).json()["total"] == 0
+    assert client.post("/notificacoes/lidas", headers=ana).status_code == 204
     assert client.get("/notificacoes", headers=ana).json()["items"][0]["lida"] is True
     client.post(f"/posts/{post_id}/comentarios", json={"texto": "novo"}, headers=bia)
-    assert client.get("/notificacoes/nao-lidas", headers=ana).json() == {"total": 1}
+    assert client.get("/notificacoes/nao-lidas", headers=ana).json()["total"] == 1
     assert client.get("/notificacoes", headers=ana).json()["items"][0]["lida"] is False
 
 

@@ -35,3 +35,4 @@ class NotificacaoPage(BaseModel):
 
 class NaoLidasOut(BaseModel):
     total: int
+    ultima_em: DataHoraUtc | None = None

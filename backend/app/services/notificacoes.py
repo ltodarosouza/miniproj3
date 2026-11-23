@@ -2,6 +2,7 @@ from datetime import date
 from datetime import datetime
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.tempo import agora_utc
@@ -187,8 +188,10 @@ def listar(db: Session, pessoa: User, offset: int, limit: int) -> NotificacaoPag
 
 
 def nao_lidas(db: Session, pessoa: User) -> NaoLidasOut:
+    itens = _montar(db, pessoa)
     return NaoLidasOut(
-        total=sum(not item["lida"] for item in _montar(db, pessoa))
+        total=sum(not item["lida"] for item in itens),
+        ultima_em=max((item["em"] for item in itens), default=None),
     )
 
 
@@ -203,4 +206,14 @@ def marcar_lidas(db: Session, pessoa: User) -> None:
         db.add(leitura)
     else:
         leitura.lidas_ate = agora_utc()
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        leitura = db.scalar(
+            select(LeituraNotificacoes).where(
+                LeituraNotificacoes.usuario_id == pessoa.id
+            )
+        )
+        leitura.lidas_ate = agora_utc()
+        db.commit()
