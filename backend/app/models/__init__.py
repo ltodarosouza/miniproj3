@@ -9,3 +9,4 @@ from app.models.session import Session  # noqa: F401
 from app.models.curtida import Curtida  # noqa: F401
 from app.models.comentario import Comentario  # noqa: F401
 from app.models.follow import Follow  # noqa: F401
+from app.models.leitura_notificacoes import LeituraNotificacoes  # noqa: F401

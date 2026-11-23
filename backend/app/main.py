@@ -24,6 +24,7 @@ from app.routers import (
     follows,
     habilidades,
     matches,
+    notificacoes,
     posts,
     trocas,
     users,
@@ -116,3 +117,4 @@ app.include_router(follows.router)
 app.include_router(matches.router)
 app.include_router(posts.router)
 app.include_router(feed.router)
+app.include_router(notificacoes.router)
