@@ -152,7 +152,7 @@ export default function PaginaConversa() {
         const resultado = [...atuais];
         for (const recebida of recebidas) {
           if (resultado.some((mensagem) => mensagem.id === recebida.id)) continue;
-          const pendente = recebida.de_username === username ? resultado.find((mensagem) => mensagem.id < 0 && mensagem.texto === recebida.texto && mensagem.estado === "enviando") : undefined;
+          const pendente = recebida.de_username !== username ? resultado.find((mensagem) => mensagem.id < 0 && mensagem.texto === recebida.texto && mensagem.estado === "enviando") : undefined;
           if (pendente) resultado[resultado.indexOf(pendente)] = { ...recebida, idLocal: pendente.idLocal };
           else resultado.push(recebida);
         }
