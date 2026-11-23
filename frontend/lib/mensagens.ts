@@ -37,7 +37,6 @@ export function useNaoLidas() {
   const [dados, setDados] = useState<NaoLidasMensagens | null>(null);
   const [indisponivel, setIndisponivel] = useState(false);
   const pedido = useRef(0);
-  const totalAnterior = useRef<number | null>(null);
   const porConversaAnterior = useRef<Record<string, number> | null>(null);
 
   const atualizar = useCallback(async () => {
@@ -47,12 +46,10 @@ export function useNaoLidas() {
     try {
       const resposta = await buscarNaoLidas();
       if (numero !== pedido.current || usuario !== meuId()) return;
-      const anterior = totalAnterior.current;
       const mapaAnterior = porConversaAnterior.current;
-      totalAnterior.current = resposta.total;
       porConversaAnterior.current = resposta.por_conversa;
       setDados(resposta);
-      if (anterior !== null && document.hidden && typeof Notification !== "undefined" && Notification.permission === "granted") {
+      if (mapaAnterior !== null && document.hidden && typeof Notification !== "undefined" && Notification.permission === "granted") {
         const aumentos = Object.entries(resposta.por_conversa).filter(([username, quantidade]) => quantidade > (mapaAnterior?.[username] ?? 0));
         if (aumentos.length) {
           for (const [username] of aumentos) {
