@@ -19,3 +19,4 @@ class Post(Base):
     minutos_estudados: Mapped[int | None] = mapped_column(default=None)
     imagem_url: Mapped[str | None] = mapped_column(String(300), default=None)
     created_at: Mapped[datetime] = mapped_column(default=agora_utc, index=True)
+    editado_em: Mapped[datetime | None] = mapped_column(default=None)

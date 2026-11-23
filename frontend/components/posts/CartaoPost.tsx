@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { EditorPost } from "@/components/posts/EditorPost";
 import { Avatar } from "@/components/ui/Avatar";
 import { Botao } from "@/components/ui/Botao";
 import { BotaoCurtir } from "@/components/ui/BotaoCurtir";
 import { Cartao } from "@/components/ui/Cartao";
 import { Icone } from "@/components/ui/Icone";
 import { TagHabilidade } from "@/components/ui/TagHabilidade";
+import { ToqueDuplo } from "@/components/ui/ToqueDuplo";
 import { formatarQuando } from "@/lib/datas";
 import {
   apagarPost,
@@ -20,7 +22,11 @@ import {
 } from "@/lib/posts";
 import { meuId } from "@/lib/sessao";
 
-export function CartaoPost({ post, podeEnsinar = false, aoApagar }: { post: Post; podeEnsinar?: boolean; aoApagar?: (id: number) => void }) {
+export function CartaoPost({ post: inicial, podeEnsinar = false, aoApagar }: { post: Post; podeEnsinar?: boolean; aoApagar?: (id: number) => void }) {
+  const [post, setPost] = useState(inicial);
+  const [editando, setEditando] = useState(false);
+  const [menuAberto, setMenuAberto] = useState(false);
+  const menu = useRef<HTMLDivElement>(null);
   const [curtido, setCurtido] = useState(post.curtido);
   const [curtidas, setCurtidas] = useState(post.curtidas);
   const [imagemFalhou, setImagemFalhou] = useState(false);
@@ -32,6 +38,12 @@ export function CartaoPost({ post, podeEnsinar = false, aoApagar }: { post: Post
   const rodape = useRef<HTMLElement>(null);
   const jaConfirmou = useRef(false);
   const perfil = `/perfil/${encodeURIComponent(post.autor.username)}`;
+
+  useEffect(() => {
+    setPost(inicial);
+    setCurtido(inicial.curtido);
+    setCurtidas(inicial.curtidas);
+  }, [inicial]);
 
   useEffect(() => setSouAutor(meuId() === post.autor.id), [post.autor.id]);
 
@@ -48,6 +60,31 @@ export function CartaoPost({ post, podeEnsinar = false, aoApagar }: { post: Post
     window.addEventListener("keydown", aoPressionar);
     return () => window.removeEventListener("keydown", aoPressionar);
   }, [confirmando]);
+
+  useEffect(() => {
+    if (!menuAberto) return;
+    menu.current?.querySelector<HTMLButtonElement>("[data-item-menu]")?.focus();
+    function fora(evento: MouseEvent) {
+      if (!menu.current?.contains(evento.target as Node)) setMenuAberto(false);
+    }
+    function tecla(evento: KeyboardEvent) {
+      if (evento.key === "Escape") {
+        setMenuAberto(false);
+        menu.current?.querySelector<HTMLButtonElement>("[data-apagar]")?.focus();
+      }
+    }
+    document.addEventListener("mousedown", fora);
+    window.addEventListener("keydown", tecla);
+    return () => {
+      document.removeEventListener("mousedown", fora);
+      window.removeEventListener("keydown", tecla);
+    };
+  }, [menuAberto]);
+
+  function fecharEditor() {
+    setEditando(false);
+    requestAnimationFrame(() => rodape.current?.querySelector<HTMLButtonElement>("[data-apagar]")?.focus());
+  }
 
   if (apagado) return null;
 
@@ -79,11 +116,25 @@ export function CartaoPost({ post, podeEnsinar = false, aoApagar }: { post: Post
               <time className="numeros" dateTime={post.created_at}>
                 {formatarQuando(post.created_at)}
               </time>
+              {post.editado_em && (
+                <span title={`Editado ${formatarQuando(post.editado_em)}`}> · editado</span>
+              )}
             </p>
           </div>
           {podeEnsinar && <TagHabilidade nome="Pode te ensinar" tipo="sei" />}
         </header>
 
+        {editando ? (
+          <EditorPost
+            post={post}
+            aoCancelar={fecharEditor}
+            aoSalvar={(salvo) => {
+              setPost(salvo);
+              fecharEditor();
+            }}
+          />
+        ) : (
+        <ToqueDuplo aoToqueDuplo={() => { if (!curtido) void alternarCurtida(); }}>
         <p className="mt-4 max-w-[65ch] whitespace-pre-line text-[0.9375rem] leading-relaxed text-texto">
           {post.texto}
         </p>
@@ -110,6 +161,8 @@ export function CartaoPost({ post, podeEnsinar = false, aoApagar }: { post: Post
             className="mt-4 max-h-96 w-full rounded-controle object-cover ring-1 ring-linha"
           />
         )}
+        </ToqueDuplo>
+        )}
 
         <footer ref={rodape} className="mt-3 -ml-2.5 flex flex-wrap items-center gap-1">
           <BotaoCurtir curtido={curtido} total={curtidas} aoAlternar={alternarCurtida} />
@@ -121,10 +174,54 @@ export function CartaoPost({ post, podeEnsinar = false, aoApagar }: { post: Post
             <Icone nome="comentario" tamanho={18} />
             <span className="numeros">{post.comentarios}</span>
           </Link>
-          {souAutor && !confirmando && (
-            <button data-apagar type="button" aria-label="Apagar post" onClick={() => { setErroApagar(false); setConfirmando(true); }} className="ml-auto inline-flex size-8 items-center justify-center rounded-full text-texto-3 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 hover:text-perigo motion-reduce:transition-none">
-              <Icone nome="lixeira" tamanho={17} />
-            </button>
+          {souAutor && !confirmando && !editando && (
+            <div
+              ref={menu}
+              className="relative ml-auto"
+              onBlur={(evento) => {
+                if (!evento.currentTarget.contains(evento.relatedTarget as Node | null)) setMenuAberto(false);
+              }}
+            >
+              <button
+                data-apagar
+                type="button"
+                aria-label="Mais opções do post"
+                aria-controls={`menu-post-${post.id}`}
+                aria-expanded={menuAberto}
+                onClick={() => setMenuAberto((aberto) => !aberto)}
+                className="inline-flex size-8 items-center justify-center rounded-full text-texto-3 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 hover:text-texto motion-reduce:transition-none"
+              >
+                <Icone nome="opcoes" tamanho={18} />
+              </button>
+              {menuAberto && (
+                <div id={`menu-post-${post.id}`} className="absolute bottom-full right-0 z-10 mb-1 min-w-36 rounded-controle border border-linha bg-superficie p-1 shadow-alta">
+                  <button
+                    type="button"
+                    data-item-menu
+                    onClick={() => {
+                      setMenuAberto(false);
+                      setEditando(true);
+                    }}
+                    className="flex w-full items-center rounded-controle px-3 py-2 text-left text-sm text-texto hover:bg-superficie-2 focus-visible:bg-superficie-2"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    data-item-menu
+                    onClick={() => {
+                      setMenuAberto(false);
+                      setErroApagar(false);
+                      setConfirmando(true);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-controle px-3 py-2 text-left text-sm text-perigo hover:bg-superficie-2 focus-visible:bg-superficie-2"
+                  >
+                    <Icone nome="lixeira" tamanho={16} />
+                    Apagar
+                  </button>
+                </div>
+              )}
+            </div>
           )}
           {souAutor && confirmando && (
             <div className="ml-auto flex flex-wrap items-center gap-1">

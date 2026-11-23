@@ -183,9 +183,9 @@ export function FormNovoPost({
             setAvisoFoto("");
           }}
         />
-        {texto.length >= 900 && (
+        {texto.length >= LIMITE_TEXTO_POST - 100 && (
           <p className="text-right text-xs text-texto-3">
-            <span className="numeros">{texto.length}/1000</span>
+            <span className="numeros">{texto.length}/{LIMITE_TEXTO_POST}</span>
           </p>
         )}
         {(aberto || foto) && (

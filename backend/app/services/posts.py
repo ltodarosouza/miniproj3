@@ -2,9 +2,11 @@ from fastapi import HTTPException
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
+from app.core.tempo import agora_utc
 from app.models.comentario import Comentario
 from app.models.curtida import Curtida
 from app.models.habilidade import Habilidade
+from app.models.imagem_post import ImagemPost
 from app.models.post import Post
 from app.models.user import User
 from app.schemas.post import PostCreate, PostOut, PostUpdate
@@ -58,6 +60,7 @@ def montar_saidas(db: Session, eu: User, posts: list[Post]) -> list[PostOut]:
             minutos_estudados=post.minutos_estudados,
             imagem_url=post.imagem_url,
             created_at=post.created_at,
+            editado_em=post.editado_em,
             curtidas=curtidas.get(post.id, 0),
             curtido=post.id in curtidos_por_mim,
             comentarios=comentarios.get(post.id, 0),
@@ -102,8 +105,13 @@ def editar(db: Session, eu: User, post_id: int, dados: PostUpdate) -> PostOut:
     post = post_do_autor(db, eu, post_id)
     campos = dados.model_dump(exclude_unset=True)
     _exigir_habilidade(db, campos.get("habilidade_id"))
+    mudou = False
     for nome, valor in campos.items():
-        setattr(post, nome, valor)
+        if getattr(post, nome) != valor:
+            setattr(post, nome, valor)
+            mudou = True
+    if mudou:
+        post.editado_em = agora_utc()
     db.commit()
     db.refresh(post)
     return montar_saidas(db, eu, [post])[0]
@@ -113,5 +121,6 @@ def apagar(db: Session, eu: User, post_id: int) -> None:
     post = post_do_autor(db, eu, post_id)
     db.execute(delete(Curtida).where(Curtida.post_id == post.id))
     db.execute(delete(Comentario).where(Comentario.post_id == post.id))
+    db.execute(delete(ImagemPost).where(ImagemPost.post_id == post.id))
     db.delete(post)
     db.commit()

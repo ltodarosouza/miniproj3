@@ -19,6 +19,7 @@ from app.models.user_habilidade import UserHabilidade
 from app.routers import (
     auth,
     avaliacoes,
+    busca,
     dms,
     feed,
     follows,
@@ -142,3 +143,4 @@ app.include_router(matches.router)
 app.include_router(posts.router)
 app.include_router(feed.router)
 app.include_router(notificacoes.router)
+app.include_router(busca.router)

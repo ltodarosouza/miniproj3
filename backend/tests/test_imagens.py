@@ -24,7 +24,7 @@ def enviar(client, post_id, headers, nome="foto.png", conteudo=PNG):
     )
 
 
-def test_enviar_imagem_grava_o_arquivo_e_atualiza_o_post(client, pessoa, pasta_de_teste):
+def test_enviar_imagem_grava_no_banco_e_nao_no_disco(client, pessoa, pasta_de_teste):
     ana = pessoa("ana")
     post_id = novo_post(client, ana)
 
@@ -33,7 +33,8 @@ def test_enviar_imagem_grava_o_arquivo_e_atualiza_o_post(client, pessoa, pasta_d
     assert r.status_code == 200
     url = r.json()["imagem_url"]
     assert url.startswith("/posts/imagens/") and url.endswith(".png")
-    assert len(list(pasta_de_teste.iterdir())) == 1
+    assert list(pasta_de_teste.iterdir()) == []
+    assert client.get(url).content == PNG
     assert client.get(f"/posts/{post_id}", headers=ana).json()["imagem_url"] == url
 
 
@@ -47,6 +48,37 @@ def test_imagem_enviada_pode_ser_baixada_sem_login(client, pessoa):
     assert r.status_code == 200
     assert r.content == PNG
     assert r.headers["content-type"] == "image/png"
+    assert "immutable" in r.headers["cache-control"]
+
+
+def test_trocar_a_imagem_apaga_a_anterior(client, pessoa):
+    ana = pessoa("ana")
+    post_id = novo_post(client, ana)
+    primeira = enviar(client, post_id, ana).json()["imagem_url"]
+
+    segunda = enviar(client, post_id, ana, nome="outra.webp").json()["imagem_url"]
+
+    assert client.get(primeira).status_code == 404
+    assert client.get(segunda).headers["content-type"] == "image/webp"
+
+
+def test_apagar_o_post_apaga_a_imagem(client, pessoa):
+    ana = pessoa("ana")
+    post_id = novo_post(client, ana)
+    url = enviar(client, post_id, ana).json()["imagem_url"]
+
+    assert client.delete(f"/posts/{post_id}", headers=ana).status_code == 204
+    assert client.get(url).status_code == 404
+
+
+def test_imagem_antiga_no_disco_continua_servida(client, pasta_de_teste):
+    nome = f"{'b' * 32}.jpg"
+    (pasta_de_teste / nome).write_bytes(b"jpeg antigo")
+
+    r = client.get(f"/posts/imagens/{nome}")
+
+    assert r.status_code == 200
+    assert r.content == b"jpeg antigo"
 
 
 def test_so_o_autor_envia_imagem(client, pessoa, pasta_de_teste):

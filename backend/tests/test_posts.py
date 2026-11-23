@@ -117,3 +117,40 @@ def test_editar_post_inexistente_da_404(client, pessoa):
     ana = pessoa("ana")
 
     assert client.patch("/posts/9999", json={"texto": "x"}, headers=ana).status_code == 404
+
+def test_post_novo_nao_vem_como_editado(client, pessoa):
+    ana = pessoa("ana")
+
+    r = client.post("/posts", json={"texto": "oi"}, headers=ana)
+
+    assert r.json()["editado_em"] is None
+
+
+def test_editar_preenche_editado_em(client, pessoa):
+    ana = pessoa("ana")
+    post = client.post("/posts", json={"texto": "oi"}, headers=ana).json()
+
+    r = client.patch(f"/posts/{post['id']}", json={"texto": "oi de novo"}, headers=ana)
+
+    assert r.json()["editado_em"] is not None
+    assert r.json()["editado_em"] >= post["created_at"]
+    assert client.get(f"/posts/{post['id']}", headers=ana).json()["editado_em"] == r.json()["editado_em"]
+
+
+def test_salvar_sem_mudar_nada_nao_marca_editado(client, pessoa):
+    ana = pessoa("ana")
+    post_id = client.post("/posts", json={"texto": "oi"}, headers=ana).json()["id"]
+
+    r = client.patch(f"/posts/{post_id}", json={"texto": "oi"}, headers=ana)
+
+    assert r.json()["editado_em"] is None
+
+
+def test_editar_de_outra_pessoa_nao_marca_editado(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    post_id = client.post("/posts", json={"texto": "meu"}, headers=ana).json()["id"]
+
+    client.patch(f"/posts/{post_id}", json={"texto": "invadido"}, headers=bia)
+
+    assert client.get(f"/posts/{post_id}", headers=ana).json()["editado_em"] is None

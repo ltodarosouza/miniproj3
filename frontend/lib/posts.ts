@@ -1,6 +1,7 @@
 import {
   apiDelete,
   apiGet,
+  apiPatch,
   apiPost,
   ErroApi,
   listarHabilidades,
@@ -11,7 +12,7 @@ import {
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-export type Motivo = "seguindo" | "pode_te_ensinar";
+export type Motivo = "meu" | "seguindo" | "pode_te_ensinar" | "descobrir";
 
 export type Post = {
   id: number;
@@ -21,6 +22,7 @@ export type Post = {
   minutos_estudados: number | null;
   imagem_url: string | null;
   created_at: string;
+  editado_em: string | null;
   curtidas: number;
   curtido: boolean;
   comentarios: number;
@@ -82,6 +84,34 @@ export function criarPost(dados: NovoPost): Promise<Post> {
 
 export function buscarPost(id: number): Promise<Post> {
   return apiGet(`/posts/${id}`);
+}
+
+export type EdicaoPost = Partial<NovoPost>;
+
+export function editarPost(id: number, dados: EdicaoPost): Promise<Post> {
+  return apiPatch(`/posts/${id}`, dados);
+}
+
+export type HabilidadeEmAlta = {
+  id: number;
+  nome: string;
+  categoria: string;
+  posts: number;
+  minutos: number;
+};
+
+export type MeuProgresso = {
+  streak: number;
+  minutos_semana: number;
+  posts_semana: number;
+};
+
+export function listarEmAlta(limit = 5): Promise<HabilidadeEmAlta[]> {
+  return apiGet(`/feed/em-alta?limit=${limit}`);
+}
+
+export function obterMeuProgresso(): Promise<MeuProgresso> {
+  return apiGet("/feed/meu-progresso");
 }
 
 export function apagarPost(id: number): Promise<void> {

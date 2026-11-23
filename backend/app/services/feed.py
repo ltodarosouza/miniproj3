@@ -1,29 +1,46 @@
-﻿from sqlalchemy import func, select
+from datetime import timedelta
+
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.matches import indice_matches
+from app.core.tempo import agora_utc
 from app.models.follow import Follow
+from app.models.habilidade import Habilidade
 from app.models.post import Post
 from app.models.user import User
-from app.schemas.feed import FeedPage, ItemFeed
+from app.models.user_habilidade import UserHabilidade
+from app.schemas.feed import FeedPage, HabilidadeEmAlta, ItemFeed, MeuProgresso
 from app.services.posts import montar_saidas
+from app.services.streak import streak_do_usuario
+
+SEMANA = timedelta(days=7)
 
 
-def _autores_do_feed(db: Session, eu: User) -> tuple[set[int], set[int]]:
-    seguidos = set(
-        db.scalars(select(Follow.seguido_id).where(Follow.seguidor_id == eu.id))
+def _quem_estuda_o_mesmo(db: Session, eu: User) -> set[int]:
+    minhas = select(UserHabilidade.habilidade_id).where(UserHabilidade.usuario_id == eu.id)
+    return set(
+        db.scalars(
+            select(UserHabilidade.usuario_id).where(UserHabilidade.habilidade_id.in_(minhas))
+        )
     )
-    professores = indice_matches.quem_pode_ensinar(eu.id) - seguidos - {eu.id}
-    return seguidos, professores
+
+
+def _motivos(db: Session, eu: User) -> dict[int, str]:
+    seguidos = set(db.scalars(select(Follow.seguido_id).where(Follow.seguidor_id == eu.id)))
+    professores = indice_matches.quem_pode_ensinar(eu.id)
+    motivos = {autor: "pode_te_ensinar" for autor in professores}
+    motivos.update({autor: "seguindo" for autor in seguidos})
+    motivos[eu.id] = "meu"
+    # Sempre o mesmo conjunto de autores, para a paginação não pular posts.
+    for autor in _quem_estuda_o_mesmo(db, eu):
+        motivos.setdefault(autor, "descobrir")
+    return motivos
 
 
 def listar(db: Session, eu: User, offset: int, limit: int) -> FeedPage:
-    seguidos, professores = _autores_do_feed(db, eu)
-    autores = seguidos | professores
-    if not autores:
-        return FeedPage(items=[], total=0, offset=offset, limit=limit)
-
-    do_feed = Post.autor_id.in_(autores)
+    motivos = _motivos(db, eu)
+    do_feed = Post.autor_id.in_(set(motivos))
     total = db.scalar(select(func.count()).select_from(Post).where(do_feed)) or 0
     posts = list(
         db.scalars(
@@ -35,10 +52,40 @@ def listar(db: Session, eu: User, offset: int, limit: int) -> FeedPage:
         )
     )
     items = [
-        ItemFeed(
-            **dict(saida),
-            motivo="seguindo" if post.autor_id in seguidos else "pode_te_ensinar",
-        )
+        ItemFeed(**dict(saida), motivo=motivos[post.autor_id])
         for post, saida in zip(posts, montar_saidas(db, eu, posts))
     ]
     return FeedPage(items=items, total=total, offset=offset, limit=limit)
+
+
+def em_alta(db: Session, limite: int = 5) -> list[HabilidadeEmAlta]:
+    desde = agora_utc() - SEMANA
+    posts = func.count(Post.id).label("posts")
+    linhas = db.execute(
+        select(Habilidade, posts, func.coalesce(func.sum(Post.minutos_estudados), 0))
+        .join(Post, Post.habilidade_id == Habilidade.id)
+        .where(Post.created_at >= desde)
+        .group_by(Habilidade.id)
+        .order_by(posts.desc(), Habilidade.nome)
+        .limit(limite)
+    )
+    return [
+        HabilidadeEmAlta(
+            id=h.id, nome=h.nome, categoria=h.categoria, posts=total, minutos=int(minutos)
+        )
+        for h, total, minutos in linhas
+    ]
+
+
+def meu_progresso(db: Session, eu: User) -> MeuProgresso:
+    desde = agora_utc() - SEMANA
+    posts_semana, minutos = db.execute(
+        select(func.count(Post.id), func.coalesce(func.sum(Post.minutos_estudados), 0)).where(
+            Post.autor_id == eu.id, Post.created_at >= desde
+        )
+    ).one()
+    return MeuProgresso(
+        streak=streak_do_usuario(db, eu.id),
+        minutos_semana=int(minutos),
+        posts_semana=posts_semana,
+    )
