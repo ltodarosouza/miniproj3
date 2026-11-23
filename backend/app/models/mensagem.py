@@ -16,3 +16,5 @@ class Mensagem(Base):
     para_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     texto: Mapped[str] = mapped_column(String(1000))
     em: Mapped[datetime] = mapped_column(default=agora_utc, index=True)
+    entregue_em: Mapped[datetime | None] = mapped_column(default=None)
+    lida_em: Mapped[datetime | None] = mapped_column(default=None)
