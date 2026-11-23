@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ItemNotificacao } from "@/components/notificacoes/ItemNotificacao";
 import { Botao, BotaoLink } from "@/components/ui/Botao";
@@ -20,19 +20,25 @@ const ORDEM_GRUPOS: GrupoData[] = ["Hoje", "Esta semana", "Antes"];
 export default function Pagina() {
   const [dados, setDados] = useState<Notificacao[] | null>(null);
   const [total, setTotal] = useState(0);
+  const [offsetServidor, setOffsetServidor] = useState(0);
   const [carregandoMais, setCarregandoMais] = useState(false);
   const [erroMais, setErroMais] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [logado, setLogado] = useState<boolean | null>(null);
+  const montada = useRef(false);
 
   const carregar = useCallback(async () => {
+    const id = meuId();
     setErro(null);
     try {
       const resposta = await listarNotificacoes(0, 50);
+      if (!montada.current || meuId() !== id) return;
       setDados(resposta.items);
       setTotal(resposta.total);
+      setOffsetServidor(resposta.items.length);
       await marcarLidas().catch(() => {});
     } catch (err) {
+      if (!montada.current || meuId() !== id) return;
       if (err instanceof ErroApi && err.status === 401) {
         limparSessao();
         setLogado(false);
@@ -51,7 +57,8 @@ export default function Pagina() {
     setCarregandoMais(true);
     setErroMais(false);
     try {
-      const resposta = await listarNotificacoes(dados.length, 50);
+      const resposta = await listarNotificacoes(offsetServidor, 50);
+      setOffsetServidor((atual) => atual + resposta.items.length);
       setDados((atuais) => {
         if (!atuais) return resposta.items;
         const chaves = new Set(
@@ -73,12 +80,16 @@ export default function Pagina() {
     } finally {
       setCarregandoMais(false);
     }
-  }, [dados, carregandoMais]);
+  }, [dados, carregandoMais, offsetServidor]);
 
   useEffect(() => {
+    montada.current = true;
     const temSessao = meuId() !== null;
     setLogado(temSessao);
     if (temSessao) carregar();
+    return () => {
+      montada.current = false;
+    };
   }, [carregar]);
 
   const grupos = dados
@@ -169,7 +180,7 @@ export default function Pagina() {
         </div>
       )}
 
-      {logado && dados && dados.length < total && (
+      {logado && dados && offsetServidor < total && (
         <div className="flex flex-col items-center gap-2">
           {erroMais && (
             <p role="alert" className="text-sm text-perigo">
