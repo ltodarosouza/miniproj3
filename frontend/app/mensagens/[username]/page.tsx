@@ -9,15 +9,15 @@ import { Botao } from "@/components/ui/Botao";
 import { Icone } from "@/components/ui/Icone";
 import { BalaoMensagem } from "@/components/mensagens/BalaoMensagem";
 import { CaixaMensagem } from "@/components/mensagens/CaixaMensagem";
-import { confirmarEnvio, type MensagemLocal } from "@/components/mensagens/mensagemLocal";
-import { enviarMensagem, listarConversas, listarMensagens, listarTrocas, type Conversa, type Troca } from "@/lib/api";
+import { aplicarEntreguesAte, confirmarEnvio, maiorIdRecebido, reconciliarMensagens, type MensagemLocal } from "@/components/mensagens/mensagemLocal";
+import { listarConversas, listarMensagens, listarTrocas, type Conversa, type Troca } from "@/lib/api";
 import { chaveDoDia, formatarDia } from "@/lib/datas";
 import { meuId } from "@/lib/sessao";
 import { CartaoTroca } from "@/components/trocas/CartaoTroca";
 import { FormAgendarTroca } from "@/components/trocas/FormAgendarTroca";
-import { marcarConversaLida } from "@/lib/mensagens";
+import { enviarMensagemComId, marcarConversaLida } from "@/lib/mensagens";
 
-type RespostaMensagens = { items: MensagemLocal[]; lidas_ate_id?: number | null };
+type RespostaMensagens = { items: MensagemLocal[]; lidas_ate_id?: number | null; entregues_ate_id?: number | null };
 
 type ItemLinhaDoTempo = { tipo: "mensagem"; mensagem: MensagemLocal } | { tipo: "troca"; troca: Troca };
 
@@ -40,6 +40,7 @@ export default function PaginaConversa() {
   const ciclosPolling = useRef(0);
   const proximoIdLocal = useRef(-1);
   const pollingEmVoo = useRef(false);
+  const cursorRef = useRef(0);
   const mensagensRef = useRef(mensagens);
   const cargaInicialConcluida = useRef(false);
   const trocasRef = useRef(trocas);
@@ -72,9 +73,11 @@ export default function PaginaConversa() {
   const aplicarCarga = useCallback(
     ([resposta, conversas, trocasCarregadas]: Awaited<ReturnType<typeof carregarConversa>>) => {
       const dados = resposta as RespostaMensagens;
-      setMensagens((atuais) => [...dados.items.map((mensagem) => mensagem.entregue_em ? mensagem : { ...mensagem, entregue_em: null }), ...atuais.filter((mensagem) => mensagem.id < 0)]);
+      cursorRef.current = maiorIdRecebido(dados.items, 0);
+      setMensagens((atuais) => reconciliarMensagens(atuais.filter((mensagem) => mensagem.id < 0), dados.items));
+      setMensagens((atuais) => aplicarEntreguesAte(atuais, dados.entregues_ate_id, username));
       if (dados.lidas_ate_id != null) {
-        setMensagens((atuais) => atuais.map((mensagem) => mensagem.de_username !== username && mensagem.id <= dados.lidas_ate_id! ? { ...mensagem, entregue_em: mensagem.entregue_em ?? mensagem.em, lida_em: mensagem.lida_em ?? new Date().toISOString() } : mensagem));
+        setMensagens((atuais) => atuais.map((mensagem) => mensagem.de_username !== username && mensagem.id > 0 && mensagem.id <= dados.lidas_ate_id! && !mensagem.lida_em ? { ...mensagem, entregue_em: mensagem.entregue_em ?? mensagem.em, lida_em: new Date().toISOString() } : mensagem));
       }
       setTrocas(trocasCarregadas.items);
       setConversa(conversas.items.find((item) => item.com.username === username) ?? null);
@@ -107,6 +110,7 @@ export default function PaginaConversa() {
     setNaoEncontrado(false);
     setErroInicial(false);
     cargaInicialConcluida.current = false;
+    cursorRef.current = 0;
     primeiroCarregamento.current = true;
     ciclosPolling.current = 0;
     carregarConversa()
@@ -153,10 +157,11 @@ export default function PaginaConversa() {
     pollingEmVoo.current = true;
     ciclosPolling.current += 1;
     const buscarTrocasAgora = ciclosPolling.current % 2 === 0;
-    const ultimoId = mensagensRef.current.reduce((maior, mensagem) => Math.max(maior, mensagem.id, 0), 0);
     try {
-      const [respostaBase, respostaTrocas] = await Promise.all([listarMensagens(username, ultimoId), buscarTrocasAgora ? listarTrocas(username) : Promise.resolve(null)]);
+      const [respostaBase, respostaTrocas] = await Promise.all([listarMensagens(username, cursorRef.current), buscarTrocasAgora ? listarTrocas(username) : Promise.resolve(null)]);
       const resposta = respostaBase as RespostaMensagens;
+      cursorRef.current = maiorIdRecebido(resposta.items, cursorRef.current);
+      setMensagens((atuais) => aplicarEntreguesAte(atuais, resposta.entregues_ate_id, username));
       aplicarLidasAte(resposta.lidas_ate_id);
       const idsTrocasAtuais = new Set(trocasRef.current.map((troca) => troca.id));
       const trocasNovas = respostaTrocas?.items.filter((troca) => !idsTrocasAtuais.has(troca.id)) ?? [];
@@ -177,16 +182,7 @@ export default function PaginaConversa() {
       const chegaramDoOutro = recebidas.some((mensagem) => mensagem.de_username === username);
       if (chegaramDoOutro) marcarLidas();
       setIdsRecentes(recebidas.filter((mensagem) => mensagem.de_username === username).map((mensagem) => mensagem.id));
-      setMensagens((atuais) => {
-        const resultado = [...atuais];
-        for (const recebida of recebidas) {
-          if (resultado.some((mensagem) => mensagem.id === recebida.id)) continue;
-          const pendente = recebida.de_username !== username ? resultado.find((mensagem) => mensagem.id < 0 && mensagem.texto === recebida.texto && mensagem.estado === "enviando") : undefined;
-          if (pendente) resultado[resultado.indexOf(pendente)] = { ...recebida, idLocal: pendente.idLocal };
-          else resultado.push(recebida);
-        }
-        return resultado;
-      });
+      setMensagens((atuais) => reconciliarMensagens(atuais, recebidas));
       setSemConexao(false);
       if (trocasNovas.length) {
         if (pertoDoFim) requestAnimationFrame(() => rolarAteFim(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"));
@@ -220,14 +216,15 @@ export default function PaginaConversa() {
 
   function aoEnviar(texto: string) {
     const idLocal = proximoIdLocal.current--;
+    const clienteId = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 14)}`;
     const meuUsername = mensagensRef.current.find((mensagem) => mensagem.de_username !== username)?.de_username
       ?? mensagensRef.current.find((mensagem) => mensagem.para_username !== username)?.para_username
       ?? "";
-    const temporaria: MensagemLocal = { id: idLocal, idLocal, de_username: meuUsername, para_username: username, texto, em: new Date().toISOString(), estado: "enviando" };
+    const temporaria: MensagemLocal = { id: idLocal, idLocal, cliente_id: clienteId, de_username: meuUsername, para_username: username, texto, em: new Date().toISOString(), estado: "enviando" };
     setMensagens((atuais) => [...atuais, temporaria]);
     requestAnimationFrame(() => rolarAteFim(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"));
-    void enviarMensagem(username, texto).then((enviada) => {
-      setMensagens((atuais) => confirmarEnvio(atuais, idLocal, enviada));
+    void enviarMensagemComId(username, texto, clienteId).then((enviada) => {
+      setMensagens((atuais) => confirmarEnvio(atuais, clienteId, enviada));
     }).catch(() => {
       setMensagens((atuais) => atuais.map((mensagem) => mensagem.idLocal === idLocal && mensagem.id < 0 ? { ...mensagem, estado: "falhou" } : mensagem));
     });
@@ -237,8 +234,10 @@ export default function PaginaConversa() {
     const mensagem = mensagensRef.current.find((item) => item.idLocal === idLocal);
     if (!mensagem) return;
     setMensagens((atuais) => atuais.map((item) => item.idLocal === idLocal ? { ...item, estado: "enviando" } : item));
-    void enviarMensagem(username, mensagem.texto).then((enviada) => {
-      setMensagens((atuais) => confirmarEnvio(atuais, idLocal, enviada));
+    const clienteId = mensagem.cliente_id;
+    if (!clienteId) return;
+    void enviarMensagemComId(username, mensagem.texto, clienteId).then((enviada) => {
+      setMensagens((atuais) => confirmarEnvio(atuais, clienteId, enviada));
     }).catch(() => {
       setMensagens((atuais) => atuais.map((item) => item.idLocal === idLocal && item.id < 0 ? { ...item, estado: "falhou" } : item));
     });
@@ -301,7 +300,7 @@ export default function PaginaConversa() {
               const agrupada = Boolean(mensagemAnterior && mensagemAnterior.de_username === mensagem.de_username && new Date(mensagem.em).getTime() - new Date(mensagemAnterior.em).getTime() < 5 * 60 * 1000);
               const horaAoFinal = !mensagemProxima || mensagemProxima.de_username !== mensagem.de_username || new Date(mensagemProxima.em).getTime() - new Date(mensagem.em).getTime() >= 5 * 60 * 1000;
               return (
-                <div key={`mensagem-${mensagem.idLocal ?? mensagem.id}`}>
+                <div key={`mensagem-${mensagem.cliente_id ?? mensagem.id}`}>
                   {!mesmoDia && <p className="my-5 text-center text-xs text-texto-3">{formatarDia(mensagem.em)}</p>}
                   <BalaoMensagem mensagem={mensagem} minha={mensagem.de_username !== username} mostrarHora={horaAoFinal} agrupadaComAnterior={agrupada} recemChegada={idsRecentes.includes(mensagem.id)} aoTentarDeNovo={tentarEnviarDeNovo} />
                 </div>

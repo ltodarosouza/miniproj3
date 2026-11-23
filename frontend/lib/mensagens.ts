@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { apiGet, apiPost, ErroApi, type User } from "@/lib/api";
+import { apiGet, apiPost, ErroApi, type Mensagem, type User } from "@/lib/api";
 import { meuId } from "@/lib/sessao";
 
 export type ConversaComStatus = {
@@ -29,6 +29,10 @@ export function marcarConversaLida(username: string): Promise<{ lidas_ate_id: nu
   return apiPost(`/dms/${encodeURIComponent(username)}/lidas`);
 }
 
+export function enviarMensagemComId(username: string, texto: string, clienteId: string): Promise<Mensagem & { cliente_id?: string | null; entregue_em?: string | null; lida_em?: string | null }> {
+  return apiPost(`/dms/${encodeURIComponent(username)}`, { texto, cliente_id: clienteId });
+}
+
 export function useNaoLidas() {
   const [dados, setDados] = useState<NaoLidasMensagens | null>(null);
   const [indisponivel, setIndisponivel] = useState(false);
@@ -48,7 +52,7 @@ export function useNaoLidas() {
       totalAnterior.current = resposta.total;
       porConversaAnterior.current = resposta.por_conversa;
       setDados(resposta);
-      if (anterior !== null && resposta.total > anterior && document.hidden && typeof Notification !== "undefined" && Notification.permission === "granted") {
+      if (anterior !== null && document.hidden && typeof Notification !== "undefined" && Notification.permission === "granted") {
         const aumentos = Object.entries(resposta.por_conversa).filter(([username, quantidade]) => quantidade > (mapaAnterior?.[username] ?? 0));
         if (aumentos.length) {
           for (const [username] of aumentos) {
@@ -59,9 +63,6 @@ export function useNaoLidas() {
               notificacao.close();
             };
           }
-        } else {
-          const notificacao = new Notification(`Você tem ${resposta.total - anterior} mensagens novas`, { tag: "mensagens" });
-          notificacao.onclick = () => { window.focus(); notificacao.close(); };
         }
       }
     } catch (erro) {
