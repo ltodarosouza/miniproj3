@@ -20,7 +20,7 @@ export function ItemNotificacao({ notificacao }: { notificacao: Notificacao }) {
       <Link href={link} className="flex min-w-0 flex-1 items-center gap-3">
         <Avatar nome={notificacao.ator.name} url={notificacao.ator.avatar_url} />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-texto">{notificacao.texto_curto}</span>
+          <span className="line-clamp-2 text-texto">{notificacao.texto_curto}</span>
           <time dateTime={notificacao.em} className="block text-xs text-texto-3">
             {formatarQuando(notificacao.em)}
           </time>
