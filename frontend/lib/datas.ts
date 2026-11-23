@@ -76,3 +76,10 @@ export function dataCompleta(iso: string): string {
   const data = new Date(iso);
   return `${DIA_E_MES.format(data).replace(".", "")} às ${HORA.format(data)}`;
 }
+
+export function formatarPreviaTroca(iso: string): string {
+  const data = new Date(iso);
+  const dia = new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" }).format(data).replace(".", "");
+  const hora = HORA.format(data);
+  return `📅 Proposta de troca · ${dia} às ${hora}`;
+}
