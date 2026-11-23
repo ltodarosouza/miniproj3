@@ -6,7 +6,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import select
+from sqlalchemy import Engine, inspect, select, text
 
 load_dotenv()
 
@@ -60,9 +60,33 @@ def semear_se_vazio(db) -> None:
     seed_fake(db)
 
 
+def completar_esquema_sqlite(motor: Engine) -> None:
+    inspetor = inspect(motor)
+    with motor.begin() as conexao:
+        for tabela in Base.metadata.sorted_tables:
+            existentes = {coluna["name"] for coluna in inspetor.get_columns(tabela.name)}
+            for coluna in tabela.columns:
+                if coluna.name in existentes:
+                    continue
+                if not coluna.nullable:
+                    raise RuntimeError(
+                        f"{tabela.name}.{coluna.name} é obrigatória e não existe no banco local. "
+                        "Apague backend/app.db e rode make seed."
+                    )
+                tipo = coluna.type.compile(dialect=motor.dialect)
+                conexao.execute(
+                    text(f'ALTER TABLE "{tabela.name}" ADD COLUMN "{coluna.name}" {tipo}')
+                )
+            indices = {indice["name"] for indice in inspetor.get_indexes(tabela.name)}
+            for indice in tabela.indexes:
+                if indice.name not in indices:
+                    indice.create(conexao)
+
+
 def preparar_banco() -> None:
     if EH_SQLITE:
         Base.metadata.create_all(engine)
+        completar_esquema_sqlite(engine)
         return
     from alembic import command
     from alembic.config import Config
