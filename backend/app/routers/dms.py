@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.deps import get_current_user
 from app.models.user import User
-from app.schemas.dm import ConversaPage, MensagemCreate, MensagemOut, MensagemPage
+from app.schemas.dm import ConversaPage, LidasOut, MensagemCreate, MensagemOut, MensagemPage, NaoLidasOut
 from app.services import dms
 
 router = APIRouter(prefix="/dms", tags=["dms"])
@@ -16,6 +16,23 @@ def listar_conversas(
     eu: User = Depends(get_current_user),
 ) -> ConversaPage:
     return dms.listar_conversas(db, eu)
+
+
+@router.get("/nao-lidas", response_model=NaoLidasOut)
+def listar_nao_lidas(
+    db: Session = Depends(get_db),
+    eu: User = Depends(get_current_user),
+) -> NaoLidasOut:
+    return dms.nao_lidas(db, eu)
+
+
+@router.post("/{username}/lidas", response_model=LidasOut)
+def marcar_lidas(
+    username: str,
+    db: Session = Depends(get_db),
+    eu: User = Depends(get_current_user),
+) -> LidasOut:
+    return dms.marcar_lidas(db, eu, username)
 
 
 @router.post("/{username}", response_model=MensagemOut, status_code=status.HTTP_201_CREATED)
