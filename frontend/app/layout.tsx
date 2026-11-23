@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { Navegacao } from "@/components/ui/Navegacao";
 import { AvisoAvaliacao } from "@/components/avaliacoes/AvisoAvaliacao";
+import { ToastNotificacoes } from "@/components/notificacoes/ToastNotificacoes";
 import { NOME_REDE } from "@/lib/marca";
 import { SCRIPT_TEMA } from "@/lib/tema";
 
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Navegacao nomeRede={NOME_REDE} />
         <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
         <AvisoAvaliacao />
+        <ToastNotificacoes />
       </body>
     </html>
   );
