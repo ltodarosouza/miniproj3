@@ -72,13 +72,15 @@ export function useNaoLidas() {
   }, [indisponivel]);
 
   useEffect(() => {
+    let ativo = true;
     void atualizar();
     let temporizador: number;
     const agendar = () => {
+      if (!ativo) return;
       window.clearTimeout(temporizador);
       temporizador = window.setTimeout(async () => {
         await atualizar();
-        agendar();
+        if (ativo) agendar();
       }, document.hidden ? 30000 : 10000);
     };
     agendar();
@@ -89,7 +91,7 @@ export function useNaoLidas() {
       } else agendar();
     };
     document.addEventListener("visibilitychange", visibilidade);
-    return () => { pedido.current++; window.clearTimeout(temporizador); document.removeEventListener("visibilitychange", visibilidade); };
+    return () => { ativo = false; pedido.current++; window.clearTimeout(temporizador); document.removeEventListener("visibilitychange", visibilidade); };
   }, [atualizar]);
 
   return dados;
