@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import type { Mensagem } from "@/lib/api";
+import type { MensagemLocal } from "@/components/mensagens/mensagemLocal";
 import { formatarHora } from "@/lib/datas";
 
 export function BalaoMensagem({
@@ -11,12 +11,14 @@ export function BalaoMensagem({
   mostrarHora,
   agrupadaComAnterior,
   recemChegada = false,
+  aoTentarDeNovo,
 }: {
-  mensagem: Mensagem;
+  mensagem: MensagemLocal;
   minha: boolean;
   mostrarHora: boolean;
   agrupadaComAnterior: boolean;
   recemChegada?: boolean;
+  aoTentarDeNovo?: (idLocal: number) => void;
 }) {
   const [visivel, setVisivel] = useState(!recemChegada);
 
@@ -32,7 +34,11 @@ export function BalaoMensagem({
         <p className={`whitespace-pre-wrap break-words rounded-[18px] px-3.5 py-2 text-[0.9375rem] leading-relaxed ${minha ? "rounded-br-md bg-marca-suave text-texto" : "rounded-bl-md bg-superficie-2 text-texto"}`}>
           {mensagem.texto}
         </p>
-        {mostrarHora && <time className="numeros mt-1 px-1 text-[0.6875rem] text-texto-3">{formatarHora(mensagem.em)}</time>}
+        {(mostrarHora || mensagem.estado === "enviando" || mensagem.estado === "falhou") && <div className={`mt-1 flex items-center gap-1 px-1 text-[0.6875rem] ${mensagem.estado === "falhou" ? "text-perigo" : "text-texto-3"}`}>
+          {minha && mensagem.estado === "enviando" && <><svg aria-hidden="true" className="size-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="6" /><path d="M8 4.5V8l2.2 1.4" /></svg><span className="sr-only">Enviando</span></>}
+          <time className="numeros">{formatarHora(mensagem.em)}</time>
+          {minha && mensagem.estado === "falhou" && <button type="button" className="underline underline-offset-2 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-perigo" onClick={() => mensagem.idLocal !== undefined && aoTentarDeNovo?.(mensagem.idLocal)}>Não enviada · Tentar de novo</button>}
+        </div>}
       </div>
     </div>
   );
