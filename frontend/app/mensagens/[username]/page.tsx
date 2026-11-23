@@ -73,7 +73,7 @@ export default function PaginaConversa() {
   const aplicarCarga = useCallback(
     ([resposta, conversas, trocasCarregadas]: Awaited<ReturnType<typeof carregarConversa>>) => {
       const dados = resposta as RespostaMensagens;
-      cursorRef.current = maiorIdRecebido(dados.items, 0);
+      cursorRef.current = maiorIdRecebido(dados.items, cursorRef.current);
       setMensagens((atuais) => reconciliarMensagens(atuais.filter((mensagem) => mensagem.id < 0), dados.items));
       setMensagens((atuais) => aplicarEntreguesAte(atuais, dados.entregues_ate_id, username));
       if (dados.lidas_ate_id != null) {
