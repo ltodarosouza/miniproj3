@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi import HTTPException
-from sqlalchemy import func, or_, select, update
+from sqlalchemy import case, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -190,18 +190,61 @@ def nao_lidas(db: Session, eu: User) -> NaoLidasOut:
 
 def listar_conversas(db: Session, eu: User) -> ConversaPage:
     _entregar(db, eu)
+    menor_id_mensagem = case(
+        (Mensagem.de_id < Mensagem.para_id, Mensagem.de_id),
+        else_=Mensagem.para_id,
+    )
+    maior_id_mensagem = case(
+        (Mensagem.de_id < Mensagem.para_id, Mensagem.para_id),
+        else_=Mensagem.de_id,
+    )
+    ultimas_mensagens = (
+        select(
+            Mensagem.id.label("mensagem_id"),
+            func.row_number()
+            .over(
+                partition_by=(menor_id_mensagem, maior_id_mensagem),
+                order_by=(Mensagem.em.desc(), Mensagem.id.desc()),
+            )
+            .label("posicao"),
+        )
+        .where(or_(Mensagem.de_id == eu.id, Mensagem.para_id == eu.id))
+        .subquery()
+    )
     mensagens = list(
         db.scalars(
             select(Mensagem)
-            .where(or_(Mensagem.de_id == eu.id, Mensagem.para_id == eu.id))
-            .order_by(Mensagem.em.desc(), Mensagem.id.desc())
+            .join(ultimas_mensagens, Mensagem.id == ultimas_mensagens.c.mensagem_id)
+            .where(ultimas_mensagens.c.posicao == 1)
         )
+    )
+    menor_id_troca = case(
+        (Troca.proposta_por_id < Troca.com_id, Troca.proposta_por_id),
+        else_=Troca.com_id,
+    )
+    maior_id_troca = case(
+        (Troca.proposta_por_id < Troca.com_id, Troca.com_id),
+        else_=Troca.proposta_por_id,
+    )
+    instante_troca = func.coalesce(Troca.respondida_em, Troca.criada_em)
+    ultimas_trocas = (
+        select(
+            Troca.id.label("troca_id"),
+            func.row_number()
+            .over(
+                partition_by=(menor_id_troca, maior_id_troca),
+                order_by=(instante_troca.desc(), Troca.id.desc()),
+            )
+            .label("posicao"),
+        )
+        .where(or_(Troca.proposta_por_id == eu.id, Troca.com_id == eu.id))
+        .subquery()
     )
     trocas = list(
         db.scalars(
             select(Troca)
-            .where(or_(Troca.proposta_por_id == eu.id, Troca.com_id == eu.id))
-            .order_by(func.coalesce(Troca.respondida_em, Troca.criada_em).desc(), Troca.id.desc())
+            .join(ultimas_trocas, Troca.id == ultimas_trocas.c.troca_id)
+            .where(ultimas_trocas.c.posicao == 1)
         )
     )
     eventos: dict[int, tuple[datetime, int, str, Mensagem | Troca]] = {}
