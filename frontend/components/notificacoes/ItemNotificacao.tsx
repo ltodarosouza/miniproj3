@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { BotaoLink } from "@/components/ui/Botao";
-import { BotaoSeguir } from "@/components/ui/BotaoSeguir";
+import { BotaoSeguirDeVolta } from "@/components/notificacoes/BotaoSeguirDeVolta";
 import { formatarQuando } from "@/lib/datas";
 import { linkDaNotificacao, type Notificacao } from "@/lib/notificacoes";
 
@@ -28,7 +28,7 @@ export function ItemNotificacao({ notificacao }: { notificacao: Notificacao }) {
         </span>
       </Link>
       {notificacao.tipo === "seguidor" && (
-        <BotaoSeguir username={notificacao.ator.username} tamanho="sm" />
+        <BotaoSeguirDeVolta username={notificacao.ator.username} nome={notificacao.ator.name} />
       )}
       {notificacao.tipo === "troca_proposta" && (
         <BotaoLink href={link} tamanho="sm" variante="troca">
