@@ -219,15 +219,14 @@ export function EditorHabilidades({
                   disabled={itens.length >= LIMITE_HABILIDADES}
                 />
               </div>
-              <div className="sm:w-44">
+              <div className="sm:w-60">
                 <p id="rotulo-tipo-habilidade" className="mb-1.5 block text-sm font-medium text-texto">
                   Vai para
                 </p>
-                <div role="radiogroup" aria-labelledby="rotulo-tipo-habilidade" className="flex rounded-controle border border-linha-forte bg-superficie p-1">
+                <div role="group" aria-labelledby="rotulo-tipo-habilidade" className="flex rounded-controle border border-linha-forte bg-superficie p-1">
                   <button
                     type="button"
-                    role="radio"
-                    aria-checked={tipoSelecionado === "sei"}
+                    aria-pressed={tipoSelecionado === "sei"}
                     onClick={() => setTipoSelecionado("sei")}
                     className={`flex-1 rounded-controle py-1.5 text-sm font-medium transition-colors duration-[var(--rapido)] ease-saida motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca ${
                       tipoSelecionado === "sei"
@@ -239,9 +238,7 @@ export function EditorHabilidades({
                   </button>
                   <button
                     type="button"
-                    role="radio"
-                    aria-checked={tipoSelecionado === "quero_aprender"}
-                    aria-label="Quero aprender"
+                    aria-pressed={tipoSelecionado === "quero_aprender"}
                     onClick={() => setTipoSelecionado("quero_aprender")}
                     className={`flex-1 rounded-controle py-1.5 text-sm font-medium transition-colors duration-[var(--rapido)] ease-saida motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca ${
                       tipoSelecionado === "quero_aprender"
@@ -276,7 +273,7 @@ export function EditorHabilidades({
                             type="button"
                             onClick={() => adicionar(habilidade)}
                             disabled={itens.length >= LIMITE_HABILIDADES}
-                            className="inline-flex items-center gap-1.5 rounded-full border border-linha-forte bg-superficie-2 px-3 py-1.5 text-sm text-texto transition-colors duration-[var(--rapido)] ease-saida hover:border-marca hover:text-marca disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca motion-reduce:transition-none"
+                            className="inline-flex items-center gap-1.5 rounded-full border border-linha-forte bg-superficie-2 px-3 py-1.5 text-sm text-texto transition-colors duration-[var(--rapido)] ease-saida hover:border-marca hover:text-marca-forte disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca motion-reduce:transition-none"
                           >
                             <Icone nome="mais" tamanho={14} />
                             {habilidade.nome}
@@ -348,7 +345,7 @@ function ColunaHabilidades({
           {itens.map((item) => (
             <li
               key={item.id}
-              className="flex flex-wrap items-center gap-2 bg-superficie-2 p-2"
+              className="flex flex-wrap items-center gap-2 rounded-controle bg-superficie p-2"
             >
               <span className="min-w-0 flex-1 truncate">
                 <TagHabilidade nome={item.nome} tipo={item.tipo} />

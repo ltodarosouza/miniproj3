@@ -116,15 +116,16 @@ export function AutocompleteHabilidade({
     setSugestaoMapeada(null);
     setBuscou(false);
     if (timerRef.current) clearTimeout(timerRef.current);
-    if (novo.length === 0) {
+    if (novo.trim().length === 0) {
       buscaAtualRef.current += 1;
       setSugestoes([]);
       setAberto(false);
       setCarregando(false);
       setErro(null);
       setBuscou(true);
+      return;
     }
-    timerRef.current = setTimeout(() => buscar(novo), 200);
+    timerRef.current = setTimeout(() => buscar(novo.trim()), 200);
   }
 
   function handleKeyDown(evento: React.KeyboardEvent<HTMLInputElement>) {
@@ -204,6 +205,32 @@ export function AutocompleteHabilidade({
           }
           className="w-full h-10 rounded-controle border border-linha-forte bg-superficie pl-10 pr-3 text-[0.9375rem] text-texto placeholder:text-texto-3 transition-[border-color,box-shadow] duration-[var(--rapido)] ease-saida focus:outline-none focus:border-marca focus:shadow-[0_0_0_4px_var(--brilho)] disabled:opacity-50 motion-reduce:transition-none"
         />
+        {aberto && sugestoes.length > 0 && (
+          <ul
+            ref={listboxRef}
+            id={`${id}-sugestoes`}
+            role="listbox"
+            className="absolute top-full z-20 mt-1 max-h-60 w-full overflow-auto rounded-controle border border-linha-forte bg-superficie py-1 shadow-cartao"
+          >
+            {sugestoes.map((habilidade, indice) => (
+              <li
+                key={habilidade.id}
+                id={`${id}-opcao-${indice}`}
+                role="option"
+                aria-selected={indice === indiceAtivo}
+                onClick={() => selecionar(habilidade)}
+                onMouseEnter={() => setIndiceAtivo(indice)}
+                className={`min-h-10 cursor-pointer px-3 py-2 text-sm transition-colors duration-[var(--rapido)] ease-saida motion-reduce:transition-none ${
+                  indice === indiceAtivo
+                    ? "bg-superficie-2 text-texto"
+                    : "text-texto-2"
+                }`}
+              >
+                {habilidade.nome}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       {dica && !erro && <p className="text-sm text-texto-3">{dica}</p>}
       {erro && (
@@ -215,32 +242,6 @@ export function AutocompleteHabilidade({
         <p role="status" aria-live="polite" className="text-sm text-texto-3">Buscando…</p>
       )}
 
-      {aberto && sugestoes.length > 0 && (
-        <ul
-          ref={listboxRef}
-          id={`${id}-sugestoes`}
-          role="listbox"
-          className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-controle border border-linha-forte bg-superficie py-1 shadow-cartao"
-        >
-          {sugestoes.map((habilidade, indice) => (
-            <li
-              key={habilidade.id}
-              id={`${id}-opcao-${indice}`}
-              role="option"
-              aria-selected={indice === indiceAtivo}
-              onClick={() => selecionar(habilidade)}
-              onMouseEnter={() => setIndiceAtivo(indice)}
-              className={`min-h-10 cursor-pointer px-3 py-2 text-sm transition-colors duration-[var(--rapido)] ease-saida motion-reduce:transition-none ${
-                indice === indiceAtivo
-                  ? "bg-superficie-2 text-texto"
-                  : "text-texto-2"
-              }`}
-            >
-              {habilidade.nome}
-            </li>
-          ))}
-        </ul>
-      )}
 
       <div aria-live="polite" className="text-sm text-texto-2">
         {sugestaoMapeada && !aberto && (
@@ -249,7 +250,7 @@ export function AutocompleteHabilidade({
             <button
               type="button"
               onClick={() => selecionar(sugestaoMapeada)}
-              className="font-medium text-marca hover:underline"
+              className="rounded-controle font-medium text-marca-forte underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
             >
               {sugestaoMapeada.nome}
             </button>
