@@ -5,7 +5,9 @@ from sqlalchemy import select
 from app.core.tempo import agora_utc
 from app.db import SessionLocal
 from app.models.curtida import Curtida
+from app.models.leitura_notificacoes import LeituraNotificacoes
 from app.models.troca import Troca
+from app.models.user import User
 
 
 def habilidades(client):
@@ -175,6 +177,27 @@ def test_marcar_lidas_atualiza_contagem_e_novas_acoes(client, pessoa):
     client.post(f"/posts/{post_id}/comentarios", json={"texto": "novo"}, headers=bia)
     assert client.get("/notificacoes/nao-lidas", headers=ana).json()["total"] == 1
     assert client.get("/notificacoes", headers=ana).json()["items"][0]["lida"] is False
+
+
+def test_marcar_lidas_nao_retrocede_marcador_futuro(client, pessoa):
+    ana = pessoa("ana")
+    futuro = agora_utc() + timedelta(hours=1)
+    with SessionLocal() as db:
+        usuario = db.scalar(select(User).where(User.username == "ana"))
+        leitura = LeituraNotificacoes(usuario_id=usuario.id, lidas_ate=futuro)
+        db.add(leitura)
+        db.commit()
+
+    assert client.post("/notificacoes/lidas", headers=ana).status_code == 204
+
+    with SessionLocal() as db:
+        usuario = db.scalar(select(User).where(User.username == "ana"))
+        leitura = db.scalar(
+            select(LeituraNotificacoes).where(
+                LeituraNotificacoes.usuario_id == usuario.id
+            )
+        )
+        assert leitura.lidas_ate == futuro
 
 
 def test_ordem_decrescente_paginacao_e_total(client, pessoa):

@@ -1,7 +1,7 @@
 from datetime import date
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -196,24 +196,33 @@ def nao_lidas(db: Session, pessoa: User) -> NaoLidasOut:
 
 
 def marcar_lidas(db: Session, pessoa: User) -> None:
-    leitura = db.scalar(
+    agora = agora_utc()
+    resultado = db.execute(
+        update(LeituraNotificacoes)
+        .where(
+            LeituraNotificacoes.usuario_id == pessoa.id,
+            LeituraNotificacoes.lidas_ate < agora,
+        )
+        .values(lidas_ate=agora)
+    )
+    if resultado.rowcount == 0 and db.scalar(
         select(LeituraNotificacoes).where(
             LeituraNotificacoes.usuario_id == pessoa.id
         )
-    )
-    if leitura is None:
-        leitura = LeituraNotificacoes(usuario_id=pessoa.id, lidas_ate=agora_utc())
-        db.add(leitura)
-    else:
-        leitura.lidas_ate = agora_utc()
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        leitura = db.scalar(
-            select(LeituraNotificacoes).where(
-                LeituraNotificacoes.usuario_id == pessoa.id
+    ) is None:
+        db.add(LeituraNotificacoes(usuario_id=pessoa.id, lidas_ate=agora))
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            db.execute(
+                update(LeituraNotificacoes)
+                .where(
+                    LeituraNotificacoes.usuario_id == pessoa.id,
+                    LeituraNotificacoes.lidas_ate < agora,
+                )
+                .values(lidas_ate=agora)
             )
-        )
-        leitura.lidas_ate = agora_utc()
-        db.commit()
+            db.commit()
+        return
+    db.commit()
