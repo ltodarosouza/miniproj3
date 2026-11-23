@@ -29,7 +29,7 @@ Projeto acadêmico (Mini-projeto 3 da Trilha UFPB), time de 4 pessoas, entrega e
 - Personalidade amigável e acolhedora: o iniciante não pode se sentir burro ao entrar.
 - Cor principal verde-azulado (teal), escolhida para fugir do azul do LinkedIn.
 - Tema claro e escuro, seguindo o sistema.
-- Movimento fluido e orgânico, com qualidade, nunca forçado: elementos que reagem ao mouse e ao arraste e transições suaves entre estados.
+- Movimento fluido e orgânico, com qualidade, nunca forçado: responde a ação (tocar, curtir, enviar, arrastar), nunca à posição do mouse, com transições suaves entre estados.
 - Código sem comentários; explicações vão nos markdowns.
 
 ## Evidence on Hand

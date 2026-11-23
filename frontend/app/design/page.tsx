@@ -5,13 +5,20 @@ import { useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { BotaoCurtir } from "@/components/ui/BotaoCurtir";
+import { celebrar } from "@/components/ui/Celebrar";
 import { AreaTexto, Campo } from "@/components/ui/Campo";
 import { Cartao } from "@/components/ui/Cartao";
 import { Estrelas } from "@/components/ui/Estrelas";
+import { EsqueletoLista } from "@/components/ui/Esqueleto";
+import { Folha } from "@/components/ui/Folha";
 import { Icone } from "@/components/ui/Icone";
+import { PuxarParaAtualizar } from "@/components/ui/PuxarParaAtualizar";
 import { QuadroArrastavel, type Coluna } from "@/components/ui/QuadroArrastavel";
 import { Revelar } from "@/components/ui/Revelar";
+import { SeloContador } from "@/components/ui/SeloContador";
+import { Streak } from "@/components/ui/Streak";
 import { TagHabilidade } from "@/components/ui/TagHabilidade";
+import { ToqueDuplo } from "@/components/ui/ToqueDuplo";
 
 type Habilidade = { id: string; nome: string; nivel: number };
 
@@ -46,6 +53,8 @@ function Secao({ titulo, descricao, children }: { titulo: string; descricao: str
 
 export default function DesignPage() {
   const [curtido, setCurtido] = useState(false);
+  const [curtidaExemplo, setCurtidaExemplo] = useState(false);
+  const [folhaAberta, setFolhaAberta] = useState(false);
   const [nota, setNota] = useState(0);
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const [colunas, setColunas] = useState<Coluna<Habilidade>[]>([
@@ -91,7 +100,7 @@ export default function DesignPage() {
           Guia visual
         </h1>
         <p className="mt-3 text-[0.9375rem] leading-relaxed text-texto-2">
-          As peças que todas as telas usam. Passe o mouse, arraste e clique: o movimento faz parte do design. Os dados desta página são fictícios.
+          As peças que todas as telas usam. Toque, curta, arraste e publique: o movimento responde ao que você faz, nunca à posição do mouse. Os dados desta página são fictícios.
         </p>
       </header>
 
@@ -118,10 +127,10 @@ export default function DesignPage() {
         </div>
       </Secao>
 
-      <Secao titulo="Botões" descricao="Primário para a ação principal da tela (uma por tela). Troca só para propor troca. Magnético nos CTAs grandes.">
+      <Secao titulo="Botões" descricao="Primário para a ação principal da tela (uma por tela). Troca só para propor troca.">
         <div className="flex flex-wrap items-center gap-3">
-          <Botao magnetico>Publicar</Botao>
-          <Botao variante="troca" magnetico>
+          <Botao>Publicar</Botao>
+          <Botao variante="troca">
             <Icone nome="troca" tamanho={18} />
             Propor troca
           </Botao>
@@ -173,7 +182,7 @@ export default function DesignPage() {
         </div>
       </Secao>
 
-      <Secao titulo="Arrastar" descricao="QuadroArrastavel: o item segue o mouse, inclina com a velocidade e assenta com mola. Pelo teclado, Enter manda para a outra coluna.">
+      <Secao titulo="Arrastar" descricao="QuadroArrastavel: o item acompanha o dedo ou o cursor enquanto você arrasta, inclina com a velocidade e assenta com mola. Pelo teclado, Enter manda para a outra coluna.">
         <QuadroArrastavel
           colunas={colunas}
           aoMover={mover}
@@ -205,7 +214,7 @@ export default function DesignPage() {
         </div>
       </Secao>
 
-      <Secao titulo="Cartões" descricao="Cartao interativo tem holofote que segue o mouse e sobe levemente. Use para posts e matches, nunca um cartão dentro de outro.">
+      <Secao titulo="Cartões" descricao="Cartao interativo ganha borda e sombra mais fortes no hover, sem se mover. Use para posts e matches, nunca um cartão dentro de outro.">
         <div className="grid gap-4">
           <Cartao interativo className="p-4">
             <div className="flex items-start gap-3">
@@ -249,13 +258,56 @@ export default function DesignPage() {
                   você ensina <TagHabilidade nome="Python" tipo="sei" nivel={4} />
                 </div>
               </div>
-              <Botao variante="troca" magnetico>
+              <Botao variante="troca">
                 <Icone nome="mensagem" tamanho={18} />
                 Conversar
               </Botao>
             </div>
           </Cartao>
         </div>
+      </Secao>
+
+      <Secao titulo="Navegação" descricao="No computador, painel lateral fixo à esquerda (só ícones entre 1024 e 1279 px). No celular, cabeçalho fino em cima e barra inferior com o + no meio. Já está no layout; as páginas só escolhem a própria largura.">
+        <div className="space-y-4">
+          <p className="text-sm text-texto-2">Use <code>var(--altura-navegacao)</code> e <code>var(--altura-barra-inferior)</code> para telas de altura cheia, como o chat.</p>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2"><SeloContador total={3} /><SeloContador total={120} /></div>
+            <Streak dias={5} postouHoje />
+            <Streak dias={5} postouHoje={false} />
+          </div>
+        </div>
+      </Secao>
+
+      <Secao titulo="Folha" descricao="Bottom sheet no celular e janela centralizada no computador. Arraste a alça para baixo para fechar.">
+        <>
+          <Botao variante="secundario" onClick={() => setFolhaAberta(true)}>Abrir folha</Botao>
+          <Folha aberta={folhaAberta} aoFechar={() => setFolhaAberta(false)} titulo="Exemplo de folha">
+            <div className="space-y-4"><p className="text-sm text-texto-2">Uma folha para ações e detalhes rápidos.</p><Botao onClick={() => setFolhaAberta(false)}>Entendi</Botao></div>
+          </Folha>
+        </>
+      </Secao>
+
+      <Secao titulo="Toque duplo e curtida" descricao="ToqueDuplo envolve a foto do post: dois toques curtem e mostram o coração. BotaoCurtir solta partículas e o número sobe animado.">
+        <div className="flex flex-col items-start gap-3">
+          <ToqueDuplo aoToqueDuplo={() => setCurtidaExemplo(true)} className="w-full max-w-sm">
+            <div className="flex aspect-[4/3] w-full items-center justify-center rounded-cartao bg-marca-suave text-sm text-texto-2">Toque duas vezes</div>
+          </ToqueDuplo>
+          <BotaoCurtir curtido={curtidaExemplo} total={12 + (curtidaExemplo ? 1 : 0)} aoAlternar={() => setCurtidaExemplo((atual) => !atual)} />
+        </div>
+      </Secao>
+
+      <Secao titulo="Celebrar" descricao="Confete leve para vitórias: troca confirmada, primeiro match, recorde de sequência. Chame celebrar() ou use <Celebrar quando={...} />.">
+        <div className="flex items-center gap-3"><Botao variante="secundario" onClick={() => celebrar()}>Celebrar</Botao></div>
+      </Secao>
+
+      <Secao titulo="Carregando" descricao="Esqueleto com brilho no lugar de blocos parados. EsqueletoLista imita posts.">
+        <div className="max-w-md"><EsqueletoLista itens={1} /></div>
+      </Secao>
+
+      <Secao titulo="Puxar para atualizar" descricao="No celular, puxar o topo da lista para baixo chama aoAtualizar. Envolva a lista do feed com PuxarParaAtualizar.">
+        <PuxarParaAtualizar aoAtualizar={() => new Promise((r) => setTimeout(r, 900))}>
+          <Cartao className="p-4 text-sm text-texto-2">Puxe para baixo no celular</Cartao>
+        </PuxarParaAtualizar>
       </Secao>
 
       <Secao titulo="Aparecer ao rolar" descricao="Envolva blocos em <Revelar>: surgem com leve subida e desfoque quando entram na tela. Use atraso para escalonar listas.">
