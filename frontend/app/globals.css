@@ -16,6 +16,8 @@
   --troca: oklch(0.7 0.14 55);
   --troca-suave: oklch(0.96 0.035 60);
   --perigo: oklch(0.58 0.19 25);
+  --selo: oklch(0.55 0.21 25);
+  --selo-texto: oklch(1 0 0);
   --sucesso: oklch(0.6 0.13 155);
   --estrela: oklch(0.78 0.15 80);
   --sombra: 0 1px 2px oklch(0.3 0.03 195 / 0.06), 0 4px 16px -4px oklch(0.3 0.03 195 / 0.08);
@@ -48,6 +50,8 @@
     --troca: oklch(0.78 0.13 60);
     --troca-suave: oklch(0.3 0.05 55);
     --perigo: oklch(0.7 0.17 25);
+    --selo: oklch(0.55 0.21 25);
+    --selo-texto: oklch(1 0 0);
     --sucesso: oklch(0.74 0.13 155);
     --sombra: 0 1px 2px oklch(0 0 0 / 0.3), 0 4px 16px -4px oklch(0 0 0 / 0.35);
     --sombra-alta: 0 2px 4px oklch(0 0 0 / 0.3), 0 18px 44px -12px oklch(0 0 0 / 0.6);
@@ -72,6 +76,8 @@
   --troca: oklch(0.78 0.13 60);
   --troca-suave: oklch(0.3 0.05 55);
   --perigo: oklch(0.7 0.17 25);
+  --selo: oklch(0.55 0.21 25);
+  --selo-texto: oklch(1 0 0);
   --sucesso: oklch(0.74 0.13 155);
   --sombra: 0 1px 2px oklch(0 0 0 / 0.3), 0 4px 16px -4px oklch(0 0 0 / 0.35);
   --sombra-alta: 0 2px 4px oklch(0 0 0 / 0.3), 0 18px 44px -12px oklch(0 0 0 / 0.6);
@@ -95,6 +101,8 @@
   --color-troca: var(--troca);
   --color-troca-suave: var(--troca-suave);
   --color-perigo: var(--perigo);
+  --color-selo: var(--selo);
+  --color-selo-texto: var(--selo-texto);
   --color-sucesso: var(--sucesso);
   --color-estrela: var(--estrela);
   --radius-cartao: var(--raio);
