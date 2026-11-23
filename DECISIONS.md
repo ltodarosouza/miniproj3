@@ -110,13 +110,13 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
 - **Opções:** recarregar a conversa inteira a cada poucos segundos; buscar só
   o que chegou depois de uma data; buscar só o que chegou depois do id da
   última mensagem.
-- **Escolha:** a tela pergunta a cada 3 segundos
+- **Escolha:** a tela pergunta a cada 1,5 segundo
   `GET /dms/{username}?depois_de=<id>` e recebe só as novas. O polling pausa
   com a aba escondida. O id é crescente e único, então não perde nem repete
   mensagens enviadas no mesmo segundo, o que a data não garante.
 - **O que cortamos e por quê:** WebSocket e "digitando...". Exigiriam um
-  servidor com conexão aberta e complicariam o deploy; 3 segundos de atraso
-  bastam para combinar uma troca.
+  servidor com conexão aberta e complicariam o deploy. A decisão 16 complementa
+  esta com envio otimista, entregue/visto e contagem de não lidas.
 
 ### 8. Troca proposta no chat, avaliada só depois do horário
 
@@ -393,6 +393,22 @@ contra a versão que percorre todos os usuários.
 - **Como ficou:** `DATABASE_URL` no Render aponta para o Neon (aceita
   `postgres://` ou `postgresql://`). O seed do boot só roda com o banco vazio,
   ou seja, uma vez.
+
+### 16. Chat com entregue/visto, não lidas e trocas na conversa
+
+- **Contexto:** o chat precisava mostrar entrega e leitura, sinalizar mensagens
+  e propostas recebidas e incluir conversas que começam por uma troca.
+- **Opções:** derivar tudo em cada consulta; guardar leitura de conversa e os
+  estados das mensagens; persistir notificações separadas.
+- **Escolha:** `mensagens.entregue_em` e `mensagens.lida_em` registram estados.
+  `leitura_conversas` guarda até quando cada pessoa abriu uma conversa, então
+  uma proposta recebida conta como não lida até a conversa ser aberta. A lista
+  de conversas combina mensagens e trocas, e `/dms/nao-lidas` é o contrato C1.
+  O chat usa polling de 1,5 s, com envio otimista no front.
+- **O que cortamos e por quê:** tabela de notificações por mensagem ou troca;
+  mensagens e propostas existentes já permitem derivar o contador, enquanto a
+  leitura por conversa preserva o estado da proposta sem alterar o modelo de
+  troca.
 
 ### 20. Casca de rede social: painel lateral no computador, barra inferior no celular, movimento por ação
 
