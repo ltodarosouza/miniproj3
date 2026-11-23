@@ -60,6 +60,7 @@ export function useNotificacoes(): { naoLidas: number; ultimaNova: Notificacao |
   const [ultimaNova, setUltimaNova] = useState<Notificacao | null>(null);
   const ultimaConhecida = useRef<string | null>(null);
   const primeira = useRef(true);
+  const propostasAvisadas = useRef(new Set<number>());
 
   useEffect(() => {
     let intervalo: ReturnType<typeof setInterval> | undefined;
@@ -69,6 +70,7 @@ export function useNotificacoes(): { naoLidas: number; ultimaNova: Notificacao |
       if (meuId() === null) {
         ultimaConhecida.current = null;
         primeira.current = true;
+        propostasAvisadas.current.clear();
         setNaoLidas(0);
         setUltimaNova(null);
         return;
@@ -97,7 +99,9 @@ export function useNotificacoes(): { naoLidas: number; ultimaNova: Notificacao |
           ) {
             for (const notificacao of novas) {
               if (notificacao.tipo === "troca_proposta") {
+                if (notificacao.troca_id === null || propostasAvisadas.current.has(notificacao.troca_id)) continue;
                 new Notification("Nova proposta de troca", { body: notificacao.texto_curto });
+                propostasAvisadas.current.add(notificacao.troca_id);
               }
             }
           }
