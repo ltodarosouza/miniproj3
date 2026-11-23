@@ -19,6 +19,9 @@ const ORDEM_GRUPOS: GrupoData[] = ["Hoje", "Esta semana", "Antes"];
 
 export default function Pagina() {
   const [dados, setDados] = useState<Notificacao[] | null>(null);
+  const [total, setTotal] = useState(0);
+  const [carregandoMais, setCarregandoMais] = useState(false);
+  const [erroMais, setErroMais] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [logado, setLogado] = useState<boolean | null>(null);
 
@@ -27,6 +30,7 @@ export default function Pagina() {
     try {
       const resposta = await listarNotificacoes(0, 50);
       setDados(resposta.items);
+      setTotal(resposta.total);
       await marcarLidas().catch(() => {});
     } catch (err) {
       if (err instanceof ErroApi && err.status === 401) {
@@ -41,6 +45,35 @@ export default function Pagina() {
       );
     }
   }, []);
+
+  const carregarMais = useCallback(async () => {
+    if (!dados || carregandoMais) return;
+    setCarregandoMais(true);
+    setErroMais(false);
+    try {
+      const resposta = await listarNotificacoes(dados.length, 50);
+      setDados((atuais) => {
+        if (!atuais) return resposta.items;
+        const chaves = new Set(
+          atuais.map((item) => `${item.tipo}-${item.em}-${item.ator.id}`),
+        );
+        return [
+          ...atuais,
+          ...resposta.items.filter((item) => {
+            const chave = `${item.tipo}-${item.em}-${item.ator.id}`;
+            if (chaves.has(chave)) return false;
+            chaves.add(chave);
+            return true;
+          }),
+        ];
+      });
+      setTotal(resposta.total);
+    } catch {
+      setErroMais(true);
+    } finally {
+      setCarregandoMais(false);
+    }
+  }, [dados, carregandoMais]);
 
   useEffect(() => {
     const temSessao = meuId() !== null;
@@ -133,6 +166,19 @@ export default function Pagina() {
               </ul>
             </section>
           ))}
+        </div>
+      )}
+
+      {logado && dados && dados.length < total && (
+        <div className="flex flex-col items-center gap-2">
+          {erroMais && (
+            <p role="alert" className="text-sm text-perigo">
+              não consegui carregar mais, tente de novo
+            </p>
+          )}
+          <Botao variante="secundario" carregando={carregandoMais} onClick={carregarMais}>
+            Carregar mais
+          </Botao>
         </div>
       )}
     </div>
