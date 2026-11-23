@@ -12,11 +12,18 @@ export function maiorIdRecebido(mensagens: MensagemLocal[], cursorAtual: number)
   return mensagens.reduce((maior, mensagem) => Math.max(maior, mensagem.id), cursorAtual);
 }
 
-export function reconciliarMensagens(atuais: MensagemLocal[], recebidas: MensagemLocal[]): MensagemLocal[] {
+export function chaveMensagem(mensagem: MensagemLocal, outroUsername: string): string {
+  if (!mensagem.cliente_id) return `id:${mensagem.id}`;
+  const lado = mensagem.id < 0 || mensagem.de_username !== outroUsername ? "eu" : "outro";
+  return `${lado}:${mensagem.cliente_id}`;
+}
+
+export function reconciliarMensagens(atuais: MensagemLocal[], recebidas: MensagemLocal[], outroUsername: string): MensagemLocal[] {
   const resultado = [...atuais];
   for (const recebida of recebidas) {
     const porId = resultado.findIndex((mensagem) => mensagem.id === recebida.id);
-    const porCliente = recebida.cliente_id ? resultado.findIndex((mensagem) => mensagem.cliente_id === recebida.cliente_id) : -1;
+    const chave = chaveMensagem(recebida, outroUsername);
+    const porCliente = recebida.cliente_id ? resultado.findIndex((mensagem) => chaveMensagem(mensagem, outroUsername) === chave) : -1;
     const indice = porId >= 0 ? porId : porCliente;
     if (indice >= 0) {
       const existente = resultado[indice];
@@ -26,18 +33,18 @@ export function reconciliarMensagens(atuais: MensagemLocal[], recebidas: Mensage
     }
   }
   const ids = new Set<number>();
-  const clientes = new Set<string>();
+  const chaves = new Set<string>();
   return resultado.filter((mensagem) => {
-    if (ids.has(mensagem.id)) return false;
-    if (mensagem.cliente_id && clientes.has(mensagem.cliente_id)) return false;
+    const chave = chaveMensagem(mensagem, outroUsername);
+    if (ids.has(mensagem.id) || chaves.has(chave)) return false;
     ids.add(mensagem.id);
-    if (mensagem.cliente_id) clientes.add(mensagem.cliente_id);
+    chaves.add(chave);
     return true;
   });
 }
 
-export function confirmarEnvio(atuais: MensagemLocal[], clienteId: string, enviada: MensagemLocal): MensagemLocal[] {
-  return reconciliarMensagens(atuais, [{ ...enviada, cliente_id: enviada.cliente_id ?? clienteId }]);
+export function confirmarEnvio(atuais: MensagemLocal[], clienteId: string, enviada: MensagemLocal, outroUsername: string): MensagemLocal[] {
+  return reconciliarMensagens(atuais, [{ ...enviada, cliente_id: enviada.cliente_id ?? clienteId }], outroUsername);
 }
 
 export function aplicarEntreguesAte(atuais: MensagemLocal[], id: number | null | undefined, outroUsername: string): MensagemLocal[] {

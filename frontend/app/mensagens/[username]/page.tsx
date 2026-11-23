@@ -9,7 +9,7 @@ import { Botao } from "@/components/ui/Botao";
 import { Icone } from "@/components/ui/Icone";
 import { BalaoMensagem } from "@/components/mensagens/BalaoMensagem";
 import { CaixaMensagem } from "@/components/mensagens/CaixaMensagem";
-import { aplicarEntreguesAte, confirmarEnvio, maiorIdRecebido, reconciliarMensagens, type MensagemLocal } from "@/components/mensagens/mensagemLocal";
+import { aplicarEntreguesAte, chaveMensagem, confirmarEnvio, maiorIdRecebido, reconciliarMensagens, type MensagemLocal } from "@/components/mensagens/mensagemLocal";
 import { listarConversas, listarMensagens, listarTrocas, type Conversa, type Troca } from "@/lib/api";
 import { chaveDoDia, formatarDia } from "@/lib/datas";
 import { meuId } from "@/lib/sessao";
@@ -74,7 +74,7 @@ export default function PaginaConversa() {
     ([resposta, conversas, trocasCarregadas]: Awaited<ReturnType<typeof carregarConversa>>) => {
       const dados = resposta as RespostaMensagens;
       cursorRef.current = maiorIdRecebido(dados.items, cursorRef.current);
-      setMensagens((atuais) => reconciliarMensagens(atuais.filter((mensagem) => mensagem.id < 0), dados.items));
+      setMensagens((atuais) => reconciliarMensagens(atuais.filter((mensagem) => mensagem.id < 0), dados.items, username));
       setMensagens((atuais) => aplicarEntreguesAte(atuais, dados.entregues_ate_id, username));
       if (dados.lidas_ate_id != null) {
         setMensagens((atuais) => atuais.map((mensagem) => mensagem.de_username !== username && mensagem.id > 0 && mensagem.id <= dados.lidas_ate_id! && !mensagem.lida_em ? { ...mensagem, entregue_em: mensagem.entregue_em ?? mensagem.em, lida_em: new Date().toISOString() } : mensagem));
@@ -182,7 +182,7 @@ export default function PaginaConversa() {
       const chegaramDoOutro = recebidas.some((mensagem) => mensagem.de_username === username);
       if (chegaramDoOutro) marcarLidas();
       setIdsRecentes(recebidas.filter((mensagem) => mensagem.de_username === username).map((mensagem) => mensagem.id));
-      setMensagens((atuais) => reconciliarMensagens(atuais, recebidas));
+      setMensagens((atuais) => reconciliarMensagens(atuais, recebidas, username));
       setSemConexao(false);
       if (trocasNovas.length) {
         if (pertoDoFim) requestAnimationFrame(() => rolarAteFim(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"));
@@ -224,7 +224,7 @@ export default function PaginaConversa() {
     setMensagens((atuais) => [...atuais, temporaria]);
     requestAnimationFrame(() => rolarAteFim(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"));
     void enviarMensagemComId(username, texto, clienteId).then((enviada) => {
-      setMensagens((atuais) => confirmarEnvio(atuais, clienteId, enviada));
+      setMensagens((atuais) => confirmarEnvio(atuais, clienteId, enviada, username));
     }).catch(() => {
       setMensagens((atuais) => atuais.map((mensagem) => mensagem.idLocal === idLocal && mensagem.id < 0 ? { ...mensagem, estado: "falhou" } : mensagem));
     });
@@ -237,7 +237,7 @@ export default function PaginaConversa() {
     const clienteId = mensagem.cliente_id;
     if (!clienteId) return;
     void enviarMensagemComId(username, mensagem.texto, clienteId).then((enviada) => {
-      setMensagens((atuais) => confirmarEnvio(atuais, clienteId, enviada));
+      setMensagens((atuais) => confirmarEnvio(atuais, clienteId, enviada, username));
     }).catch(() => {
       setMensagens((atuais) => atuais.map((item) => item.idLocal === idLocal && item.id < 0 ? { ...item, estado: "falhou" } : item));
     });
@@ -300,7 +300,7 @@ export default function PaginaConversa() {
               const agrupada = Boolean(mensagemAnterior && mensagemAnterior.de_username === mensagem.de_username && new Date(mensagem.em).getTime() - new Date(mensagemAnterior.em).getTime() < 5 * 60 * 1000);
               const horaAoFinal = !mensagemProxima || mensagemProxima.de_username !== mensagem.de_username || new Date(mensagemProxima.em).getTime() - new Date(mensagem.em).getTime() >= 5 * 60 * 1000;
               return (
-                <div key={`mensagem-${mensagem.cliente_id ?? mensagem.id}`}>
+                <div key={`mensagem-${chaveMensagem(mensagem, username)}`}>
                   {!mesmoDia && <p className="my-5 text-center text-xs text-texto-3">{formatarDia(mensagem.em)}</p>}
                   <BalaoMensagem mensagem={mensagem} minha={mensagem.de_username !== username} mostrarHora={horaAoFinal} agrupadaComAnterior={agrupada} recemChegada={idsRecentes.includes(mensagem.id)} aoTentarDeNovo={tentarEnviarDeNovo} />
                 </div>
