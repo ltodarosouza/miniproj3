@@ -15,6 +15,9 @@ import { chaveDoDia, formatarDia } from "@/lib/datas";
 import { meuId } from "@/lib/sessao";
 import { CartaoTroca } from "@/components/trocas/CartaoTroca";
 import { FormAgendarTroca } from "@/components/trocas/FormAgendarTroca";
+import { marcarConversaLida } from "@/lib/mensagens";
+
+type RespostaMensagens = { items: MensagemLocal[]; lidas_ate_id?: number | null };
 
 type ItemLinhaDoTempo = { tipo: "mensagem"; mensagem: MensagemLocal } | { tipo: "troca"; troca: Troca };
 
@@ -38,6 +41,7 @@ export default function PaginaConversa() {
   const proximoIdLocal = useRef(-1);
   const pollingEmVoo = useRef(false);
   const mensagensRef = useRef(mensagens);
+  const cargaInicialConcluida = useRef(false);
   const trocasRef = useRef(trocas);
   mensagensRef.current = mensagens;
   trocasRef.current = trocas;
@@ -67,10 +71,15 @@ export default function PaginaConversa() {
 
   const aplicarCarga = useCallback(
     ([resposta, conversas, trocasCarregadas]: Awaited<ReturnType<typeof carregarConversa>>) => {
-      setMensagens((atuais) => [...resposta.items, ...atuais.filter((mensagem) => mensagem.id < 0)]);
+      const dados = resposta as RespostaMensagens;
+      setMensagens((atuais) => [...dados.items.map((mensagem) => mensagem.entregue_em ? mensagem : { ...mensagem, entregue_em: null }), ...atuais.filter((mensagem) => mensagem.id < 0)]);
+      if (dados.lidas_ate_id != null) {
+        setMensagens((atuais) => atuais.map((mensagem) => mensagem.de_username !== username && mensagem.id <= dados.lidas_ate_id! ? { ...mensagem, entregue_em: mensagem.entregue_em ?? mensagem.em, lida_em: mensagem.lida_em ?? new Date().toISOString() } : mensagem));
+      }
       setTrocas(trocasCarregadas.items);
       setConversa(conversas.items.find((item) => item.com.username === username) ?? null);
       setSemConexao(false);
+      cargaInicialConcluida.current = true;
     },
     [username],
   );
@@ -97,6 +106,7 @@ export default function PaginaConversa() {
     setConversa(null);
     setNaoEncontrado(false);
     setErroInicial(false);
+    cargaInicialConcluida.current = false;
     primeiroCarregamento.current = true;
     ciclosPolling.current = 0;
     carregarConversa()
@@ -123,6 +133,16 @@ export default function PaginaConversa() {
     return () => { ativo = false; };
   }, [idUsuario, username, rolarAteFim, carregarConversa, aplicarCarga]);
 
+  const aplicarLidasAte = useCallback((id: number | null | undefined) => {
+    if (id == null) return;
+    setMensagens((atuais) => atuais.map((mensagem) => mensagem.de_username !== username && mensagem.id <= id ? { ...mensagem, entregue_em: mensagem.entregue_em ?? mensagem.em, lida_em: mensagem.lida_em ?? new Date().toISOString() } : mensagem));
+  }, [username]);
+
+  const marcarLidas = useCallback(() => {
+    if (document.hidden || !cargaInicialConcluida.current) return;
+    void marcarConversaLida(username).then((resposta) => aplicarLidasAte(resposta.lidas_ate_id)).catch(() => {});
+  }, [aplicarLidasAte, username]);
+
   const buscarNovas = useCallback(async () => {
     if (document.hidden || idUsuario === null || pollingEmVoo.current) return;
     pollingEmVoo.current = true;
@@ -130,7 +150,9 @@ export default function PaginaConversa() {
     const buscarTrocasAgora = ciclosPolling.current % 2 === 0;
     const ultimoId = mensagensRef.current.reduce((maior, mensagem) => Math.max(maior, mensagem.id, 0), 0);
     try {
-      const [resposta, respostaTrocas] = await Promise.all([listarMensagens(username, ultimoId), buscarTrocasAgora ? listarTrocas(username) : Promise.resolve(null)]);
+      const [respostaBase, respostaTrocas] = await Promise.all([listarMensagens(username, ultimoId), buscarTrocasAgora ? listarTrocas(username) : Promise.resolve(null)]);
+      const resposta = respostaBase as RespostaMensagens;
+      aplicarLidasAte(resposta.lidas_ate_id);
       const idsTrocasAtuais = new Set(trocasRef.current.map((troca) => troca.id));
       const trocasNovas = respostaTrocas?.items.filter((troca) => !idsTrocasAtuais.has(troca.id)) ?? [];
       if (respostaTrocas) setTrocas(respostaTrocas.items);
@@ -147,6 +169,8 @@ export default function PaginaConversa() {
       const container = lista.current;
       const pertoDoFim = !container || container.scrollHeight - container.scrollTop - container.clientHeight < 120;
       const recebidas = resposta.items;
+      const chegaramDoOutro = recebidas.some((mensagem) => mensagem.de_username === username);
+      if (chegaramDoOutro) marcarLidas();
       setIdsRecentes(recebidas.filter((mensagem) => mensagem.de_username === username).map((mensagem) => mensagem.id));
       setMensagens((atuais) => {
         const resultado = [...atuais];
@@ -172,18 +196,22 @@ export default function PaginaConversa() {
     } finally {
       pollingEmVoo.current = false;
     }
-  }, [idUsuario, rolarAteFim, username]);
+  }, [aplicarLidasAte, idUsuario, marcarLidas, rolarAteFim, username]);
+
+  useEffect(() => {
+    if (!carregando && cargaInicialConcluida.current) marcarLidas();
+  }, [carregando, marcarLidas]);
 
   useEffect(() => {
     if (idUsuario === null) return;
     const temporizador = window.setInterval(() => { void buscarNovas(); }, 1500);
-    const aoMudarVisibilidade = () => { if (!document.hidden) void buscarNovas(); };
+    const aoMudarVisibilidade = () => { if (!document.hidden) { marcarLidas(); void buscarNovas(); } };
     document.addEventListener("visibilitychange", aoMudarVisibilidade);
     return () => {
       window.clearInterval(temporizador);
       document.removeEventListener("visibilitychange", aoMudarVisibilidade);
     };
-  }, [buscarNovas, idUsuario]);
+  }, [buscarNovas, idUsuario, marcarLidas]);
 
   function aoEnviar(texto: string) {
     const idLocal = proximoIdLocal.current--;
