@@ -67,7 +67,8 @@ export function useNotificacoes(): { naoLidas: number; ultimaNova: Notificacao |
     let ativa = true;
 
     const consultar = async () => {
-      if (meuId() === null) {
+      const id = meuId();
+      if (id === null) {
         ultimaConhecida.current = null;
         primeira.current = true;
         propostasAvisadas.current.clear();
@@ -77,7 +78,7 @@ export function useNotificacoes(): { naoLidas: number; ultimaNova: Notificacao |
       }
       try {
         const resposta = await consultarNaoLidas();
-        if (!ativa) return;
+        if (!ativa || meuId() !== id) return;
         setNaoLidas(resposta.total);
         if (primeira.current) {
           ultimaConhecida.current = resposta.ultima_em;
@@ -87,7 +88,7 @@ export function useNotificacoes(): { naoLidas: number; ultimaNova: Notificacao |
         const base = ultimaConhecida.current;
         if (resposta.ultima_em && new Date(resposta.ultima_em) > new Date(base ?? 0)) {
           const pagina = await listarNotificacoes(0, 20);
-          if (!ativa) return;
+          if (!ativa || meuId() !== id) return;
           const novas = pagina.items.filter((item) =>
             !item.lida && (base === null || new Date(item.em) > new Date(base)),
           );
