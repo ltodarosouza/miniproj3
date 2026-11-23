@@ -8,10 +8,12 @@ from app.schemas.user import UserOut
 TextoMensagem = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)
 ]
+ClienteId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=64)]
 
 
 class MensagemCreate(BaseModel):
     texto: TextoMensagem
+    cliente_id: ClienteId | None = None
 
 
 class MensagemOut(BaseModel):
@@ -19,6 +21,7 @@ class MensagemOut(BaseModel):
     de_username: str
     para_username: str
     texto: str
+    cliente_id: str | None
     em: DataHoraUtc
     entregue_em: DataHoraUtc | None
     lida_em: DataHoraUtc | None
@@ -27,6 +30,7 @@ class MensagemOut(BaseModel):
 class MensagemPage(BaseModel):
     items: list[MensagemOut]
     lidas_ate_id: int | None
+    entregues_ate_id: int | None
 
 
 class ConversaOut(BaseModel):

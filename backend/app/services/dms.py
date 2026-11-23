@@ -47,6 +47,7 @@ def _saida(mensagem: Mensagem, de_username: str, para_username: str) -> Mensagem
         de_username=de_username,
         para_username=para_username,
         texto=mensagem.texto,
+        cliente_id=mensagem.cliente_id,
         em=mensagem.em,
         entregue_em=mensagem.entregue_em,
         lida_em=mensagem.lida_em,
@@ -63,11 +64,57 @@ def _lidas_ate_id(db: Session, eu: User, outro: User) -> int | None:
     )
 
 
+def _entregues_ate_id(db: Session, eu: User, outro: User) -> int | None:
+    return db.scalar(
+        select(func.max(Mensagem.id)).where(
+            Mensagem.de_id == eu.id,
+            Mensagem.para_id == outro.id,
+            Mensagem.entregue_em.is_not(None),
+        )
+    )
+
+
+def _mensagem_cliente(db: Session, eu: User, cliente_id: str) -> Mensagem | None:
+    return db.scalar(
+        select(Mensagem).where(
+            Mensagem.de_id == eu.id,
+            Mensagem.cliente_id == cliente_id,
+        )
+    )
+
+
+def _conflito_cliente_id() -> HTTPException:
+    return HTTPException(status_code=409, detail="cliente_id já usado")
+
+
 def enviar(db: Session, eu: User, username: str, dados: MensagemCreate) -> MensagemOut:
     outro = _destinatario(db, username, eu)
-    mensagem = Mensagem(de_id=eu.id, para_id=outro.id, texto=dados.texto, em=agora_utc())
+    if dados.cliente_id is not None:
+        existente = _mensagem_cliente(db, eu, dados.cliente_id)
+        if existente is not None:
+            if existente.para_id != outro.id:
+                raise _conflito_cliente_id()
+            return _saida(existente, eu.username, outro.username)
+    mensagem = Mensagem(
+        de_id=eu.id,
+        para_id=outro.id,
+        texto=dados.texto,
+        cliente_id=dados.cliente_id,
+        em=agora_utc(),
+    )
     db.add(mensagem)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        if dados.cliente_id is None:
+            raise
+        existente = _mensagem_cliente(db, eu, dados.cliente_id)
+        if existente is None:
+            raise
+        if existente.para_id != outro.id:
+            raise _conflito_cliente_id()
+        return _saida(existente, eu.username, outro.username)
     db.refresh(mensagem)
     return _saida(mensagem, eu.username, outro.username)
 
@@ -99,6 +146,7 @@ def listar(
             for mensagem in mensagens
         ],
         lidas_ate_id=_lidas_ate_id(db, eu, outro),
+        entregues_ate_id=_entregues_ate_id(db, eu, outro),
     )
 
 
