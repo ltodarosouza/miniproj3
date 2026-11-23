@@ -411,6 +411,9 @@ contra a versão que percorre todos os usuários.
     Ação da pessoa sobre si mesma nunca vira notificação.
   - O service monta a lista inteira em Python (uma consulta por tipo, atores
     carregados de uma vez), ordena por data e fatia `offset`/`limit`.
+  - `/nao-lidas` devolve `{"total", "ultima_em"}`. O `total` é o C2;
+    `ultima_em` existe porque uma curtida nova num grupo já não lido não muda
+    o total, e o front precisa perceber que algo chegou para mostrar o toast.
   - `useNotificacoes()` em `lib/notificacoes.ts`: consulta ao montar, a cada
     15 s com a aba visível e na volta para a aba. Com a aba escondida só
     continua (a cada 60 s) se a permissão de notificação do navegador já foi
