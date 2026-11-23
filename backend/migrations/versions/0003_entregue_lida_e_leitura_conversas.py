@@ -24,11 +24,15 @@ def upgrade() -> None:
     with op.batch_alter_table('mensagens', schema=None) as batch_op:
         batch_op.add_column(sa.Column('entregue_em', sa.DateTime(), nullable=True))
         batch_op.add_column(sa.Column('lida_em', sa.DateTime(), nullable=True))
+        batch_op.add_column(sa.Column('cliente_id', sa.String(length=64), nullable=True))
+        batch_op.create_index('uq_mensagens_de_cliente_id', ['de_id', 'cliente_id'], unique=True)
 
 
 
 def downgrade() -> None:
     with op.batch_alter_table('mensagens', schema=None) as batch_op:
+        batch_op.drop_index('uq_mensagens_de_cliente_id')
+        batch_op.drop_column('cliente_id')
         batch_op.drop_column('lida_em')
         batch_op.drop_column('entregue_em')
 
