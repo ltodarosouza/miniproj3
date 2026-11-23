@@ -75,7 +75,7 @@ def test_quem_eu_sigo_e_pode_me_ensinar_aparece_uma_vez_como_seguindo(
     assert [item["motivo"] for item in r.json()["items"]] == ["seguindo"]
 
 
-def test_feed_nao_mostra_meus_proprios_posts(client, pessoa, monkeypatch):
+def test_feed_mostra_meus_proprios_posts(client, pessoa, monkeypatch):
     ana = pessoa("ana")
     bia = pessoa("bia")
     ana_id = int(ana["X-User-Id"])
@@ -86,7 +86,80 @@ def test_feed_nao_mostra_meus_proprios_posts(client, pessoa, monkeypatch):
     client.post("/posts", json={"texto": "da bia"}, headers=bia)
     seguir(client, ana, "bia")
 
-    assert textos(client.get("/feed", headers=ana)) == ["da bia"]
+    r = client.get("/feed", headers=ana)
+
+    assert textos(r) == ["da bia", "meu post"]
+    assert {i["texto"]: i["motivo"] for i in r.json()["items"]}["meu post"] == "meu"
+
+
+def test_post_publicado_continua_no_feed_de_quem_nao_segue_ninguem(client, pessoa):
+    ana = pessoa("ana")
+    client.post("/posts", json={"texto": "primeiro post"}, headers=ana)
+
+    r = client.get("/feed", headers=ana)
+
+    assert textos(r) == ["primeiro post"]
+    assert r.json()["items"][0]["motivo"] == "meu"
+
+
+def habilidade(client, nome):
+    return client.get(f"/habilidades/autocomplete?prefixo={nome}").json()["items"][0]["id"]
+
+
+def marcar(client, quem, nome, tipo="sei"):
+    hid = habilidade(client, nome)
+    r = client.put(
+        "/usuarios/eu/habilidades",
+        json=[{"habilidade_id": hid, "tipo": tipo, "nivel": 3}],
+        headers=quem,
+    )
+    assert r.status_code < 300, r.text
+    return hid
+
+
+def test_feed_inclui_quem_estuda_o_mesmo_como_descobrir(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    caio = pessoa("caio")
+    marcar(client, ana, "Python")
+    marcar(client, bia, "Python")
+    client.post("/posts", json={"texto": "da bia"}, headers=bia)
+    client.post("/posts", json={"texto": "do caio"}, headers=caio)
+
+    r = client.get("/feed", headers=ana)
+
+    assert {i["texto"]: i["motivo"] for i in r.json()["items"]} == {"da bia": "descobrir"}
+
+
+def test_em_alta_conta_posts_da_semana_por_habilidade(client, pessoa):
+    ana = pessoa("ana")
+    python = habilidade(client, "Python")
+    for minutos in (30, 45):
+        client.post(
+            "/posts",
+            json={"texto": "estudei", "habilidade_id": python, "minutos_estudados": minutos},
+            headers=ana,
+        )
+    client.post("/posts", json={"texto": "sem habilidade"}, headers=ana)
+
+    r = client.get("/feed/em-alta", headers=ana)
+
+    assert r.status_code == 200
+    assert r.json()[0]["id"] == python
+    assert r.json()[0]["posts"] == 2
+    assert r.json()[0]["minutos"] == 75
+    assert len(r.json()) == 1
+    assert client.get("/feed/em-alta").status_code == 401
+
+
+def test_meu_progresso_soma_a_semana(client, pessoa):
+    ana = pessoa("ana")
+    client.post("/posts", json={"texto": "a", "minutos_estudados": 20}, headers=ana)
+    client.post("/posts", json={"texto": "b"}, headers=ana)
+
+    r = client.get("/feed/meu-progresso", headers=ana)
+
+    assert r.json() == {"streak": 1, "minutos_semana": 20, "posts_semana": 2}
 
 
 def test_item_do_feed_traz_curtidas_e_comentarios(client, pessoa):
@@ -111,3 +184,20 @@ def test_feed_exige_login_e_valida_paginacao(client, pessoa):
     assert client.get("/feed").status_code == 401
     assert client.get("/feed?limit=0", headers=ana).status_code == 422
     assert client.get("/feed?offset=-1", headers=ana).status_code == 422
+
+
+def test_descobrir_nao_muda_entre_paginas_quando_alguem_publica(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    marcar(client, ana, "Python")
+    marcar(client, bia, "Python")
+    for n in range(12):
+        client.post("/posts", json={"texto": f"bia {n}"}, headers=bia)
+    for n in range(9):
+        client.post("/posts", json={"texto": f"ana {n}"}, headers=ana)
+    primeira = client.get("/feed?offset=0&limit=10", headers=ana).json()
+
+    client.post("/posts", json={"texto": "ana 9"}, headers=ana)
+    segunda = client.get("/feed?offset=10&limit=10", headers=ana).json()
+
+    assert segunda["total"] == primeira["total"] + 1

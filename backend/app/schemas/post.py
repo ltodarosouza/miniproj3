@@ -38,6 +38,7 @@ class PostOut(BaseModel):
     minutos_estudados: int | None
     imagem_url: str | None
     created_at: DataHoraUtc
+    editado_em: DataHoraUtc | None = None
     curtidas: int = 0
     curtido: bool = False
     comentarios: int = 0

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query, UploadFile, status
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -23,8 +23,8 @@ def criar_post(
 
 
 @router.get("/imagens/{nome}", tags=["imagens"])
-def ver_imagem(nome: str) -> FileResponse:
-    return FileResponse(imagens.caminho(nome))
+def ver_imagem(nome: str, db: Session = Depends(get_db)) -> Response:
+    return imagens.servir(db, nome)
 
 
 @router.get("/{post_id}", response_model=PostOut)

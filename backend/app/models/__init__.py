@@ -11,3 +11,4 @@ from app.models.comentario import Comentario  # noqa: F401
 from app.models.follow import Follow  # noqa: F401
 from app.models.leitura_notificacoes import LeituraNotificacoes  # noqa: F401
 from app.models.leitura_conversa import LeituraConversa  # noqa: F401
+from app.models.imagem_post import ImagemPost  # noqa: F401
