@@ -20,9 +20,10 @@ export function listarNotificacoes(offset = 0, limit = 50): Promise<Page<Notific
   return apiGet(`/notificacoes?offset=${offset}&limit=${limit}`);
 }
 
-export async function contarNaoLidas(): Promise<number> {
-  const resposta = await apiGet<{ total: number }>("/notificacoes/nao-lidas");
-  return resposta.total;
+export type NaoLidas = { total: number; ultima_em: string | null };
+
+export function consultarNaoLidas(): Promise<NaoLidas> {
+  return apiGet<NaoLidas>("/notificacoes/nao-lidas");
 }
 
 export function marcarLidas(): Promise<void> {
@@ -46,7 +47,9 @@ export function grupoDaData(iso: string): GrupoData {
   const hoje = new Date();
   const inicioHoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
   const inicioData = new Date(data.getFullYear(), data.getMonth(), data.getDate());
-  const dias = Math.floor((inicioHoje.getTime() - inicioData.getTime()) / 86400000);
+  const hojeUtc = Date.UTC(inicioHoje.getFullYear(), inicioHoje.getMonth(), inicioHoje.getDate());
+  const dataUtc = Date.UTC(inicioData.getFullYear(), inicioData.getMonth(), inicioData.getDate());
+  const dias = Math.round((hojeUtc - dataUtc) / 86400000);
   if (dias === 0) return "Hoje";
   if (dias > 0 && dias < 7) return "Esta semana";
   return "Antes";
@@ -55,7 +58,8 @@ export function grupoDaData(iso: string): GrupoData {
 export function useNotificacoes(): { naoLidas: number; ultimaNova: Notificacao | null; dispensar: () => void } {
   const [naoLidas, setNaoLidas] = useState(0);
   const [ultimaNova, setUltimaNova] = useState<Notificacao | null>(null);
-  const totalConhecido = useRef<number | null>(null);
+  const ultimaConhecida = useRef<string | null>(null);
+  const primeira = useRef(true);
 
   useEffect(() => {
     let intervalo: ReturnType<typeof setInterval> | undefined;
@@ -63,31 +67,42 @@ export function useNotificacoes(): { naoLidas: number; ultimaNova: Notificacao |
 
     const consultar = async () => {
       if (meuId() === null) {
-        totalConhecido.current = null;
+        ultimaConhecida.current = null;
+        primeira.current = true;
         setNaoLidas(0);
+        setUltimaNova(null);
         return;
       }
       try {
-        const total = await contarNaoLidas();
+        const resposta = await consultarNaoLidas();
         if (!ativa) return;
-        const anterior = totalConhecido.current;
-        totalConhecido.current = total;
-        setNaoLidas(total);
-        if (anterior !== null && total > anterior) {
-          const pagina = await listarNotificacoes(0, 1);
+        setNaoLidas(resposta.total);
+        if (primeira.current) {
+          ultimaConhecida.current = resposta.ultima_em;
+          primeira.current = false;
+          return;
+        }
+        const base = ultimaConhecida.current;
+        if (resposta.ultima_em && new Date(resposta.ultima_em) > new Date(base ?? 0)) {
+          const pagina = await listarNotificacoes(0, 20);
           if (!ativa) return;
-          const notificacao = pagina.items[0];
-          if (!notificacao) return;
-          setUltimaNova(notificacao);
+          const novas = pagina.items.filter((item) =>
+            !item.lida && (base === null || new Date(item.em) > new Date(base)),
+          );
+          if (novas.length > 0) setUltimaNova(novas[0]);
           if (
             document.visibilityState !== "visible" &&
-            notificacao.tipo === "troca_proposta" &&
             typeof Notification !== "undefined" &&
             Notification.permission === "granted"
           ) {
-            new Notification("Nova proposta de troca", { body: notificacao.texto_curto });
+            for (const notificacao of novas) {
+              if (notificacao.tipo === "troca_proposta") {
+                new Notification("Nova proposta de troca", { body: notificacao.texto_curto });
+              }
+            }
           }
         }
+        ultimaConhecida.current = resposta.ultima_em;
       } catch {
       }
     };
