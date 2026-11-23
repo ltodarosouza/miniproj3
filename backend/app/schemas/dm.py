@@ -20,10 +20,13 @@ class MensagemOut(BaseModel):
     para_username: str
     texto: str
     em: DataHoraUtc
+    entregue_em: DataHoraUtc | None
+    lida_em: DataHoraUtc | None
 
 
 class MensagemPage(BaseModel):
     items: list[MensagemOut]
+    lidas_ate_id: int | None
 
 
 class ConversaOut(BaseModel):
@@ -31,7 +34,19 @@ class ConversaOut(BaseModel):
     ultima_mensagem: str
     ultima_de_mim: bool
     em: DataHoraUtc
+    ultimo_evento: str
+    troca_data_hora: DataHoraUtc | None
+    nao_lidas: int
 
 
 class ConversaPage(BaseModel):
     items: list[ConversaOut]
+
+
+class NaoLidasOut(BaseModel):
+    total: int
+    por_conversa: dict[str, int]
+
+
+class LidasOut(BaseModel):
+    lidas_ate_id: int | None
