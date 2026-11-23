@@ -55,7 +55,7 @@ export function BotaoSeguirDeVolta({ username, nome }: { username: string; nome:
         tamanho="sm"
         carregando={carregando}
         onClick={alternar}
-        aria-label={seguindo ? undefined : `Seguir ${nome} de volta`}
+        aria-label={seguindo ? `Seguindo ${nome}` : `Seguir ${nome} de volta`}
         aria-pressed={seguindo}
       >
         {seguindo ? "Seguindo" : "Seguir de volta"}
