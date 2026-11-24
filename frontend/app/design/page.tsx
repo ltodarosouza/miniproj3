@@ -287,7 +287,7 @@ export default function DesignPage() {
         </>
       </Secao>
 
-      <Secao titulo="Toque duplo e curtida" descricao="ToqueDuplo envolve a foto do post: dois toques curtem e mostram o coração. BotaoCurtir solta partículas e o número sobe animado.">
+      <Secao titulo="Toque duplo e curtida" descricao="ToqueDuplo envolve o cartão inteiro do post: dois toques em qualquer lugar curtem e mostram o coração no centro. Toques em links e botões são ignorados. BotaoCurtir solta partículas e o número sobe animado.">
         <div className="flex flex-col items-start gap-3">
           <ToqueDuplo aoToqueDuplo={() => setCurtidaExemplo(true)} className="w-full max-w-sm">
             <div className="flex aspect-[4/3] w-full items-center justify-center rounded-cartao bg-marca-suave text-sm text-texto-2">Toque duas vezes</div>
