@@ -106,19 +106,27 @@ function EmAndamento({ itens }: { itens: Match[] }) {
   if (itens.length === 0) return null;
   const quantidade = itens.length === 1 ? "1 conversa em andamento" : `${itens.length} conversas em andamento`;
   return (
-    <details className="group rounded-cartao border border-linha bg-superficie">
+    <details className="group rounded-cartao border border-linha bg-superficie shadow-cartao">
       <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
-        <span className="flex -space-x-2" aria-hidden>
-          {itens.slice(0, 4).map((m) => (
-            <span key={m.usuario.id} className="rounded-full ring-2 ring-superficie">
-              <Avatar nome={m.usuario.name} url={m.usuario.avatar_url} tamanho="sm" />
-            </span>
-          ))}
+        <span className="flex w-10 shrink-0 justify-center" aria-hidden>
+          <Avatar nome={itens[0].usuario.name} url={itens[0].usuario.avatar_url} tamanho="sm" />
         </span>
-        <span className="flex-1">
+        <span className="min-w-0 flex-1">
           <span className="block font-medium text-texto">Em andamento</span>
           <span className="block text-sm text-texto-2">{quantidade}</span>
         </span>
+        {itens.length > 1 && (
+          <span className="hidden shrink-0 items-center sm:flex" aria-hidden>
+            <span className="flex -space-x-2">
+              {itens.slice(1, 4).map((m) => (
+                <span key={m.usuario.id} className="rounded-full ring-2 ring-superficie">
+                  <Avatar nome={m.usuario.name} url={m.usuario.avatar_url} tamanho="sm" />
+                </span>
+              ))}
+            </span>
+            {itens.length > 4 && <span className="ml-2 text-xs text-texto-2">+{itens.length - 4}</span>}
+          </span>
+        )}
         <span className="text-sm text-texto-2 transition-transform duration-[var(--rapido)] group-open:rotate-180 motion-reduce:transition-none" aria-hidden>
           ▾
         </span>
@@ -130,7 +138,9 @@ function EmAndamento({ itens }: { itens: Match[] }) {
               href={`/mensagens/${encodeURIComponent(m.usuario.username)}`}
               className="flex items-center gap-3 px-4 py-3 hover:bg-superficie-2"
             >
-              <Avatar nome={m.usuario.name} url={m.usuario.avatar_url} tamanho="sm" />
+              <span className="flex w-10 shrink-0 justify-center">
+                <Avatar nome={m.usuario.name} url={m.usuario.avatar_url} tamanho="sm" />
+              </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium text-texto">{m.usuario.name}</span>
                 <span className="block truncate text-xs text-texto-2">

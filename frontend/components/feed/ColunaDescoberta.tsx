@@ -12,7 +12,7 @@ import { formatarTempoEstudado, type HabilidadeEmAlta, type MeuProgresso } from 
 
 function Bloco({ titulo, acao, children }: { titulo: string; acao?: ReactNode; children: ReactNode }) {
   return (
-    <section className="rounded-cartao border border-linha bg-superficie p-4">
+    <section className="rounded-cartao border border-linha bg-superficie p-4 shadow-cartao">
       <div className="mb-3 flex items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold text-texto">{titulo}</h2>
         {acao}

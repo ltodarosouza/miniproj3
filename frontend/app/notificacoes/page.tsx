@@ -166,7 +166,7 @@ export default function Pagina() {
               <h2 className="text-sm font-semibold text-texto-2">
                 {grupo.titulo}
               </h2>
-              <ul className="space-y-1">
+              <ul className="-mx-3 space-y-1">
                 {grupo.itens.map((item) => (
                   <li
                     key={`${item.tipo}-${item.em}-${item.ator.id}`}

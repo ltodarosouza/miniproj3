@@ -221,20 +221,22 @@ export default function PerfilPage() {
     conteudo = (
       <div className="space-y-6">
         <Cartao className="p-5 sm:p-6">
-          <div className="flex items-start gap-4">
-            <Avatar nome={perfil.name} url={perfil.avatar_url} tamanho="lg" />
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-xl font-semibold text-texto">
-                {perfil.name}
-              </h1>
-              <p className="truncate text-sm text-texto-2">@{perfil.username}</p>
-              {perfil.bio && (
-                <p className="mt-2 max-w-[65ch] whitespace-pre-line text-[0.9375rem] leading-relaxed text-texto">
-                  {perfil.bio}
-                </p>
-              )}
+          <div className="flex flex-col items-start gap-4 sm:flex-row">
+            <div className="flex min-w-0 w-full flex-1 items-start gap-4 sm:w-auto">
+              <Avatar nome={perfil.name} url={perfil.avatar_url} tamanho="lg" />
+              <div className="min-w-0 flex-1">
+                <h1 className="truncate text-xl font-semibold text-texto">
+                  {perfil.name}
+                </h1>
+                <p className="truncate text-sm text-texto-2">@{perfil.username}</p>
+                {perfil.bio && (
+                  <p className="mt-2 max-w-[65ch] whitespace-pre-line text-[0.9375rem] leading-relaxed text-texto">
+                    {perfil.bio}
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="shrink-0">
+            <div className="shrink-0 sm:ml-auto">
               {souEu ? (
                 <BotaoLink href="/perfil/editar" variante="secundario" tamanho="sm">
                   Editar
