@@ -66,6 +66,12 @@ function Feed() {
   const reserva = useRef<{ offset: number; geracao: number; pagina: Promise<Page<ItemFeed>>; pronta: boolean } | null>(null);
   // Posição da próxima página no servidor. Não usa itens.length, que não anda quando a página volta só com posts repetidos.
   const [proximoOffset, setProximoOffset] = useState(0);
+  // Cópia em ref para a busca somar por cima de ajustes (publicar/apagar) feitos enquanto ela esperava.
+  const proximoRef = useRef(0);
+  const mudarProximo = useCallback((valor: number) => {
+    proximoRef.current = Math.max(0, valor);
+    setProximoOffset(proximoRef.current);
+  }, []);
 
   const buscar = useCallback(async (offset: number) => {
     // Recomeçar do topo invalida qualquer "carregar mais" em andamento.
@@ -86,10 +92,11 @@ function Feed() {
         return [...atuais, ...pagina.items.filter((i) => !ids.has(i.id))];
       });
       if (offset === 0) setTamanhoPrimeiraPagina(pagina.items.length);
-      setTotal(pagina.total);
+      const proximo = (offset === 0 ? 0 : proximoRef.current) + pagina.items.length;
+      mudarProximo(proximo);
+      // Página vazia antes do total (posts apagados no meio do caminho): trata como fim do feed em vez de travar.
+      setTotal(pagina.items.length === 0 ? proximo : pagina.total);
       setErro(false);
-      const proximo = offset + pagina.items.length;
-      setProximoOffset(proximo);
       if (pagina.items.length > 0 && proximo < pagina.total) {
         const nova = { offset: proximo, geracao: minha, pagina: listarFeed(proximo, POR_PAGINA), pronta: false };
         // Uma falha aqui só aparece se a pessoa chegar a precisar desta página.
@@ -104,7 +111,7 @@ function Feed() {
       setCarregando(false);
       setCarregandoMais(false);
     }
-  }, []);
+  }, [mudarProximo]);
 
   const atualizarProgresso = useCallback(() => {
     obterMeuProgresso().then(setProgresso).catch(() => undefined);
@@ -169,7 +176,7 @@ function Feed() {
     setItens((atuais) => [{ ...post, motivo: "meu" }, ...atuais.filter((i) => i.id !== post.id)]);
     setTotal((t) => t + 1);
     // O post novo entra no topo do feed no servidor e empurra os demais uma posição.
-    setProximoOffset((o) => o + 1);
+    mudarProximo(proximoRef.current + 1);
     if (erro && itens.length === 0) setErro(false);
     atualizarProgresso();
   }
@@ -177,7 +184,7 @@ function Feed() {
   function aoApagar(id: number) {
     setItens((atuais) => atuais.filter((i) => i.id !== id));
     setTotal((t) => Math.max(0, t - 1));
-    setProximoOffset((o) => Math.max(0, o - 1));
+    mudarProximo(proximoRef.current - 1);
     atualizarProgresso();
   }
 
