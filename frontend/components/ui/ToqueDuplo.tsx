@@ -59,7 +59,7 @@ export function ToqueDuplo({
     if (!evento.isPrimary) return;
     const inicio = inicioToque.current;
     inicioToque.current = null;
-    // Sem pointerdown aqui dentro (arrasto que começou fora do post) não conta como toque.
+    // Sem pointerdown válido (arrasto que começou fora do post, ou gesto cancelado por rolagem ou por um segundo dedo) não conta como toque.
     const arrastou = !inicio || Math.hypot(evento.clientX - inicio.x, evento.clientY - inicio.y) > 10;
     // Só descarta se a seleção de texto surgiu durante este gesto; uma seleção antiga em outro lugar da página não bloqueia.
     const selecionou = inicio !== null && inicio.semSelecao && !semSelecao();
