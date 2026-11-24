@@ -165,7 +165,7 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, aoApagar }: { p
         </>
         )}
 
-        <footer ref={rodape} className="mt-3 -ml-2.5 flex flex-wrap items-center gap-1">
+        <footer ref={rodape} data-sem-toque-duplo className="mt-3 -ml-2.5 flex flex-wrap items-center gap-1">
           <BotaoCurtir curtido={curtido} total={curtidas} aoAlternar={alternarCurtida} />
           <Link
             href={`/posts/${post.id}#comentarios`}

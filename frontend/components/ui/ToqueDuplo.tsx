@@ -28,6 +28,7 @@ export function ToqueDuplo({
 }) {
   const toqueAnterior = useRef<PosicaoToque | null>(null);
   const toqueDuploRecente = useRef(0);
+  const inicioToque = useRef<{ x: number; y: number } | null>(null);
   const coracaoRef = useRef<HTMLSpanElement>(null);
   const [disparo, setDisparo] = useState(0);
 
@@ -37,8 +38,16 @@ export function ToqueDuplo({
     setDisparo((atual) => atual + 1);
   }
 
+  function aoPointerDown(evento: React.PointerEvent<HTMLDivElement>) {
+    inicioToque.current = { x: evento.clientX, y: evento.clientY };
+  }
+
   function aoPointerUp(evento: React.PointerEvent<HTMLDivElement>) {
-    if (desativado || comecouEmInterativo(evento.target, evento.currentTarget)) {
+    const inicio = inicioToque.current;
+    inicioToque.current = null;
+    const arrastou = inicio !== null && Math.hypot(evento.clientX - inicio.x, evento.clientY - inicio.y) > 10;
+    const selecionou = window.getSelection()?.isCollapsed === false;
+    if (desativado || arrastou || selecionou || comecouEmInterativo(evento.target, evento.currentTarget)) {
       toqueAnterior.current = null;
       return;
     }
@@ -98,6 +107,7 @@ export function ToqueDuplo({
   return (
     <div
       className={`relative touch-manipulation ${className ?? ""}`}
+      onPointerDown={aoPointerDown}
       onPointerUp={aoPointerUp}
       onMouseDown={aoMouseDown}
       onDoubleClick={aoDoubleClick}
