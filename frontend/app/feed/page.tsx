@@ -26,6 +26,8 @@ import {
 import { meuId } from "@/lib/sessao";
 
 const POR_PAGINA = 20;
+// "Você chegou ao fim do feed" só aparece em feeds com mais posts que isso.
+const MINIMO_PARA_AVISAR_FIM = 10;
 // Pede a próxima página quando faltam umas duas telas para o fim da lista.
 const ANTECIPAR_CARREGAMENTO = "1500px 0px";
 // Os cartões começam a animar um pouco antes de entrar na tela.
@@ -61,7 +63,9 @@ function Feed() {
   const buscando = useRef(false);
   const geracao = useRef(0);
   // Próxima página já pedida em segundo plano, para aparecer na hora quando a pessoa chegar lá.
-  const reserva = useRef<{ offset: number; geracao: number; pagina: Promise<Page<ItemFeed>> } | null>(null);
+  const reserva = useRef<{ offset: number; geracao: number; pagina: Promise<Page<ItemFeed>>; pronta: boolean } | null>(null);
+  // Posição da próxima página no servidor. Não usa itens.length, que não anda quando a página volta só com posts repetidos.
+  const [proximoOffset, setProximoOffset] = useState(0);
 
   const buscar = useCallback(async (offset: number) => {
     // Recomeçar do topo invalida qualquer "carregar mais" em andamento.
@@ -85,11 +89,12 @@ function Feed() {
       setTotal(pagina.total);
       setErro(false);
       const proximo = offset + pagina.items.length;
+      setProximoOffset(proximo);
       if (pagina.items.length > 0 && proximo < pagina.total) {
-        const promessa = listarFeed(proximo, POR_PAGINA);
+        const nova = { offset: proximo, geracao: minha, pagina: listarFeed(proximo, POR_PAGINA), pronta: false };
         // Uma falha aqui só aparece se a pessoa chegar a precisar desta página.
-        promessa.catch(() => undefined);
-        reserva.current = { offset: proximo, geracao: minha, pagina: promessa };
+        nova.pagina.then(() => { nova.pronta = true; }, () => undefined);
+        reserva.current = nova;
       }
     } catch {
       if (minha === geracao.current) setErro(true);
@@ -132,13 +137,15 @@ function Feed() {
     await buscar(0);
   }, [buscar, atualizarProgresso]);
 
-  const temMais = itens.length < total;
+  const temMais = proximoOffset < total;
 
   const carregarMais = useCallback(() => {
     if (buscando.current) return;
-    setCarregandoMais(true);
-    void buscar(itens.length);
-  }, [buscar, itens.length]);
+    const guardada = reserva.current;
+    // Com a página já guardada, ela aparece na hora: sem esqueleto nem aviso de carregando.
+    if (!(guardada && guardada.offset === proximoOffset && guardada.pronta)) setCarregandoMais(true);
+    void buscar(proximoOffset);
+  }, [buscar, proximoOffset]);
 
   useEffect(() => {
     const alvo = sentinela.current;
@@ -161,6 +168,8 @@ function Feed() {
   function aoPublicar(post: Post) {
     setItens((atuais) => [{ ...post, motivo: "meu" }, ...atuais.filter((i) => i.id !== post.id)]);
     setTotal((t) => t + 1);
+    // O post novo entra no topo do feed no servidor e empurra os demais uma posição.
+    setProximoOffset((o) => o + 1);
     if (erro && itens.length === 0) setErro(false);
     atualizarProgresso();
   }
@@ -168,6 +177,7 @@ function Feed() {
   function aoApagar(id: number) {
     setItens((atuais) => atuais.filter((i) => i.id !== id));
     setTotal((t) => Math.max(0, t - 1));
+    setProximoOffset((o) => Math.max(0, o - 1));
     atualizarProgresso();
   }
 
@@ -258,7 +268,7 @@ function Feed() {
             )}
           </div>
         )}
-        {!temMais && itens.length > POR_PAGINA && (
+        {!temMais && itens.length > MINIMO_PARA_AVISAR_FIM && (
           <p className="text-center text-sm text-texto-3">Você chegou ao fim do feed.</p>
         )}
       </>
