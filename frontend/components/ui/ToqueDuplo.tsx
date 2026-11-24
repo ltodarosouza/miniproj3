@@ -73,7 +73,9 @@ export function ToqueDuplo({
       ? Math.hypot(evento.clientX - anterior.x, evento.clientY - anterior.y)
       : Infinity;
 
-    if (anterior && agora - anterior.tempo <= 300 && distancia < 30) {
+    // No mouse, acompanha o intervalo de duplo clique do sistema (cerca de 500 ms no Windows).
+    const limite = evento.pointerType === "mouse" ? 500 : 300;
+    if (anterior && agora - anterior.tempo <= limite && distancia < 30) {
       toqueAnterior.current = null;
       dispararToqueDuplo();
       return;
@@ -83,8 +85,9 @@ export function ToqueDuplo({
   }
 
   function aoMouseDown(evento: React.MouseEvent<HTMLDivElement>) {
-    // Impede que o duplo clique selecione uma palavra, sem bloquear a seleção arrastando o mouse.
-    if (evento.detail > 1 && !desativado && !comecouEmInterativo(evento.target, evento.currentTarget)) {
+    // Impede que o duplo clique selecione uma palavra, sem bloquear a seleção arrastando o mouse
+    // nem o triplo clique, que seleciona o parágrafo.
+    if (evento.detail === 2 && !desativado && !comecouEmInterativo(evento.target, evento.currentTarget)) {
       evento.preventDefault();
     }
   }
