@@ -661,14 +661,18 @@ contra a versão que percorre todos os usuários.
   depois das 21h (horário de Brasília) contava para o dia seguinte, e a chama
   da navegação apagava à noite mesmo com post feito. Ela também demorava até
   1 minuto para acender depois de publicar.
-- **Opções:** `zoneinfo("America/Sao_Paulo")`, fuso fixo UTC−3, ou fuso
-  enviado pelo navegador de cada pessoa.
+- **Opções:** fuso fixo UTC−3, `America/Sao_Paulo` nomeado, ou o fuso do
+  navegador de cada pessoa.
 - **Escolha:**
-  - Backend com fuso fixo UTC−3 (`FUSO_BRASIL` e `dia_no_brasil()` em
-    `core/streak.py`). O Brasil não tem horário de verão desde 2019, e o fixo
-    não depende do pacote `tzdata` no servidor.
-  - Frontend compara "postou hoje" pelo dia local do navegador (`dataLocal`).
+  - Um único fuso para o produto: `America/Sao_Paulo`. Backend com
+    `ZoneInfo` (`FUSO_BRASIL` e `dia_no_brasil()` em `core/streak.py`, com o
+    pacote `tzdata` para não depender da base de fusos do servidor). Frontend
+    com `Intl.DateTimeFormat(..., { timeZone: "America/Sao_Paulo" })` em
+    `useStreak`, para a chama e o contador virarem o dia no mesmo instante,
+    inclusive para quem está em outro fuso (ex.: Manaus).
   - `criarPost` e `apagarPost` disparam `troca:posts-mudaram`; `useStreak`
-    escuta esse evento e a volta para a aba, além do intervalo de 60 s.
-- **O que cortamos e por quê:** fuso por pessoa (o público é brasileiro; quem
-  estiver fora do UTC−3 pode ver a virada do dia deslocada).
+    escuta esse evento e a volta para a aba, além do intervalo de 60 s. Uma
+    consulta por vez: o intervalo pula se já houver uma em andamento, e um
+    evento no meio dela agenda uma nova leitura no final.
+- **O que cortamos e por quê:** fuso por pessoa (o público é brasileiro e o
+  dia do streak precisa ser o mesmo no servidor e na tela).
