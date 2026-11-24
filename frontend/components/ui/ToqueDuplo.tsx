@@ -73,8 +73,8 @@ export function ToqueDuplo({
       ? Math.hypot(evento.clientX - anterior.x, evento.clientY - anterior.y)
       : Infinity;
 
-    // No mouse, acompanha o intervalo de duplo clique do sistema (cerca de 500 ms no Windows).
-    const limite = evento.pointerType === "mouse" ? 500 : 300;
+    // No mouse e na caneta, acompanha o intervalo de duplo clique do sistema (cerca de 500 ms no Windows).
+    const limite = evento.pointerType === "touch" ? 300 : 500;
     if (anterior && agora - anterior.tempo <= limite && distancia < 30) {
       toqueAnterior.current = null;
       dispararToqueDuplo();
