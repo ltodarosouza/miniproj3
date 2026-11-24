@@ -18,7 +18,6 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: NOME_REDE, statusBarStyle: "default" },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "32x32" },
       { url: "/icone-32.png", sizes: "32x32", type: "image/png" },
       { url: "/icon.svg", type: "image/svg+xml" },
     ],
