@@ -30,6 +30,7 @@ from app.services.habilidades import garantir_catalogo
 SENHA_SEED = "senha-forte-123"
 SEMENTE = 42
 TOTAL_PARES = 16
+TOTAL_POSTS_DE_PROGRESSO = 10
 RETRATOS = "https://randomuser.me/api/portraits/{genero}/{numero}.jpg"
 FRACAO_COM_FOTO = 0.45
 UNSPLASH = "https://images.unsplash.com/photo-{}?w=800&q=80&auto=format&fit=crop"
@@ -110,6 +111,16 @@ ROTINAS = [
     "Lista de {hab} feita ({min} min). Alguém quer comparar as respostas?",
     "Assisti uma aula de {hab} e refiz os exemplos por conta própria, {min} minutos.",
     "Hoje o {hab} venceu: {min} minutos e ainda não entendi. Amanhã eu volto.",
+]
+
+PROGRESSOS = [
+    "Meu caderno depois de {min} minutos de {hab}. Agora vai.",
+    "Montei meu cantinho de estudo para {hab}: {min} minutos hoje.",
+    "Print do que eu fiz em {hab} hoje, {min} min.",
+    "Registrei meus {min} minutos de {hab}. Aos poucos está saindo.",
+    "Mais uma página de {hab} no caderno depois de {min} minutos.",
+    "Meu progresso em {hab} hoje: {min} minutos focado.",
+    "Separei {min} minutos para {hab} e deixei tudo anotado.",
 ]
 
 COMENTARIOS = [
@@ -255,6 +266,31 @@ def _momento_do_dia(dia: int, sorteio: random.Random) -> datetime:
     return meia_noite - timedelta(days=dia) + timedelta(hours=sorteio.randint(8, 20))
 
 
+def _criar_posts_de_progresso(
+    usuarios: list[User],
+    perfis: dict[int, tuple[set[int], set[int]]],
+    nomes: dict[int, str],
+    sorteio: random.Random,
+) -> list[Post]:
+    agora = agora_utc()
+    posts = []
+    for usuario in sorteio.sample(usuarios, TOTAL_POSTS_DE_PROGRESSO):
+        sei, quero = perfis[usuario.id]
+        habilidade_id = sorteio.choice(sorted(quero | sei))
+        minutos = sorteio.choice([15, 20, 25, 30, 45, 60, 90])
+        posts.append(
+            Post(
+                autor_id=usuario.id,
+                texto=sorteio.choice(PROGRESSOS).format(min=minutos, hab=nomes[habilidade_id]),
+                habilidade_id=habilidade_id,
+                minutos_estudados=minutos,
+                imagem_url=_foto_do_post(nomes[habilidade_id], sorteio),
+                created_at=agora - timedelta(minutes=sorteio.randint(10, 47 * 60)),
+            )
+        )
+    return posts
+
+
 def _criar_posts(
     db: Session,
     usuarios: list[User],
@@ -286,6 +322,7 @@ def _criar_posts(
                     created_at=_momento_do_dia(dia, sorteio),
                 )
             )
+    posts.extend(_criar_posts_de_progresso(usuarios, perfis, nomes, sorteio))
     db.add_all(posts)
     db.flush()
     return posts
