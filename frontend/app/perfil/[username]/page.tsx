@@ -261,7 +261,7 @@ export default function PerfilPage() {
           {/* Destaque de match de troca */}
           {!souEu && infoTroca && (
             <div className="mt-4 flex items-center gap-2 rounded-controle bg-troca-suave px-3 py-2 text-sm text-texto">
-              <Icone nome="trocar" tamanho={16} />
+              <Icone nome="troca" tamanho={16} />
               <span>
                 Vocês podem trocar:{" "}
                 <strong>{infoTroca.euEnsino}</strong>
