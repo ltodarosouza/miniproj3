@@ -92,10 +92,14 @@ function Feed() {
         return [...atuais, ...pagina.items.filter((i) => !ids.has(i.id))];
       });
       if (offset === 0) setTamanhoPrimeiraPagina(pagina.items.length);
+      // Supõe que o servidor respondeu antes de qualquer publicar/apagar feito durante a espera.
+      // Se ele já tiver visto a mudança, pode pular ou repetir um post (o repetido é filtrado por id);
+      // resolver de vez exigiria paginação por cursor no backend.
       const proximo = (offset === 0 ? 0 : proximoRef.current) + pagina.items.length;
       mudarProximo(proximo);
       // Página vazia antes do total (posts apagados no meio do caminho): trata como fim do feed em vez de travar.
-      setTotal(pagina.items.length === 0 ? proximo : pagina.total);
+      // O total da resposta pode ser de antes de um post publicado durante a espera: nunca fica abaixo da posição atual.
+      setTotal(pagina.items.length === 0 ? proximo : Math.max(pagina.total, proximo));
       setErro(false);
       if (pagina.items.length > 0 && proximo < pagina.total) {
         const nova = { offset: proximo, geracao: minha, pagina: listarFeed(proximo, POR_PAGINA), pronta: false };
@@ -150,9 +154,10 @@ function Feed() {
     if (buscando.current) return;
     const guardada = reserva.current;
     // Com a página já guardada, ela aparece na hora: sem esqueleto nem aviso de carregando.
-    if (!(guardada && guardada.offset === proximoOffset && guardada.pronta)) setCarregandoMais(true);
-    void buscar(proximoOffset);
-  }, [buscar, proximoOffset]);
+    const offset = proximoRef.current;
+    if (!(guardada && guardada.offset === offset && guardada.pronta)) setCarregandoMais(true);
+    void buscar(offset);
+  }, [buscar]);
 
   useEffect(() => {
     const alvo = sentinela.current;
@@ -165,7 +170,8 @@ function Feed() {
     );
     observador.observe(alvo);
     return () => observador.disconnect();
-  }, [temMais, erro, carregarMais]);
+    // proximoOffset recria o observador a cada página, para disparar de novo se a sentinela ainda estiver na margem.
+  }, [temMais, erro, carregarMais, proximoOffset]);
 
   function tentarDeNovo() {
     setCarregando(true);
