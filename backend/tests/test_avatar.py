@@ -1,4 +1,10 @@
-PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 100
+import base64
+
+import pytest
+
+PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/pZsAAAAASUVORK5CYII=")
+JPEG = base64.b64decode("/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAF//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABBQJ//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPwF//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPwF//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQAGPwJ//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPyF//9oADAMBAAIAAwAAABAf/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPxB//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPxB//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxB//9k=")
+WEBP = base64.b64decode("UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEAAUAmJaQAA3AA/v89WAAAAA==")
 DOIS_MB = 2 * 1024 * 1024
 
 
@@ -21,6 +27,8 @@ def test_enviar_servir_e_exibir_avatar(client, pessoa):
     assert imagem.status_code == 200
     assert imagem.content == PNG
     assert imagem.headers["cache-control"] == "public, max-age=31536000, immutable"
+    assert imagem.headers["content-type"] == "image/png"
+    assert imagem.headers["x-content-type-options"] == "nosniff"
     assert client.get("/usuarios/ana").json()["avatar_url"] == url
 
 
@@ -43,10 +51,31 @@ def test_remover_avatar(client, pessoa):
 
 def test_validacao_de_upload_e_login(client, pessoa):
     ana = pessoa("ana")
-    assert enviar(client, ana, nome="foto.gif").status_code == 422
-    assert enviar(client, ana, conteudo=b"0" * (DOIS_MB + 1)).status_code == 413
+    assert enviar(client, ana, nome="foto.gif", conteudo=b"GIF89a").status_code == 422
+    assert enviar(client, ana, conteudo=PNG + b"0" * (DOIS_MB + 1 - len(PNG))).status_code == 413
     assert enviar(client, {}).status_code == 401
     assert client.delete("/usuarios/eu/avatar").status_code == 401
+
+
+@pytest.mark.parametrize("conteudo,tipo,extensao", [(JPEG, "image/jpeg", ".jpg"), (PNG, "image/png", ".png"), (WEBP, "image/webp", ".webp")])
+def test_formatos_reais_sao_aceitos_e_servidos(client, pessoa, conteudo, tipo, extensao):
+    ana = pessoa("ana")
+    resposta = enviar(client, ana, nome="foto.jpg", conteudo=conteudo)
+    assert resposta.status_code == 200
+    url = resposta.json()["avatar_url"]
+    assert url.endswith(extensao)
+    servido = client.get(url)
+    assert servido.headers["content-type"] == tipo
+    assert servido.headers["x-content-type-options"] == "nosniff"
+
+
+@pytest.mark.parametrize("conteudo", [b"", b"<html>erro</html>"])
+def test_conteudo_invalido_nao_substitui_avatar(client, pessoa, conteudo):
+    ana = pessoa("ana")
+    url = enviar(client, ana).json()["avatar_url"]
+    resposta = enviar(client, ana, nome="foto.png", conteudo=conteudo)
+    assert resposta.status_code == 422
+    assert client.get(url).content == PNG
 
 
 def test_nome_de_avatar_invalido_ou_inexistente(client):

@@ -1,8 +1,12 @@
-﻿import pytest
+﻿import base64
+
+import pytest
 
 from app.services import imagens
 
-PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 100
+PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/pZsAAAAASUVORK5CYII=")
+JPEG = base64.b64decode("/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAF//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABBQJ//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPwF//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPwF//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQAGPwJ//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPyF//9oADAMBAAIAAwAAABAf/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPxB//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPxB//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxB//9k=")
+WEBP = base64.b64decode("UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEAAUAmJaQAA3AA/v89WAAAAA==")
 DOIS_MB = 2 * 1024 * 1024
 
 
@@ -48,6 +52,7 @@ def test_imagem_enviada_pode_ser_baixada_sem_login(client, pessoa):
     assert r.status_code == 200
     assert r.content == PNG
     assert r.headers["content-type"] == "image/png"
+    assert r.headers["x-content-type-options"] == "nosniff"
     assert "immutable" in r.headers["cache-control"]
 
 
@@ -56,7 +61,9 @@ def test_trocar_a_imagem_apaga_a_anterior(client, pessoa):
     post_id = novo_post(client, ana)
     primeira = enviar(client, post_id, ana).json()["imagem_url"]
 
-    segunda = enviar(client, post_id, ana, nome="outra.webp").json()["imagem_url"]
+    segunda_resp = enviar(client, post_id, ana, nome="outra.webp", conteudo=WEBP)
+    assert segunda_resp.status_code == 200
+    segunda = segunda_resp.json()["imagem_url"]
 
     assert client.get(primeira).status_code == 404
     assert client.get(segunda).headers["content-type"] == "image/webp"
@@ -137,7 +144,7 @@ def test_extensao_invalida_da_422(client, pessoa, pasta_de_teste):
     for nome in ("documento.pdf", "programa.exe", "semextensao"):
         r = client.post(
             f"/posts/{post_id}/imagem",
-            files={"arquivo": (nome, PNG, "application/pdf")},
+            files={"arquivo": (nome, b"<html>invalid</html>", "application/pdf")},
             headers=ana,
         )
         assert r.status_code == 422
@@ -150,17 +157,17 @@ def test_content_type_define_extensao_sem_extensao_no_nome(client, pessoa):
 
     jpeg = client.post(
         f"/posts/{post_id}/imagem",
-        files={"arquivo": ("image", PNG, "image/jpeg")},
+        files={"arquivo": ("image", JPEG, "image/jpeg")},
         headers=ana,
     )
     webp = client.post(
         f"/posts/{post_id}/imagem",
-        files={"arquivo": ("blob", PNG, "image/webp")},
+        files={"arquivo": ("blob", WEBP, "image/webp")},
         headers=ana,
     )
     pdf = client.post(
         f"/posts/{post_id}/imagem",
-        files={"arquivo": ("foto", PNG, "application/pdf")},
+        files={"arquivo": ("foto", b"not an image", "application/pdf")},
         headers=ana,
     )
 
@@ -171,16 +178,41 @@ def test_content_type_define_extensao_sem_extensao_no_nome(client, pessoa):
     assert pdf.status_code == 422
 
 
-def test_descobrir_extensao_prioriza_extensao_valida():
-    assert imagens.descobrir_extensao("foto.PNG", "image/jpeg") == ".png"
-    assert imagens.descobrir_extensao("foto.jpg", "image/webp") == ".jpg"
+def test_formato_detectado_ignora_nome_e_content_type(client, pessoa):
+    ana = pessoa("ana")
+    post_id = novo_post(client, ana)
+    resposta = client.post(f"/posts/{post_id}/imagem", files={"arquivo": ("foto.jpg", PNG, "image/jpeg")}, headers=ana)
+    assert resposta.status_code == 200
+    assert resposta.json()["imagem_url"].endswith(".png")
+    assert client.get(resposta.json()["imagem_url"]).headers["content-type"] == "image/png"
+
+
+@pytest.mark.parametrize("conteudo", [b"", b"<html>erro</html>"])
+def test_conteudo_invalido_nao_substitui_imagem(client, pessoa, conteudo):
+    ana = pessoa("ana")
+    post_id = novo_post(client, ana)
+    url = enviar(client, post_id, ana).json()["imagem_url"]
+    resposta = enviar(client, post_id, ana, nome="foto.png", conteudo=conteudo)
+    assert resposta.status_code == 422
+    assert client.get(url).content == PNG
+
+
+@pytest.mark.parametrize("conteudo,tipo", [(JPEG, "image/jpeg"), (PNG, "image/png"), (WEBP, "image/webp")])
+def test_formatos_reais_sao_aceitos_e_servidos(client, pessoa, conteudo, tipo):
+    ana = pessoa("ana")
+    post_id = novo_post(client, ana)
+    resposta = enviar(client, post_id, ana, conteudo=conteudo)
+    assert resposta.status_code == 200
+    servido = client.get(resposta.json()["imagem_url"])
+    assert servido.headers["content-type"] == tipo
+    assert servido.headers["x-content-type-options"] == "nosniff"
 
 
 def test_limite_de_2_mb(client, pessoa):
     ana = pessoa("ana")
     post_id = novo_post(client, ana)
 
-    assert enviar(client, post_id, ana, conteudo=b"0" * DOIS_MB).status_code == 200
+    assert enviar(client, post_id, ana, conteudo=PNG + b"0" * (DOIS_MB - len(PNG))).status_code == 200
     assert enviar(client, post_id, ana, conteudo=b"0" * (DOIS_MB + 1)).status_code == 413
 
 
