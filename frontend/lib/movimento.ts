@@ -11,7 +11,11 @@ export function useMagnetico<T extends HTMLElement>(_forca = 0.25): RefObject<T 
   return useRef<T>(null);
 }
 
-export function useVisivel<T extends HTMLElement>(): [RefObject<T | null>, boolean] {
+// Sem opções, revela quando o elemento já entrou um pouco na tela.
+// Com `antecipacao` (ex.: "200px"), revela essa distância antes de entrar.
+export function useVisivel<T extends HTMLElement>(
+  { antecipacao }: { antecipacao?: string } = {}
+): [RefObject<T | null>, boolean] {
   const ref = useRef<T>(null);
   const [visivel, setVisivel] = useState(false);
 
@@ -29,11 +33,13 @@ export function useVisivel<T extends HTMLElement>(): [RefObject<T | null>, boole
           observador.disconnect();
         }
       },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.08 }
+      antecipacao
+        ? { rootMargin: `0px 0px ${antecipacao} 0px`, threshold: 0 }
+        : { rootMargin: "0px 0px -8% 0px", threshold: 0.08 }
     );
     observador.observe(el);
     return () => observador.disconnect();
-  }, []);
+  }, [antecipacao]);
 
   return [ref, visivel];
 }

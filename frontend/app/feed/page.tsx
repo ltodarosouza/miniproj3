@@ -12,7 +12,8 @@ import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { Icone } from "@/components/ui/Icone";
 import { PuxarParaAtualizar } from "@/components/ui/PuxarParaAtualizar";
 import { Revelar } from "@/components/ui/Revelar";
-import { listarMatches, type Match } from "@/lib/api";
+import { EsqueletoPost } from "@/components/ui/Esqueleto";
+import { listarMatches, type Match, type Page } from "@/lib/api";
 import {
   listarEmAlta,
   listarFeed,
@@ -24,7 +25,13 @@ import {
 } from "@/lib/posts";
 import { meuId } from "@/lib/sessao";
 
-const POR_PAGINA = 10;
+const POR_PAGINA = 20;
+// "Você chegou ao fim do feed" só aparece em feeds com mais posts que isso.
+const MINIMO_PARA_AVISAR_FIM = 10;
+// Pede a próxima página quando faltam umas duas telas para o fim da lista.
+const ANTECIPAR_CARREGAMENTO = "1500px 0px";
+// Os cartões começam a animar um pouco antes de entrar na tela.
+const ANTECIPAR_ANIMACAO = "200px";
 const PESSOAS_NA_LATERAL = 5;
 const CARROSSEL_DEPOIS_DO = 3;
 
@@ -51,25 +58,55 @@ function Feed() {
   const [pessoas, setPessoas] = useState<Match[] | null>(null);
   const [emAlta, setEmAlta] = useState<HabilidadeEmAlta[] | null>(null);
   const [progresso, setProgresso] = useState<MeuProgresso | null>(null);
+  const [tamanhoPrimeiraPagina, setTamanhoPrimeiraPagina] = useState(0);
   const sentinela = useRef<HTMLDivElement>(null);
   const buscando = useRef(false);
   const geracao = useRef(0);
+  // Próxima página já pedida em segundo plano, para aparecer na hora quando a pessoa chegar lá.
+  const reserva = useRef<{ offset: number; geracao: number; pagina: Promise<Page<ItemFeed>>; pronta: boolean } | null>(null);
+  // Posição da próxima página no servidor. Não usa itens.length, que não anda quando a página volta só com posts repetidos.
+  const [proximoOffset, setProximoOffset] = useState(0);
+  // Cópia em ref para a busca somar por cima de ajustes (publicar/apagar) feitos enquanto ela esperava.
+  const proximoRef = useRef(0);
+  const mudarProximo = useCallback((valor: number) => {
+    proximoRef.current = Math.max(0, valor);
+    setProximoOffset(proximoRef.current);
+  }, []);
 
   const buscar = useCallback(async (offset: number) => {
     // Recomeçar do topo invalida qualquer "carregar mais" em andamento.
     if (offset === 0) geracao.current += 1;
     const minha = geracao.current;
     buscando.current = true;
+    const guardada = reserva.current;
+    reserva.current = null;
     try {
-      const pagina = await listarFeed(offset, POR_PAGINA);
+      const pagina =
+        guardada && guardada.offset === offset && guardada.geracao === minha
+          ? await guardada.pagina
+          : await listarFeed(offset, POR_PAGINA);
       if (minha !== geracao.current) return;
       setItens((atuais) => {
         if (offset === 0) return pagina.items;
         const ids = new Set(atuais.map((i) => i.id));
         return [...atuais, ...pagina.items.filter((i) => !ids.has(i.id))];
       });
-      setTotal(pagina.total);
+      if (offset === 0) setTamanhoPrimeiraPagina(pagina.items.length);
+      // Supõe que o servidor respondeu antes de qualquer publicar/apagar feito durante a espera.
+      // Se ele já tiver visto a mudança, pode pular ou repetir um post (o repetido é filtrado por id);
+      // resolver de vez exigiria paginação por cursor no backend.
+      const proximo = (offset === 0 ? 0 : proximoRef.current) + pagina.items.length;
+      mudarProximo(proximo);
+      // Página vazia antes do total (posts apagados no meio do caminho): trata como fim do feed em vez de travar.
+      // O total da resposta pode ser de antes de um post publicado durante a espera: nunca fica abaixo da posição atual.
+      setTotal(pagina.items.length === 0 ? proximo : Math.max(pagina.total, proximo));
       setErro(false);
+      if (pagina.items.length > 0 && proximo < pagina.total) {
+        const nova = { offset: proximo, geracao: minha, pagina: listarFeed(proximo, POR_PAGINA), pronta: false };
+        // Uma falha aqui só aparece se a pessoa chegar a precisar desta página.
+        nova.pagina.then(() => { nova.pronta = true; }, () => undefined);
+        reserva.current = nova;
+      }
     } catch {
       if (minha === geracao.current) setErro(true);
     } finally {
@@ -78,7 +115,7 @@ function Feed() {
       setCarregando(false);
       setCarregandoMais(false);
     }
-  }, []);
+  }, [mudarProximo]);
 
   const atualizarProgresso = useCallback(() => {
     obterMeuProgresso().then(setProgresso).catch(() => undefined);
@@ -111,14 +148,18 @@ function Feed() {
     await buscar(0);
   }, [buscar, atualizarProgresso]);
 
-  const temMais = itens.length < total;
+  const temMais = proximoOffset < total;
 
   const carregarMais = useCallback(() => {
     if (buscando.current) return;
-    setCarregandoMais(true);
-    void buscar(itens.length);
-  }, [buscar, itens.length]);
+    const guardada = reserva.current;
+    // Com a página já guardada, ela aparece na hora: sem esqueleto nem aviso de carregando.
+    const offset = proximoRef.current;
+    if (!(guardada && guardada.offset === offset && guardada.pronta)) setCarregandoMais(true);
+    void buscar(offset);
+  }, [buscar]);
 
+  // proximoOffset nas dependências recria o observador a cada página, para disparar de novo se a sentinela ainda estiver na margem.
   useEffect(() => {
     const alvo = sentinela.current;
     if (!alvo || !temMais || erro) return;
@@ -126,11 +167,11 @@ function Feed() {
       ([entrada]) => {
         if (entrada.isIntersecting) carregarMais();
       },
-      { rootMargin: "600px 0px" },
+      { rootMargin: ANTECIPAR_CARREGAMENTO },
     );
     observador.observe(alvo);
     return () => observador.disconnect();
-  }, [temMais, erro, carregarMais]);
+  }, [temMais, erro, carregarMais, proximoOffset]);
 
   function tentarDeNovo() {
     setCarregando(true);
@@ -140,6 +181,8 @@ function Feed() {
   function aoPublicar(post: Post) {
     setItens((atuais) => [{ ...post, motivo: "meu" }, ...atuais.filter((i) => i.id !== post.id)]);
     setTotal((t) => t + 1);
+    // O post novo entra no topo do feed no servidor e empurra os demais uma posição.
+    mudarProximo(proximoRef.current + 1);
     if (erro && itens.length === 0) setErro(false);
     atualizarProgresso();
   }
@@ -147,6 +190,7 @@ function Feed() {
   function aoApagar(id: number) {
     setItens((atuais) => atuais.filter((i) => i.id !== id));
     setTotal((t) => Math.max(0, t - 1));
+    mudarProximo(proximoRef.current - 1);
     atualizarProgresso();
   }
 
@@ -207,7 +251,10 @@ function Feed() {
           {itens.map((item, i) => (
             <Fragment key={item.id}>
               <li>
-                <Revelar atraso={Math.min(i, 6) * 40}>
+                <Revelar
+                  atraso={i < tamanhoPrimeiraPagina ? Math.min(i, 6) * 40 : 0}
+                  antecipacao={ANTECIPAR_ANIMACAO}
+                >
                   {item.motivo === "descobrir" && <Descoberta titulo="Estuda o mesmo que você" />}
                   <CartaoPost post={item} podeEnsinar={item.motivo === "pode_te_ensinar"} aoApagar={aoApagar} />
                 </Revelar>
@@ -225,11 +272,16 @@ function Feed() {
           </div>
         )}
         {temMais && !erro && (
-          <div ref={sentinela} className="flex justify-center py-2" aria-live="polite">
-            {carregandoMais && <span className="text-sm text-texto-3">Carregando mais posts…</span>}
+          <div ref={sentinela} aria-live="polite">
+            {carregandoMais && (
+              <>
+                <EsqueletoPost />
+                <span className="sr-only">Carregando mais posts…</span>
+              </>
+            )}
           </div>
         )}
-        {!temMais && itens.length > POR_PAGINA && (
+        {!temMais && itens.length > MINIMO_PARA_AVISAR_FIM && (
           <p className="text-center text-sm text-texto-3">Você chegou ao fim do feed.</p>
         )}
       </>
