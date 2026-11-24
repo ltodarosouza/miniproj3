@@ -1,3 +1,5 @@
+import { apiDelete } from "@/lib/api";
+
 export const LADO_MAXIMO_POST = 1600;
 export const LADO_MAXIMO_AVATAR = 512;
 export const LIMITE_BYTES = 2 * 1024 * 1024;
@@ -33,7 +35,7 @@ export async function prepararImagem(
   arquivo: File,
   opcoes: OpcoesPrepararImagem = {},
 ): Promise<File> {
-  if (!arquivo.type.startsWith("image/")) {
+  if (arquivo.type && !arquivo.type.startsWith("image/")) {
     throw new Error("Escolha uma foto jpg, png ou webp.");
   }
 
@@ -48,7 +50,7 @@ export async function prepararImagem(
     const ladoMaximo = opcoes.ladoMaximo ?? LADO_MAXIMO_POST;
     const tiposAceitos = ["image/jpeg", "image/png", "image/webp"];
     if (
-      tiposAceitos.includes(arquivo.type.toLowerCase()) &&
+      arquivo.type && tiposAceitos.includes(arquivo.type.toLowerCase()) &&
       Math.max(bitmap.width, bitmap.height) <= ladoMaximo &&
       arquivo.size <= LIMITE_BYTES
     ) {
@@ -98,4 +100,8 @@ export async function prepararImagem(
 export function urlDaApi(caminho: string): string {
   if (/^(http|blob:|data:)/i.test(caminho)) return caminho;
   return `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}${caminho}`;
+}
+
+export function removerImagemDoPost(id: number): Promise<void> {
+  return apiDelete(`/posts/${id}/imagem`);
 }
