@@ -116,7 +116,7 @@ function EmAndamento({ itens }: { itens: Match[] }) {
           <span className="block text-sm text-texto-2">{quantidade}</span>
         </span>
         {itens.length > 1 && (
-          <span className="flex shrink-0 items-center" aria-hidden>
+          <span className="hidden shrink-0 items-center sm:flex" aria-hidden>
             <span className="flex -space-x-2">
               {itens.slice(1, 4).map((m) => (
                 <span key={m.usuario.id} className="rounded-full ring-2 ring-superficie">
