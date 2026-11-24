@@ -47,6 +47,13 @@ async def salvar(db: Session, eu: User, post_id: int, arquivo: UploadFile) -> st
     return post.imagem_url
 
 
+def remover(db: Session, eu: User, post_id: int) -> None:
+    post = post_do_autor(db, eu, post_id)
+    db.execute(delete(ImagemPost).where(ImagemPost.post_id == post.id))
+    post.imagem_url = None
+    db.commit()
+
+
 def servir(db: Session, nome: str) -> Response:
     if not NOME_VALIDO.match(nome):
         raise HTTPException(status_code=404, detail="imagem não encontrada")

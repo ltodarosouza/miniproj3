@@ -91,6 +91,45 @@ def test_so_o_autor_envia_imagem(client, pessoa, pasta_de_teste):
     assert client.get(f"/posts/{post_id}", headers=ana).json()["imagem_url"] is None
 
 
+def test_autor_remove_imagem(client, pessoa):
+    ana = pessoa("ana")
+    post_id = novo_post(client, ana)
+    url = enviar(client, post_id, ana).json()["imagem_url"]
+
+    r = client.delete(f"/posts/{post_id}/imagem", headers=ana)
+
+    assert r.status_code == 204
+    assert client.get(f"/posts/{post_id}", headers=ana).json()["imagem_url"] is None
+    assert client.get(url).status_code == 404
+
+
+def test_remover_post_sem_imagem(client, pessoa):
+    ana = pessoa("ana")
+    post_id = novo_post(client, ana)
+
+    assert client.delete(f"/posts/{post_id}/imagem", headers=ana).status_code == 204
+
+
+def test_so_o_autor_remove_imagem(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    post_id = novo_post(client, ana)
+    url = enviar(client, post_id, ana).json()["imagem_url"]
+
+    r = client.delete(f"/posts/{post_id}/imagem", headers=bia)
+
+    assert r.status_code == 403
+    assert r.json()["detail"] == "só o autor pode mexer neste post"
+    assert client.get(url).status_code == 200
+
+
+def test_remover_imagem_sem_login(client, pessoa):
+    ana = pessoa("ana")
+    post_id = novo_post(client, ana)
+
+    assert client.delete(f"/posts/{post_id}/imagem").status_code == 401
+
+
 def test_extensao_invalida_da_422(client, pessoa, pasta_de_teste):
     ana = pessoa("ana")
     post_id = novo_post(client, ana)
