@@ -22,6 +22,8 @@ export default function EditarPerfilPage() {
   const [salvando, setSalvando] = useState(false);
   const [alterandoFoto, setAlterandoFoto] = useState(false);
   const inputFoto = useRef<HTMLInputElement>(null);
+  const avatarUrlAtual = useRef(avatarUrl);
+  const operacaoFoto = useRef(0);
   const [erro, setErro] = useState<string | null>(null);
   const [salvo, setSalvo] = useState(false);
 
@@ -37,6 +39,7 @@ export default function EditarPerfilPage() {
         setPerfil(p);
         setBio(p.bio);
         setAvatarUrl(p.avatar_url);
+        avatarUrlAtual.current = p.avatar_url;
         setCarregando(false);
       })
       .catch((err) => {
@@ -70,9 +73,8 @@ export default function EditarPerfilPage() {
 
     try {
       const atualizado = await atualizarPerfil(dados);
-      setPerfil(atualizado);
+      setPerfil({ ...atualizado, avatar_url: avatarUrlAtual.current });
       setBio(atualizado.bio);
-      setAvatarUrl(atualizado.avatar_url);
       setSalvo(true);
     } catch (err) {
       setErro(
@@ -86,11 +88,16 @@ export default function EditarPerfilPage() {
   async function escolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const arquivo = e.target.files?.[0];
     if (!arquivo) return;
+    const operacao = ++operacaoFoto.current;
     setErro(null);
     setAlterandoFoto(true);
     try {
       const preparada = await prepararImagem(arquivo, { ladoMaximo: LADO_MAXIMO_AVATAR });
-      setAvatarUrl(await enviarAvatar(preparada));
+      const url = await enviarAvatar(preparada);
+      if (operacao === operacaoFoto.current) {
+        avatarUrlAtual.current = url;
+        setAvatarUrl(url);
+      }
     } catch (err) {
       setErro(err instanceof ErroApi ? err.message : err instanceof Error ? err.message : "Não consegui enviar a foto.");
     } finally {
@@ -100,11 +107,15 @@ export default function EditarPerfilPage() {
   }
 
   async function apagarFoto() {
+    const operacao = ++operacaoFoto.current;
     setErro(null);
     setAlterandoFoto(true);
     try {
       await removerAvatar();
-      setAvatarUrl("");
+      if (operacao === operacaoFoto.current) {
+        avatarUrlAtual.current = "";
+        setAvatarUrl("");
+      }
     } catch (err) {
       setErro(err instanceof ErroApi ? err.message : err instanceof Error ? err.message : "Não consegui remover a foto.");
     } finally {
