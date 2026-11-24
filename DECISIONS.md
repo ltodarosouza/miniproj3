@@ -628,3 +628,23 @@ contra a versão que percorre todos os usuários.
   comentários nos posts da pessoa, seguidores, trocas e avaliações recebidas,
   mais O(n log n) para ordenar. Se um perfil ficar grande, o próximo passo é
   limitar a janela (ex.: últimos 90 dias) ou guardar um contador.
+
+### 22. Foto de perfil por arquivo e compressão da foto no navegador
+
+- **Contexto:** issue #59. Foto de celular (3 a 8 MB) passava do limite de
+  2 MB e era recusada; arquivos da câmera sem extensão davam 422; não dava
+  para mexer na foto ao editar o post; a foto de perfil só aceitava URL.
+- **Opções:** subir o limite do servidor, comprimir no servidor (Pillow) ou
+  comprimir no navegador antes do upload.
+- **Escolha:**
+  - `prepararImagem()` em `lib/imagens.ts` redimensiona no canvas (lado maior
+    1600 px no post, 512 px no avatar) e exporta webp/jpeg abaixo de 2 MB. O
+    servidor mantém o limite de 2 MB.
+  - O backend reconhece o tipo pelo `content-type` quando a extensão falta.
+  - Avatar guardado como bytes na tabela `imagens_avatar` (migração 0005),
+    mesmo padrão da decisão 19: `POST`/`DELETE /usuarios/eu/avatar` e
+    `GET /usuarios/avatares/{nome}` com cache de um ano.
+  - `DELETE /posts/{id}/imagem`; o editor do post adiciona, troca e remove a
+    foto ao salvar.
+- **O que cortamos e por quê:** Pillow no servidor (dependência nova e CPU no
+  plano grátis do Render); recorte do avatar (o `object-cover` já centraliza).
