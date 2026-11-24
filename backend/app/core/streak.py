@@ -1,4 +1,12 @@
-﻿from datetime import date, timedelta
+﻿from datetime import date, datetime, timedelta, timezone
+
+FUSO_BRASIL = timezone(timedelta(hours=-3))
+
+
+def dia_no_brasil(momento_utc: datetime) -> date:
+    if momento_utc.tzinfo is None:
+        momento_utc = momento_utc.replace(tzinfo=timezone.utc)
+    return momento_utc.astimezone(FUSO_BRASIL).date()
 
 
 def calcular_streak(dias_com_post: set[date], hoje: date) -> int:
