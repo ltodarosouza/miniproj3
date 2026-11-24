@@ -54,6 +54,13 @@ export const LIMITE_TEXTO_COMENTARIO = 500;
 export const LIMITE_MINUTOS = 1440;
 export const LIMITE_BYTES_IMAGEM = 2 * 1024 * 1024;
 export const TIPOS_IMAGEM = ["image/jpeg", "image/png", "image/webp"];
+export const EVENTO_POSTS_MUDARAM = "troca:posts-mudaram";
+
+function avisarPostsMudaram(): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(EVENTO_POSTS_MUDARAM));
+  }
+}
 
 export function listarFeed(offset: number, limit: number): Promise<Page<ItemFeed>> {
   return apiGet(`/feed?offset=${offset}&limit=${limit}`);
@@ -78,8 +85,10 @@ export function formatarTempoEstudado(minutos: number): string {
   return resto === 0 ? `${horas}h` : `${horas}h${String(resto).padStart(2, "0")}`;
 }
 
-export function criarPost(dados: NovoPost): Promise<Post> {
-  return apiPost("/posts", dados);
+export async function criarPost(dados: NovoPost): Promise<Post> {
+  const post = await apiPost<Post>("/posts", dados);
+  avisarPostsMudaram();
+  return post;
 }
 
 export function buscarPost(id: number): Promise<Post> {
@@ -114,8 +123,9 @@ export function obterMeuProgresso(): Promise<MeuProgresso> {
   return apiGet("/feed/meu-progresso");
 }
 
-export function apagarPost(id: number): Promise<void> {
-  return apiDelete(`/posts/${id}`);
+export async function apagarPost(id: number): Promise<void> {
+  await apiDelete(`/posts/${id}`);
+  avisarPostsMudaram();
 }
 
 export function validarImagem(arquivo: File): string | null {
