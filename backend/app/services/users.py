@@ -165,18 +165,18 @@ def salvar_habilidades(
 ) -> list[HabilidadePerfilOut]:
     if len(itens) > MAX_HABILIDADES:
         raise HTTPException(status_code=422, detail="no máximo 40 habilidades")
-    vistos: dict[int, str] = {}
+    vistos: set[tuple[int, str]] = set()
     for item in itens:
-        if item.habilidade_id in vistos:
+        chave = (item.habilidade_id, item.tipo)
+        if chave in vistos:
             raise HTTPException(
                 status_code=422,
-                detail="cada habilidade entra uma vez só: em Sei ou em Quero aprender",
+                detail="essa habilidade já está repetida nesta lista",
             )
-        vistos[item.habilidade_id] = item.tipo
-    existentes = set(
-        db.scalars(select(Habilidade.id).where(Habilidade.id.in_(vistos)))
-    )
-    if existentes != set(vistos):
+        vistos.add(chave)
+    ids = {item.habilidade_id for item in itens}
+    existentes = set(db.scalars(select(Habilidade.id).where(Habilidade.id.in_(ids))))
+    if existentes != ids:
         raise HTTPException(status_code=422, detail="habilidade fora do catálogo")
 
     antigas = list(

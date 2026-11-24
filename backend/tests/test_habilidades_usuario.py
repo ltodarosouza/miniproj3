@@ -61,15 +61,47 @@ def test_salvar_atualiza_os_matches_na_hora(client, logar):
     assert client.get("/matches", headers=ana).json()["troca"] == []
 
 
-def test_mesma_habilidade_em_sei_e_quero_e_recusada(client, logar):
+def test_mesma_habilidade_pode_estar_em_sei_e_em_quero_aprender(client, logar):
     ana = logar("ana")
     (react,) = ids("React")
     r = client.put(
         "/usuarios/eu/habilidades",
-        json=[{"habilidade_id": react, "tipo": "sei"}, {"habilidade_id": react, "tipo": "quero_aprender"}],
+        json=[
+            {"habilidade_id": react, "tipo": "sei", "nivel": 3},
+            {"habilidade_id": react, "tipo": "quero_aprender", "nivel": 5},
+        ],
+        headers=ana,
+    )
+    assert r.status_code == 200
+    assert {(h["tipo"], h["nivel"]) for h in r.json()} == {("sei", 3), ("quero_aprender", 5)}
+    perfil = client.get("/usuarios/ana").json()
+    assert [h["nome"] for h in perfil["habilidades"]] == ["React", "React"]
+
+
+def test_repetir_a_habilidade_na_mesma_lista_e_recusado(client, logar):
+    ana = logar("ana")
+    (react,) = ids("React")
+    r = client.put(
+        "/usuarios/eu/habilidades",
+        json=[{"habilidade_id": react, "tipo": "sei"}, {"habilidade_id": react, "tipo": "sei", "nivel": 2}],
         headers=ana,
     )
     assert r.status_code == 422
+
+
+def test_habilidade_nos_dois_lados_nao_gera_match_comigo_mesma(client, logar):
+    ana = logar("ana")
+    (react,) = ids("React")
+    client.put(
+        "/usuarios/eu/habilidades",
+        json=[{"habilidade_id": react, "tipo": "sei"}, {"habilidade_id": react, "tipo": "quero_aprender"}],
+        headers=ana,
+    )
+    assert client.get("/matches", headers=ana).json() == {
+        "troca": [],
+        "pode_te_ensinar": [],
+        "em_andamento": [],
+    }
 
 
 def test_habilidade_fora_do_catalogo_e_nivel_invalido(client, logar):
@@ -94,3 +126,45 @@ def test_busca_de_usuarios_por_nome_ou_username(client, logar):
     assert r.json()["total"] == 2
     assert client.get("/usuarios?q=%25").json()["total"] == 0
     assert client.get("/usuarios").json()["total"] == 3
+
+
+def test_habilidade_nos_dois_tipos_aparece_em_ambas_as_listas_no_perfil(client, logar):
+    """Mesma habilidade em sei e quero_aprender aparece nas duas seções do perfil."""
+    ana = logar("ana")
+    (python,) = ids("Python")
+    client.put(
+        "/usuarios/eu/habilidades",
+        json=[
+            {"habilidade_id": python, "tipo": "sei", "nivel": 2},
+            {"habilidade_id": python, "tipo": "quero_aprender", "nivel": 5},
+        ],
+        headers=ana,
+    )
+    perfil = client.get("/usuarios/ana").json()
+    tipos = {h["tipo"] for h in perfil["habilidades"] if h["nome"] == "Python"}
+    assert tipos == {"sei", "quero_aprender"}
+
+
+def test_habilidade_nos_dois_tipos_gera_match_com_outra_pessoa(client, logar):
+    """Ana sabe React (sei) e quer aprender React (quero_aprender).
+    Bia quer aprender React. Ana aparece como 'pode_te_ensinar' de Bia,
+    mas Bia não aparece como match de troca de Ana (Bia não sabe nada que Ana queira)."""
+    ana = logar("ana")
+    bia = logar("bia")
+    (react,) = ids("React")
+    client.put(
+        "/usuarios/eu/habilidades",
+        json=[
+            {"habilidade_id": react, "tipo": "sei", "nivel": 3},
+            {"habilidade_id": react, "tipo": "quero_aprender", "nivel": 5},
+        ],
+        headers=ana,
+    )
+    client.put(
+        "/usuarios/eu/habilidades",
+        json=[{"habilidade_id": react, "tipo": "quero_aprender", "nivel": 1}],
+        headers=bia,
+    )
+    matches_bia = client.get("/matches", headers=bia).json()
+    assert any(m["usuario"]["username"] == "ana" for m in matches_bia["pode_te_ensinar"])
+    assert client.get("/matches", headers=ana).json()["troca"] == []

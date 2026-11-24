@@ -13,12 +13,14 @@ import { Estrelas } from "@/components/ui/Estrelas";
 import { Icone } from "@/components/ui/Icone";
 import { Revelar } from "@/components/ui/Revelar";
 import { TagHabilidade } from "@/components/ui/TagHabilidade";
-import { ErroApi } from "@/lib/api";
+import { ErroApi, listarMatches } from "@/lib/api";
 import { buscarPerfil, listarPostsDoUsuario, type Perfil } from "@/lib/perfil";
 import { type Post } from "@/lib/posts";
 import { meuId } from "@/lib/sessao";
 
 const POSTS_POR_PAGINA = 10;
+
+type InfoTroca = { euEnsino: string; elaEnsina: string } | null;
 
 function Contador({
   valor,
@@ -101,12 +103,7 @@ function SecaoHabilidades({ habilidades, souEu }: { habilidades: Perfil["habilid
           <h2 className="mb-2 text-sm font-medium text-texto-2">Quero aprender</h2>
           <div className="flex flex-wrap gap-2">
             {quero.map((h) => (
-              <TagHabilidade
-                key={h.id}
-                nome={h.nome}
-                tipo="quero_aprender"
-                nivel={h.nivel}
-              />
+              <TagHabilidade key={h.id} nome={h.nome} tipo="quero_aprender" nivel={h.nivel} />
             ))}
           </div>
         </section>
@@ -125,6 +122,7 @@ export default function PerfilPage() {
   const [carregandoMais, setCarregandoMais] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [eu, setEu] = useState<number | null>(null);
+  const [infoTroca, setInfoTroca] = useState<InfoTroca>(null);
 
   useEffect(() => {
     setEu(meuId());
@@ -165,6 +163,22 @@ export default function PerfilPage() {
     },
     [username],
   );
+
+  // Verifica se há match de troca com este usuário
+  useEffect(() => {
+    if (!eu) return;
+    listarMatches()
+      .then((matches) => {
+        const match = matches.troca.find((m) => m.usuario.username === username);
+        if (!match) return;
+        const euEnsino = match.eu_ensino[0]?.nome;
+        const elaEnsina = match.me_ensina[0]?.nome;
+        if (euEnsino && elaEnsina) {
+          setInfoTroca({ euEnsino, elaEnsina });
+        }
+      })
+      .catch(() => {});
+  }, [username, eu]);
 
   useEffect(() => {
     void carregarPerfil();
@@ -222,22 +236,40 @@ export default function PerfilPage() {
             </div>
             <div className="shrink-0">
               {souEu ? (
-                <BotaoLink
-                  href="/perfil/editar"
-                  variante="secundario"
-                  tamanho="sm"
-                >
+                <BotaoLink href="/perfil/editar" variante="secundario" tamanho="sm">
                   Editar
                 </BotaoLink>
               ) : (
-                <BotaoSeguir
-                  username={perfil.username}
-                  aoMudar={atualizarSeguidores}
-                  tamanho="sm"
-                />
+                <div className="flex gap-2">
+                  <BotaoSeguir
+                    username={perfil.username}
+                    aoMudar={atualizarSeguidores}
+                    tamanho="sm"
+                  />
+                  <BotaoLink
+                    href={`/mensagens/${encodeURIComponent(perfil.username)}`}
+                    variante={infoTroca ? "primario" : "secundario"}
+                    tamanho="sm"
+                  >
+                    {infoTroca ? "Propor troca" : "Mensagem"}
+                  </BotaoLink>
+                </div>
               )}
             </div>
           </div>
+
+          {/* Destaque de match de troca */}
+          {!souEu && infoTroca && (
+            <div className="mt-4 flex items-center gap-2 rounded-controle bg-troca-suave px-3 py-2 text-sm text-texto">
+              <Icone nome="trocar" tamanho={16} />
+              <span>
+                Vocês podem trocar:{" "}
+                <strong>{infoTroca.euEnsino}</strong>
+                {" ↔ "}
+                <strong>{infoTroca.elaEnsina}</strong>
+              </span>
+            </div>
+          )}
 
           <div className="mt-5 flex items-center justify-center gap-2 border-y border-linha bg-superficie-2/40 py-3">
             <Contador
@@ -274,9 +306,7 @@ export default function PerfilPage() {
         <SecaoHabilidades habilidades={perfil.habilidades} souEu={souEu} />
 
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold tracking-tight text-texto">
-            Posts
-          </h2>
+          <h2 className="text-lg font-semibold tracking-tight text-texto">Posts</h2>
 
           {carregandoPosts ? (
             <div className="space-y-4" aria-label="Carregando posts">

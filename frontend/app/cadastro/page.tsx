@@ -32,6 +32,7 @@ export default function CadastroPage() {
   const [erros, setErros] = useState<Erros>({});
   const [erroGeral, setErroGeral] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
+  const [usernameValido, setUsernameValido] = useState(false);
 
   useEffect(() => {
     if (temToken()) router.replace("/feed");
@@ -49,8 +50,10 @@ export default function CadastroPage() {
         ...atual,
         username: "use apenas letras sem acento, números ou _",
       }));
+      setUsernameValido(false);
     } else {
       limparErro("username");
+      setUsernameValido(PADRAO_USERNAME.test(novo));
     }
   }
 
@@ -142,13 +145,30 @@ export default function CadastroPage() {
             value={username}
             onChange={(e) => aoMudarUsername(e.target.value)}
             erro={erros.username}
-            dica="Use de 3 a 30 letras sem acento, números ou _"
+            dica={
+              usernameValido && !erros.username
+                ? undefined
+                : "De 3 a 30 caracteres: letras sem acento, números e _"
+            }
             autoComplete="username"
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
             maxLength={30}
             placeholder="ana_dev"
+            acao={
+              usernameValido && !erros.username ? (
+                <span aria-label="formato válido" className="text-sucesso">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="size-5">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+              ) : undefined
+            }
           />
 
           <CampoDeSenha
