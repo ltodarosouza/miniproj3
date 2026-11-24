@@ -27,8 +27,7 @@ export function ToqueDuplo({
   desativado?: boolean;
 }) {
   const toqueAnterior = useRef<PosicaoToque | null>(null);
-  const toqueDuploRecente = useRef(0);
-  const inicioToque = useRef<{ x: number; y: number } | null>(null);
+  const inicioToque = useRef<{ x: number; y: number; semSelecao: boolean } | null>(null);
   const coracaoRef = useRef<HTMLSpanElement>(null);
   const [disparo, setDisparo] = useState(0);
 
@@ -38,15 +37,32 @@ export function ToqueDuplo({
     setDisparo((atual) => atual + 1);
   }
 
+  function semSelecao() {
+    return window.getSelection()?.isCollapsed !== false;
+  }
+
+  function cancelarGesto() {
+    inicioToque.current = null;
+    toqueAnterior.current = null;
+  }
+
   function aoPointerDown(evento: React.PointerEvent<HTMLDivElement>) {
-    inicioToque.current = { x: evento.clientX, y: evento.clientY };
+    // Só o primeiro dedo conta: um segundo dedo (pinça) cancela o gesto.
+    if (!evento.isPrimary) {
+      cancelarGesto();
+      return;
+    }
+    inicioToque.current = { x: evento.clientX, y: evento.clientY, semSelecao: semSelecao() };
   }
 
   function aoPointerUp(evento: React.PointerEvent<HTMLDivElement>) {
+    if (!evento.isPrimary) return;
     const inicio = inicioToque.current;
     inicioToque.current = null;
-    const arrastou = inicio !== null && Math.hypot(evento.clientX - inicio.x, evento.clientY - inicio.y) > 10;
-    const selecionou = window.getSelection()?.isCollapsed === false;
+    // Sem pointerdown aqui dentro (arrasto que começou fora do post) não conta como toque.
+    const arrastou = !inicio || Math.hypot(evento.clientX - inicio.x, evento.clientY - inicio.y) > 10;
+    // Só descarta se a seleção de texto surgiu durante este gesto; uma seleção antiga em outro lugar da página não bloqueia.
+    const selecionou = inicio !== null && inicio.semSelecao && !semSelecao();
     if (desativado || arrastou || selecionou || comecouEmInterativo(evento.target, evento.currentTarget)) {
       toqueAnterior.current = null;
       return;
@@ -59,7 +75,6 @@ export function ToqueDuplo({
 
     if (anterior && agora - anterior.tempo <= 300 && distancia < 30) {
       toqueAnterior.current = null;
-      toqueDuploRecente.current = agora;
       dispararToqueDuplo();
       return;
     }
@@ -72,13 +87,6 @@ export function ToqueDuplo({
     if (evento.detail > 1 && !desativado && !comecouEmInterativo(evento.target, evento.currentTarget)) {
       evento.preventDefault();
     }
-  }
-
-  function aoDoubleClick(evento: React.MouseEvent<HTMLDivElement>) {
-    if (desativado || comecouEmInterativo(evento.target, evento.currentTarget)) return;
-    if (Date.now() - toqueDuploRecente.current < 400) return;
-    toqueDuploRecente.current = Date.now();
-    dispararToqueDuplo();
   }
 
   useEffect(() => {
@@ -109,8 +117,8 @@ export function ToqueDuplo({
       className={`relative touch-manipulation ${className ?? ""}`}
       onPointerDown={aoPointerDown}
       onPointerUp={aoPointerUp}
+      onPointerCancel={cancelarGesto}
       onMouseDown={aoMouseDown}
-      onDoubleClick={aoDoubleClick}
     >
       {children}
       {disparo > 0 && (
