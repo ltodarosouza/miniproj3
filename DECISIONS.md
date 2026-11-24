@@ -742,4 +742,8 @@ contra a versão que percorre todos os usuários.
   dentro dos 80% centrais, então o mesmo 512 serve para `any` e `maskable`.
 - **O que cortamos e por quê:** um ícone novo mais marcante ficaria para uma
   decisão de marca do time, não desta correção. O script de geração não foi
-  versionado: são só dois arquivos, e o comando está aqui.
+  versionado: são só dois arquivos. Para refazer, renderize o `icon.svg` com
+  `resvg_py.svg_to_bytes(svg_path="frontend/app/icon.svg", width=N, height=N)`
+  em 16, 32 e 48; salve o de 32 como `frontend/public/icone-32.png` e junte os
+  três com Pillow em `frontend/app/favicon.ico`
+  (`img48.save(..., format="ICO", sizes=[(16,16),(32,32),(48,48)])`).
