@@ -59,7 +59,7 @@ export function ListaConversas({ ativa, naoLidas }: { ativa?: string; naoLidas: 
 
   return (
     <section className="flex h-full min-h-0 flex-col" aria-label="Lista de conversas">
-      <header className="shrink-0 border-b border-linha px-5 py-5">
+      <header className="flex h-16 shrink-0 items-center border-b border-linha px-5">
         <h1 className="text-lg font-semibold tracking-tight text-texto">Mensagens</h1>
       </header>
       {conversas.length > 0 && <ConviteAvisos temConversas />}
