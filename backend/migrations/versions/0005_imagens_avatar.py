@@ -21,10 +21,11 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('nome')
     )
     with op.batch_alter_table('imagens_avatar', schema=None) as batch_op:
-        batch_op.create_index('ix_imagens_avatar_usuario_id', ['usuario_id'], unique=False)
+        batch_op.create_index('ix_imagens_avatar_usuario_id', ['usuario_id'], unique=True)
 
 
 def downgrade() -> None:
+    op.execute("UPDATE users SET avatar_url = '' WHERE avatar_url LIKE '/usuarios/avatares/%'")
     with op.batch_alter_table('imagens_avatar', schema=None) as batch_op:
         batch_op.drop_index('ix_imagens_avatar_usuario_id')
 

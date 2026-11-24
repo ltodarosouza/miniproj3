@@ -11,7 +11,7 @@ class ImagemAvatar(Base):
     __tablename__ = "imagens_avatar"
 
     nome: Mapped[str] = mapped_column(String(40), primary_key=True)
-    usuario_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True, unique=True)
     tipo: Mapped[str] = mapped_column(String(20))
     conteudo: Mapped[bytes] = mapped_column(LargeBinary)
     created_at: Mapped[datetime] = mapped_column(default=agora_utc)
