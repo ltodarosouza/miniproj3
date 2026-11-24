@@ -65,6 +65,15 @@ async def enviar_imagem(
     return ImagemOut(imagem_url=await imagens.salvar(db, eu, post_id, arquivo))
 
 
+@router.delete("/{post_id}/imagem", status_code=status.HTTP_204_NO_CONTENT, tags=["imagens"])
+def remover_imagem(
+    post_id: int,
+    db: Session = Depends(get_db),
+    eu: User = Depends(get_current_user),
+) -> None:
+    imagens.remover(db, eu, post_id)
+
+
 @router.post(
     "/{post_id}/curtir",
     status_code=status.HTTP_204_NO_CONTENT,

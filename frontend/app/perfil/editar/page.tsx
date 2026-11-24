@@ -1,14 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { EditorHabilidades } from "@/components/perfil/EditorHabilidades";
 import { Botao, BotaoLink } from "@/components/ui/Botao";
+import { Avatar } from "@/components/ui/Avatar";
 import { Cartao } from "@/components/ui/Cartao";
-import { AreaTexto, Campo } from "@/components/ui/Campo";
+import { AreaTexto } from "@/components/ui/Campo";
 import { ErroApi, eu } from "@/lib/api";
-import { atualizarPerfil, buscarPerfil, type Perfil } from "@/lib/perfil";
+import { atualizarPerfil, buscarPerfil, enviarAvatar, removerAvatar, type Perfil } from "@/lib/perfil";
+import { LADO_MAXIMO_AVATAR, prepararImagem } from "@/lib/imagens";
 import { temToken } from "@/lib/sessao";
 
 export default function EditarPerfilPage() {
@@ -18,6 +20,10 @@ export default function EditarPerfilPage() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
+  const [alterandoFoto, setAlterandoFoto] = useState(false);
+  const inputFoto = useRef<HTMLInputElement>(null);
+  const avatarUrlAtual = useRef(avatarUrl);
+  const operacaoFoto = useRef(0);
   const [erro, setErro] = useState<string | null>(null);
   const [salvo, setSalvo] = useState(false);
 
@@ -33,6 +39,7 @@ export default function EditarPerfilPage() {
         setPerfil(p);
         setBio(p.bio);
         setAvatarUrl(p.avatar_url);
+        avatarUrlAtual.current = p.avatar_url;
         setCarregando(false);
       })
       .catch((err) => {
@@ -61,15 +68,13 @@ export default function EditarPerfilPage() {
     setSalvo(false);
     setSalvando(true);
 
-    const dados: { bio?: string; avatar_url?: string } = {};
+    const dados: { bio?: string } = {};
     if (bio !== perfil.bio) dados.bio = bio;
-    if (avatarUrl !== perfil.avatar_url) dados.avatar_url = avatarUrl;
 
     try {
       const atualizado = await atualizarPerfil(dados);
-      setPerfil(atualizado);
+      setPerfil({ ...atualizado, avatar_url: avatarUrlAtual.current });
       setBio(atualizado.bio);
-      setAvatarUrl(atualizado.avatar_url);
       setSalvo(true);
     } catch (err) {
       setErro(
@@ -77,6 +82,44 @@ export default function EditarPerfilPage() {
       );
     } finally {
       setSalvando(false);
+    }
+  }
+
+  async function escolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const arquivo = e.target.files?.[0];
+    if (!arquivo) return;
+    const operacao = ++operacaoFoto.current;
+    setErro(null);
+    setAlterandoFoto(true);
+    try {
+      const preparada = await prepararImagem(arquivo, { ladoMaximo: LADO_MAXIMO_AVATAR });
+      const url = await enviarAvatar(preparada);
+      if (operacao === operacaoFoto.current) {
+        avatarUrlAtual.current = url;
+        setAvatarUrl(url);
+      }
+    } catch (err) {
+      setErro(err instanceof ErroApi ? err.message : err instanceof Error ? err.message : "Não consegui enviar a foto.");
+    } finally {
+      e.target.value = "";
+      setAlterandoFoto(false);
+    }
+  }
+
+  async function apagarFoto() {
+    const operacao = ++operacaoFoto.current;
+    setErro(null);
+    setAlterandoFoto(true);
+    try {
+      await removerAvatar();
+      if (operacao === operacaoFoto.current) {
+        avatarUrlAtual.current = "";
+        setAvatarUrl("");
+      }
+    } catch (err) {
+      setErro(err instanceof ErroApi ? err.message : err instanceof Error ? err.message : "Não consegui remover a foto.");
+    } finally {
+      setAlterandoFoto(false);
     }
   }
 
@@ -125,15 +168,22 @@ export default function EditarPerfilPage() {
               placeholder="Conte um pouco sobre você e o que quer aprender..."
               dica="Máximo de 280 caracteres"
             />
-            <Campo
-              rotulo="URL do avatar"
-              type="url"
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              placeholder="https://..."
-              dica="Imagem quadrada, preferencialmente 400×400"
-            />
-            {erro && <p role="alert" className="text-sm text-perigo">{erro}</p>}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-texto">Foto de perfil</h3>
+              <div className="flex items-center gap-4">
+                <Avatar tamanho="lg" nome={perfil.name} url={avatarUrl} />
+                <div className="flex flex-wrap gap-3">
+                  <input ref={inputFoto} type="file" accept="image/*" className="sr-only" onChange={escolherFoto} />
+                  <Botao type="button" variante="secundario" disabled={alterandoFoto} onClick={() => inputFoto.current?.click()}>
+                    {avatarUrl ? "Trocar foto" : "Escolher foto"}
+                  </Botao>
+                  {avatarUrl && <Botao type="button" variante="fantasma" disabled={alterandoFoto} onClick={apagarFoto}>Remover foto</Botao>}
+                </div>
+              </div>
+              <p className="text-sm text-texto-2">JPG, PNG ou WebP. A gente reduz o tamanho automaticamente.</p>
+              {alterandoFoto && <p role="status" className="text-sm text-texto-2">Enviando foto…</p>}
+              {erro && <p role="alert" className="text-sm text-perigo">{erro}</p>}
+            </div>
             {salvo && <p role="status" className="text-sm text-sucesso">Perfil salvo.</p>}
             <div className="flex flex-wrap gap-3">
               <Botao type="submit" variante="secundario" carregando={salvando}>Salvar perfil</Botao>

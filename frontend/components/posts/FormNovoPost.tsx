@@ -13,6 +13,7 @@ import { Botao } from "@/components/ui/Botao";
 import { Cartao } from "@/components/ui/Cartao";
 import { Icone } from "@/components/ui/Icone";
 import { ErroApi } from "@/lib/api";
+import { prepararImagem } from "@/lib/imagens";
 import {
   criarPost,
   enviarImagem,
@@ -43,10 +44,14 @@ export function FormNovoPost({
   const [foto, setFoto] = useState<File | null>(null);
   const [urlPrevia, setUrlPrevia] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [preparandoFoto, setPreparandoFoto] = useState(false);
+  const [postFotoPendente, setPostFotoPendente] = useState<Post | null>(null);
+  const [reenviandoFoto, setReenviandoFoto] = useState(false);
   const [aberto, setAberto] = useState(false);
   const entradaFoto = useRef<HTMLInputElement>(null);
   const urlAtual = useRef("");
   const envioAtivo = useRef(false);
+  const selecaoFotoAtual = useRef(0);
 
   useEffect(() => {
     let ativo = true;
@@ -67,11 +72,21 @@ export function FormNovoPost({
       });
     return () => {
       ativo = false;
+      selecaoFotoAtual.current += 1;
       if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
+      urlAtual.current = "";
     };
   }, []);
 
+  function removerFotoEscolhida() {
+    // Durante um envio a foto não pode sumir: se falhar, é ela que será reenviada.
+    if (enviando || reenviandoFoto) return;
+    limparFoto();
+  }
+
   function limparFoto() {
+    selecaoFotoAtual.current += 1;
+    setPreparandoFoto(false);
     if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
     urlAtual.current = "";
     setUrlPrevia("");
@@ -80,21 +95,67 @@ export function FormNovoPost({
     if (entradaFoto.current) entradaFoto.current.value = "";
   }
 
-  function escolherFoto(evento: ChangeEvent<HTMLInputElement>) {
+  async function escolherFoto(evento: ChangeEvent<HTMLInputElement>) {
+    if (enviando || reenviandoFoto) return;
     const arquivo = evento.target.files?.[0] ?? null;
     evento.target.value = "";
+    const selecao = ++selecaoFotoAtual.current;
     setErroFoto("");
     if (!arquivo) return;
-    const mensagem = validarImagem(arquivo);
-    if (mensagem) {
-      setErroFoto(mensagem);
-      return;
+    setPreparandoFoto(true);
+    try {
+      const imagem = await prepararImagem(arquivo);
+      if (selecao !== selecaoFotoAtual.current) return;
+      const mensagem = validarImagem(imagem);
+      if (mensagem) {
+        setErroFoto(mensagem);
+        return;
+      }
+      if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
+      const url = URL.createObjectURL(imagem);
+      urlAtual.current = url;
+      setUrlPrevia(url);
+      setFoto(imagem);
+    } catch (erro) {
+      if (selecao === selecaoFotoAtual.current) {
+        setErroFoto(erro instanceof Error ? erro.message : "Não consegui preparar essa foto.");
+      }
+    } finally {
+      if (selecao === selecaoFotoAtual.current) setPreparandoFoto(false);
     }
-    if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
-    const url = URL.createObjectURL(arquivo);
-    urlAtual.current = url;
-    setUrlPrevia(url);
-    setFoto(arquivo);
+  }
+
+  async function tentarEnviarFotoNovamente() {
+    if (!postFotoPendente || !foto || preparandoFoto || reenviandoFoto) return;
+    const arquivo = foto;
+    setReenviandoFoto(true);
+    try {
+      const imagem_url = await enviarImagem(postFotoPendente.id, arquivo);
+      aoPublicar({ ...postFotoPendente, imagem_url });
+      concluirPublicacao();
+    } catch (erro) {
+      setAvisoFoto(
+        `Seu post foi publicado, mas a foto não subiu: ${erro instanceof ErroApi ? erro.message : "tente de novo mais tarde."}`,
+      );
+    } finally {
+      setReenviandoFoto(false);
+    }
+  }
+
+  function concluirPublicacao() {
+    setPostFotoPendente(null);
+    setAvisoFoto("");
+    setAberto(false);
+    setTexto("");
+    setHabilidadeId("");
+    setMinutos("");
+    limparFoto();
+  }
+
+  function seguirSemFoto() {
+    if (!postFotoPendente || preparandoFoto || reenviandoFoto) return;
+    aoPublicar(postFotoPendente);
+    concluirPublicacao();
   }
 
   function alterarMinutos(valor: string) {
@@ -113,7 +174,7 @@ export function FormNovoPost({
 
   async function publicar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    if (envioAtivo.current) return;
+    if (envioAtivo.current || preparandoFoto || postFotoPendente) return;
     const textoLimpo = texto.trim();
     const numeroMinutos = minutos ? Number(minutos) : null;
     const minutosInvalidos =
@@ -140,17 +201,15 @@ export function FormNovoPost({
         try {
           final = { ...post, imagem_url: await enviarImagem(post.id, foto) };
         } catch (erro) {
+          setPostFotoPendente(post);
           setAvisoFoto(
             `Seu post foi publicado, mas a foto não subiu: ${erro instanceof ErroApi ? erro.message : "tente de novo mais tarde."}`,
           );
+          return;
         }
       }
       aoPublicar(final);
-      setAberto(false);
-      setTexto("");
-      setHabilidadeId("");
-      setMinutos("");
-      limparFoto();
+      concluirPublicacao();
     } catch (erro) {
       setErroEnvio(
         erro instanceof ErroApi
@@ -178,6 +237,7 @@ export function FormNovoPost({
           maxLength={LIMITE_TEXTO_POST}
           placeholder="Conte um pouco sobre seus estudos..."
           value={texto}
+          disabled={Boolean(postFotoPendente)}
           onChange={(evento) => {
             setTexto(evento.target.value);
             setAvisoFoto("");
@@ -194,7 +254,7 @@ export function FormNovoPost({
               rotulo="Habilidade"
               value={habilidadeId}
               onChange={(evento) => setHabilidadeId(evento.target.value)}
-              disabled={!habilidadesCarregadas}
+              disabled={!habilidadesCarregadas || Boolean(postFotoPendente)}
               erro={erroHabilidades || undefined}
             >
               {!habilidadesCarregadas ? (
@@ -227,6 +287,7 @@ export function FormNovoPost({
               inputMode="numeric"
               value={minutos}
               onChange={(evento) => alterarMinutos(evento.target.value)}
+              disabled={Boolean(postFotoPendente)}
               erro={erroMinutos || undefined}
               dica={
                 minutosValidos
@@ -246,7 +307,8 @@ export function FormNovoPost({
               />
               <button
                 type="button"
-                onClick={limparFoto}
+                onClick={removerFotoEscolhida}
+                disabled={enviando || reenviandoFoto}
                 aria-label="Remover foto"
                 className="absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-full bg-superficie text-texto shadow-cartao ring-1 ring-linha transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
               >
@@ -257,7 +319,7 @@ export function FormNovoPost({
           <input
             ref={entradaFoto}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/*"
             className="sr-only"
             tabIndex={-1}
             aria-hidden="true"
@@ -268,16 +330,17 @@ export function FormNovoPost({
               type="button"
               variante="fantasma"
               tamanho="sm"
+              disabled={preparandoFoto || enviando || reenviandoFoto}
               onClick={() => entradaFoto.current?.click()}
             >
               <Icone nome="imagem" tamanho={17} />
-              {foto ? "Trocar foto" : "Adicionar foto"}
+              {preparandoFoto ? "Preparando foto…" : foto ? "Trocar foto" : "Adicionar foto"}
             </Botao>
             <Botao
               type="submit"
               magnetico
               carregando={enviando}
-              disabled={!texto.trim()}
+              disabled={!texto.trim() || preparandoFoto || Boolean(postFotoPendente)}
             >
               Publicar
             </Botao>
@@ -293,9 +356,19 @@ export function FormNovoPost({
             </p>
           )}
           {avisoFoto && (
-            <p role="alert" className="text-sm text-perigo">
-              {avisoFoto}
-            </p>
+            <div>
+              <p role="alert" className="text-sm text-perigo">{avisoFoto}</p>
+              {postFotoPendente && foto && (
+                <Botao type="button" variante="fantasma" tamanho="sm" disabled={preparandoFoto || reenviandoFoto} carregando={reenviandoFoto} onClick={tentarEnviarFotoNovamente}>
+                  Tentar enviar a foto de novo
+                </Botao>
+              )}
+              {postFotoPendente && (
+                <Botao type="button" variante="fantasma" tamanho="sm" disabled={preparandoFoto || reenviandoFoto} onClick={seguirSemFoto}>
+                  Seguir sem foto
+                </Botao>
+              )}
+            </div>
           )}
         </div>
       </form>

@@ -4,7 +4,8 @@ Toda feature nova imita este caminho. 1 arquivo por router — registre o seu
 com uma linha em main.py.
 """
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, UploadFile, status
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.core.contadores import contador_iniciais
@@ -21,9 +22,32 @@ from app.schemas.user import (
     UserOut,
     UserPage,
 )
+from app.services import avatares
 from app.services import users as service
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
+
+
+@router.post("/eu/avatar")
+async def enviar_avatar(
+    arquivo: UploadFile,
+    db: Session = Depends(get_db),
+    eu: User = Depends(get_current_user),
+) -> dict[str, str]:
+    return {"avatar_url": await avatares.salvar(db, eu, arquivo)}
+
+
+@router.delete("/eu/avatar", status_code=status.HTTP_204_NO_CONTENT)
+def remover_avatar(
+    db: Session = Depends(get_db),
+    eu: User = Depends(get_current_user),
+) -> None:
+    avatares.remover(db, eu)
+
+
+@router.get("/avatares/{nome}", tags=["imagens"])
+def ver_avatar(nome: str, db: Session = Depends(get_db)) -> Response:
+    return avatares.servir(db, nome)
 
 
 @router.get("", response_model=UserPage)

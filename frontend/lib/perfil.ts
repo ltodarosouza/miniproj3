@@ -1,4 +1,4 @@
-import { apiGet, apiPatch, apiPut, type Page, type User } from "@/lib/api";
+import { apiDelete, apiGet, apiPatch, apiPost, apiPut, type Page, type User } from "@/lib/api";
 import { type Post } from "@/lib/posts";
 
 export type TipoHabilidade = "sei" | "quero_aprender";
@@ -39,6 +39,17 @@ export function buscarPerfil(username: string): Promise<Perfil> {
 
 export function atualizarPerfil(dados: PerfilUpdate): Promise<Perfil> {
   return apiPatch<Perfil>("/usuarios/eu", dados);
+}
+
+export async function enviarAvatar(arquivo: File): Promise<string> {
+  const corpo = new FormData();
+  corpo.append("arquivo", arquivo);
+  const resposta = await apiPost<{ avatar_url: string }>("/usuarios/eu/avatar", corpo);
+  return resposta.avatar_url;
+}
+
+export function removerAvatar(): Promise<void> {
+  return apiDelete("/usuarios/eu/avatar");
 }
 
 export function listarPostsDoUsuario(
