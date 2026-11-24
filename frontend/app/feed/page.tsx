@@ -12,7 +12,8 @@ import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { Icone } from "@/components/ui/Icone";
 import { PuxarParaAtualizar } from "@/components/ui/PuxarParaAtualizar";
 import { Revelar } from "@/components/ui/Revelar";
-import { listarMatches, type Match } from "@/lib/api";
+import { EsqueletoPost } from "@/components/ui/Esqueleto";
+import { listarMatches, type Match, type Page } from "@/lib/api";
 import {
   listarEmAlta,
   listarFeed,
@@ -24,7 +25,11 @@ import {
 } from "@/lib/posts";
 import { meuId } from "@/lib/sessao";
 
-const POR_PAGINA = 10;
+const POR_PAGINA = 20;
+// Pede a próxima página quando faltam umas duas telas para o fim da lista.
+const ANTECIPAR_CARREGAMENTO = "1500px 0px";
+// Os cartões começam a animar um pouco antes de entrar na tela.
+const ANTECIPAR_ANIMACAO = "200px";
 const PESSOAS_NA_LATERAL = 5;
 const CARROSSEL_DEPOIS_DO = 3;
 
@@ -51,25 +56,41 @@ function Feed() {
   const [pessoas, setPessoas] = useState<Match[] | null>(null);
   const [emAlta, setEmAlta] = useState<HabilidadeEmAlta[] | null>(null);
   const [progresso, setProgresso] = useState<MeuProgresso | null>(null);
+  const [tamanhoPrimeiraPagina, setTamanhoPrimeiraPagina] = useState(0);
   const sentinela = useRef<HTMLDivElement>(null);
   const buscando = useRef(false);
   const geracao = useRef(0);
+  // Próxima página já pedida em segundo plano, para aparecer na hora quando a pessoa chegar lá.
+  const reserva = useRef<{ offset: number; geracao: number; pagina: Promise<Page<ItemFeed>> } | null>(null);
 
   const buscar = useCallback(async (offset: number) => {
     // Recomeçar do topo invalida qualquer "carregar mais" em andamento.
     if (offset === 0) geracao.current += 1;
     const minha = geracao.current;
     buscando.current = true;
+    const guardada = reserva.current;
+    reserva.current = null;
     try {
-      const pagina = await listarFeed(offset, POR_PAGINA);
+      const pagina =
+        guardada && guardada.offset === offset && guardada.geracao === minha
+          ? await guardada.pagina
+          : await listarFeed(offset, POR_PAGINA);
       if (minha !== geracao.current) return;
       setItens((atuais) => {
         if (offset === 0) return pagina.items;
         const ids = new Set(atuais.map((i) => i.id));
         return [...atuais, ...pagina.items.filter((i) => !ids.has(i.id))];
       });
+      if (offset === 0) setTamanhoPrimeiraPagina(pagina.items.length);
       setTotal(pagina.total);
       setErro(false);
+      const proximo = offset + pagina.items.length;
+      if (pagina.items.length > 0 && proximo < pagina.total) {
+        const promessa = listarFeed(proximo, POR_PAGINA);
+        // Uma falha aqui só aparece se a pessoa chegar a precisar desta página.
+        promessa.catch(() => undefined);
+        reserva.current = { offset: proximo, geracao: minha, pagina: promessa };
+      }
     } catch {
       if (minha === geracao.current) setErro(true);
     } finally {
@@ -126,7 +147,7 @@ function Feed() {
       ([entrada]) => {
         if (entrada.isIntersecting) carregarMais();
       },
-      { rootMargin: "600px 0px" },
+      { rootMargin: ANTECIPAR_CARREGAMENTO },
     );
     observador.observe(alvo);
     return () => observador.disconnect();
@@ -207,7 +228,10 @@ function Feed() {
           {itens.map((item, i) => (
             <Fragment key={item.id}>
               <li>
-                <Revelar atraso={Math.min(i, 6) * 40}>
+                <Revelar
+                  atraso={i < tamanhoPrimeiraPagina ? Math.min(i, 6) * 40 : 0}
+                  antecipacao={ANTECIPAR_ANIMACAO}
+                >
                   {item.motivo === "descobrir" && <Descoberta titulo="Estuda o mesmo que você" />}
                   <CartaoPost post={item} podeEnsinar={item.motivo === "pode_te_ensinar"} aoApagar={aoApagar} />
                 </Revelar>
@@ -225,8 +249,13 @@ function Feed() {
           </div>
         )}
         {temMais && !erro && (
-          <div ref={sentinela} className="flex justify-center py-2" aria-live="polite">
-            {carregandoMais && <span className="text-sm text-texto-3">Carregando mais posts…</span>}
+          <div ref={sentinela} aria-live="polite">
+            {carregandoMais && (
+              <>
+                <EsqueletoPost />
+                <span className="sr-only">Carregando mais posts…</span>
+              </>
+            )}
           </div>
         )}
         {!temMais && itens.length > POR_PAGINA && (

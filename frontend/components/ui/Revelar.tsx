@@ -7,13 +7,15 @@ import { useVisivel } from "@/lib/movimento";
 export function Revelar({
   children,
   atraso = 0,
+  antecipacao,
   className = "",
 }: {
   children: ReactNode;
   atraso?: number;
+  antecipacao?: string;
   className?: string;
 }) {
-  const [ref, visivel] = useVisivel<HTMLDivElement>();
+  const [ref, visivel] = useVisivel<HTMLDivElement>({ antecipacao });
 
   return (
     <div
