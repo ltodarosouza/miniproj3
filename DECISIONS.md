@@ -687,8 +687,11 @@ contra a versão que percorre todos os usuários.
 - **Opções:** ajustar cada caso com valores soltos, ou fixar algumas regras
   e corrigir pelos tokens que já existem.
 - **Escolha:**
-  - Na navegação lateral, todo ícone fica numa caixa `size-9` encostada na
-    borda interna, e todos os rótulos começam na mesma coluna (`gap-3`).
+  - Na navegação lateral, o logo, os itens do menu, o tema e o Sair têm o
+    ícone numa caixa `size-9` encostada na borda interna, e os rótulos
+    começam na mesma coluna (`gap-3`). "Publicar" é um botão e continua
+    centralizado. A nav rola por dentro quando falta altura, para o Sair
+    nunca sair da tela.
   - Item de lista com fundo próprio (não lida, hover) usa margem negativa
     igual ao padding (`-mx-3` com `p-3`, como o `-mx-2 px-2` de Em alta), para
     o conteúdo ficar na coluna dos títulos.
