@@ -101,6 +101,7 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, aoApagar }: { p
   }
 
   return (
+    <ToqueDuplo desativado={editando} aoToqueDuplo={() => { if (!curtido) void alternarCurtida(); }}>
     <Cartao interativo className="p-5">
       <article>
         <header className="flex items-center gap-3">
@@ -134,7 +135,7 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, aoApagar }: { p
             }}
           />
         ) : (
-        <ToqueDuplo aoToqueDuplo={() => { if (!curtido) void alternarCurtida(); }}>
+        <>
         <p className="mt-4 max-w-[65ch] whitespace-pre-line text-[0.9375rem] leading-relaxed text-texto">
           {post.texto}
         </p>
@@ -161,7 +162,7 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, aoApagar }: { p
             className="mt-4 max-h-96 w-full rounded-controle object-cover ring-1 ring-linha"
           />
         )}
-        </ToqueDuplo>
+        </>
         )}
 
         <footer ref={rodape} className="mt-3 -ml-2.5 flex flex-wrap items-center gap-1">
@@ -250,5 +251,6 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, aoApagar }: { p
         </footer>
       </article>
     </Cartao>
+    </ToqueDuplo>
   );
 }

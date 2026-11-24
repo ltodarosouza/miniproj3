@@ -7,14 +7,24 @@ import { Icone } from "./Icone";
 
 type PosicaoToque = { tempo: number; x: number; y: number };
 
+const INTERATIVOS = "a, button, input, textarea, select, label, [role=button], [contenteditable=true], [data-sem-toque-duplo]";
+
+function comecouEmInterativo(alvo: EventTarget | null, raiz: HTMLElement) {
+  if (!(alvo instanceof Element)) return false;
+  const interativo = alvo.closest(INTERATIVOS);
+  return interativo !== null && raiz.contains(interativo);
+}
+
 export function ToqueDuplo({
   aoToqueDuplo,
   children,
   className,
+  desativado = false,
 }: {
   aoToqueDuplo: () => void;
   children: React.ReactNode;
   className?: string;
+  desativado?: boolean;
 }) {
   const toqueAnterior = useRef<PosicaoToque | null>(null);
   const toqueDuploRecente = useRef(0);
@@ -28,6 +38,10 @@ export function ToqueDuplo({
   }
 
   function aoPointerUp(evento: React.PointerEvent<HTMLDivElement>) {
+    if (desativado || comecouEmInterativo(evento.target, evento.currentTarget)) {
+      toqueAnterior.current = null;
+      return;
+    }
     const agora = Date.now();
     const anterior = toqueAnterior.current;
     const distancia = anterior
@@ -44,7 +58,15 @@ export function ToqueDuplo({
     toqueAnterior.current = { tempo: agora, x: evento.clientX, y: evento.clientY };
   }
 
-  function aoDoubleClick() {
+  function aoMouseDown(evento: React.MouseEvent<HTMLDivElement>) {
+    // Impede que o duplo clique selecione uma palavra, sem bloquear a seleção arrastando o mouse.
+    if (evento.detail > 1 && !desativado && !comecouEmInterativo(evento.target, evento.currentTarget)) {
+      evento.preventDefault();
+    }
+  }
+
+  function aoDoubleClick(evento: React.MouseEvent<HTMLDivElement>) {
+    if (desativado || comecouEmInterativo(evento.target, evento.currentTarget)) return;
     if (Date.now() - toqueDuploRecente.current < 400) return;
     toqueDuploRecente.current = Date.now();
     dispararToqueDuplo();
@@ -75,8 +97,9 @@ export function ToqueDuplo({
 
   return (
     <div
-      className={`relative touch-manipulation select-none ${className ?? ""}`}
+      className={`relative touch-manipulation ${className ?? ""}`}
       onPointerUp={aoPointerUp}
+      onMouseDown={aoMouseDown}
       onDoubleClick={aoDoubleClick}
     >
       {children}
