@@ -640,11 +640,17 @@ contra a versão que percorre todos os usuários.
   - `prepararImagem()` em `lib/imagens.ts` redimensiona no canvas (lado maior
     1600 px no post, 512 px no avatar) e exporta webp/jpeg abaixo de 2 MB. O
     servidor mantém o limite de 2 MB.
-  - O backend reconhece o tipo pelo `content-type` quando a extensão falta.
-  - Avatar guardado como bytes na tabela `imagens_avatar` (migração 0005),
+  - O backend ignora o nome e o `content-type` enviados: decodifica a imagem
+    com Pillow (JPEG, PNG ou WebP, até 40 MP) e grava o formato detectado.
+    Arquivo truncado ou corrompido dá 422 e não substitui a foto anterior. As
+    rotas que servem imagens enviam `X-Content-Type-Options: nosniff`.
+  - Avatar guardado como bytes na tabela `imagens_avatar` (migração 0005, um
+    por usuário; o downgrade limpa os `avatar_url` internos),
     mesmo padrão da decisão 19: `POST`/`DELETE /usuarios/eu/avatar` e
     `GET /usuarios/avatares/{nome}` com cache de um ano.
   - `DELETE /posts/{id}/imagem`; o editor do post adiciona, troca e remove a
     foto ao salvar.
-- **O que cortamos e por quê:** Pillow no servidor (dependência nova e CPU no
-  plano grátis do Render); recorte do avatar (o `object-cover` já centraliza).
+- **O que cortamos e por quê:** redimensionar no servidor (a compressão fica
+  no navegador; o Pillow só valida, e o limite de 2 MB mantém o custo baixo);
+  recorte do avatar (o `object-cover` já centraliza); limite do corpo antes do
+  parser multipart (exige middleware global, fora da #59).
