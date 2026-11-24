@@ -78,6 +78,12 @@ export function FormNovoPost({
     };
   }, []);
 
+  function removerFotoEscolhida() {
+    // Durante um envio a foto não pode sumir: se falhar, é ela que será reenviada.
+    if (enviando || reenviandoFoto) return;
+    limparFoto();
+  }
+
   function limparFoto() {
     selecaoFotoAtual.current += 1;
     setPreparandoFoto(false);
@@ -90,6 +96,7 @@ export function FormNovoPost({
   }
 
   async function escolherFoto(evento: ChangeEvent<HTMLInputElement>) {
+    if (enviando || reenviandoFoto) return;
     const arquivo = evento.target.files?.[0] ?? null;
     evento.target.value = "";
     const selecao = ++selecaoFotoAtual.current;
@@ -119,10 +126,11 @@ export function FormNovoPost({
   }
 
   async function tentarEnviarFotoNovamente() {
-    if (!postFotoPendente || !foto || reenviandoFoto) return;
+    if (!postFotoPendente || !foto || preparandoFoto || reenviandoFoto) return;
+    const arquivo = foto;
     setReenviandoFoto(true);
     try {
-      const imagem_url = await enviarImagem(postFotoPendente.id, foto);
+      const imagem_url = await enviarImagem(postFotoPendente.id, arquivo);
       aoPublicar({ ...postFotoPendente, imagem_url });
       concluirPublicacao();
     } catch (erro) {
@@ -145,7 +153,7 @@ export function FormNovoPost({
   }
 
   function seguirSemFoto() {
-    if (!postFotoPendente) return;
+    if (!postFotoPendente || preparandoFoto || reenviandoFoto) return;
     aoPublicar(postFotoPendente);
     concluirPublicacao();
   }
@@ -299,7 +307,8 @@ export function FormNovoPost({
               />
               <button
                 type="button"
-                onClick={limparFoto}
+                onClick={removerFotoEscolhida}
+                disabled={enviando || reenviandoFoto}
                 aria-label="Remover foto"
                 className="absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-full bg-superficie text-texto shadow-cartao ring-1 ring-linha transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
               >
@@ -321,7 +330,7 @@ export function FormNovoPost({
               type="button"
               variante="fantasma"
               tamanho="sm"
-              disabled={preparandoFoto || enviando}
+              disabled={preparandoFoto || enviando || reenviandoFoto}
               onClick={() => entradaFoto.current?.click()}
             >
               <Icone nome="imagem" tamanho={17} />
@@ -350,12 +359,12 @@ export function FormNovoPost({
             <div>
               <p role="alert" className="text-sm text-perigo">{avisoFoto}</p>
               {postFotoPendente && foto && (
-                <Botao type="button" variante="fantasma" tamanho="sm" disabled={reenviandoFoto} carregando={reenviandoFoto} onClick={tentarEnviarFotoNovamente}>
+                <Botao type="button" variante="fantasma" tamanho="sm" disabled={preparandoFoto || reenviandoFoto} carregando={reenviandoFoto} onClick={tentarEnviarFotoNovamente}>
                   Tentar enviar a foto de novo
                 </Botao>
               )}
               {postFotoPendente && (
-                <Botao type="button" variante="fantasma" tamanho="sm" disabled={reenviandoFoto} onClick={seguirSemFoto}>
+                <Botao type="button" variante="fantasma" tamanho="sm" disabled={preparandoFoto || reenviandoFoto} onClick={seguirSemFoto}>
                   Seguir sem foto
                 </Botao>
               )}
