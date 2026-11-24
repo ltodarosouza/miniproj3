@@ -41,8 +41,8 @@ function Recomendados() {
   }, []);
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <section className="rounded-cartao border border-linha bg-superficie p-4">
+    <div className="grid items-start gap-6 md:grid-cols-2">
+      <section className="rounded-cartao border border-linha bg-superficie p-4 shadow-cartao">
         <h2 className="mb-3 text-sm font-semibold text-texto">Pode te ensinar</h2>
         {pessoas === null ? (
           <p className="text-sm text-texto-3">Carregando…</p>
@@ -54,7 +54,7 @@ function Recomendados() {
           </p>
         )}
       </section>
-      <section className="rounded-cartao border border-linha bg-superficie p-4">
+      <section className="rounded-cartao border border-linha bg-superficie p-4 shadow-cartao">
         <h2 className="mb-3 text-sm font-semibold text-texto">Em alta esta semana</h2>
         {emAlta === null ? <p className="text-sm text-texto-3">Carregando…</p> : <EmAlta habilidades={emAlta} />}
       </section>
@@ -68,7 +68,7 @@ function Resultados({ resultado, aoApagar }: { resultado: ResultadoBusca; aoApag
   }
   if (resultado.tipo === "pessoas") {
     return (
-      <ul className="divide-y divide-linha rounded-cartao border border-linha bg-superficie">
+      <ul className="divide-y divide-linha rounded-cartao border border-linha bg-superficie shadow-cartao">
         {resultado.pessoas.map((p) => (
           <li key={p.id}>
             <Link
@@ -106,7 +106,7 @@ function Resultados({ resultado, aoApagar }: { resultado: ResultadoBusca; aoApag
         <li key={h.id}>
           <Link
             href={`/busca/habilidades/${h.id}`}
-            className="block rounded-cartao border border-linha bg-superficie p-4 transition-colors duration-[var(--rapido)] hover:border-marca motion-reduce:transition-none"
+            className="block rounded-cartao border border-linha bg-superficie p-4 shadow-cartao transition-colors duration-[var(--rapido)] hover:border-marca motion-reduce:transition-none"
           >
             <span className="block font-medium text-texto">{h.nome}</span>
             <span className="numeros text-sm text-texto-3">
