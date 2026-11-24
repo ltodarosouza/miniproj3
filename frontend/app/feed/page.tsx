@@ -159,6 +159,7 @@ function Feed() {
     void buscar(offset);
   }, [buscar]);
 
+  // proximoOffset nas dependências recria o observador a cada página, para disparar de novo se a sentinela ainda estiver na margem.
   useEffect(() => {
     const alvo = sentinela.current;
     if (!alvo || !temMais || erro) return;
@@ -170,7 +171,6 @@ function Feed() {
     );
     observador.observe(alvo);
     return () => observador.disconnect();
-    // proximoOffset recria o observador a cada página, para disparar de novo se a sentinela ainda estiver na margem.
   }, [temMais, erro, carregarMais, proximoOffset]);
 
   function tentarDeNovo() {
