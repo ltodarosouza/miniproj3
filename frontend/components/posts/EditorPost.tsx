@@ -152,6 +152,8 @@ export function EditorPost({
       onKeyDown={(evento) => {
         if (evento.key === "Escape") {
           evento.stopPropagation();
+          // Mesma regra do botão Cancelar: não fecha no meio de um salvamento.
+          if (salvando) return;
           if (salvoRef.current) aoSalvar(salvoRef.current);
           else aoCancelar();
         }
