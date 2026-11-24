@@ -30,11 +30,47 @@ from app.services.habilidades import garantir_catalogo
 SENHA_SEED = "senha-forte-123"
 SEMENTE = 42
 TOTAL_PARES = 16
+TOTAL_POSTS_DE_PROGRESSO = 10
+RETRATOS = "https://randomuser.me/api/portraits/{genero}/{numero}.jpg"
+FRACAO_COM_FOTO = 0.45
+UNSPLASH = "https://images.unsplash.com/photo-{}?w=800&q=80&auto=format&fit=crop"
+
+_IDS_POR_TEMA = {
+    "codigo": "1461749280684-dccba630e2f6 1515879218367-8466d910aaa4 1516116216624-53e697fedbea 1517694712202-14dd9538aa97 1555066931-4365d14bab8c 1607799279861-4dd421887fb3",
+    "python": "1526379095098-d400fd0bf935 1555066931-4365d14bab8c 1515879218367-8466d910aaa4",
+    "web": "1542831371-29b0f74f9713 1555949963-aa79dcee981c 1498050108023-c5249f4df085",
+    "design": "1561070791-2526d30994b5 1600132806370-bf17e65e942f",
+    "dados": "1551288049-bebda4e38f71 1627398242454-45a1465c2479 1544383835-bda2bc66a55d",
+    "infra": "1558494949-ef010cbdcc31 1518432031352-d6fc5c10da5a 1550751827-4bd374c3f58b 1504639725590-34d0984388bd",
+    "matematica": "1509228468518-180dd4864904 1635070041078-e363dbe005cb 1453733190371-0a9bedd82893 1606326608606-aa0b62935f2b",
+    "fisica": "1636466497217-26a8cbeaf0aa 1532094349884-543bc11b234d",
+    "estudo": "1434030216411-0b793f4b4173 1453928582365-b6ad33cbcf64 1456513080510-7bf3a84b82f8 1488190211105-8b0e65b80b4e 1497633762265-9d179a990aa6 1501504905252-473c47e087f8 1503676260728-1c00da094a0b 1513258496099-48168024aec0 1522202176988-66273c2fd55f 1580894894513-541e068a3e2b 1596495578065-6e0763fa1178",
+}
+FOTOS_POR_TEMA = {
+    tema: [UNSPLASH.format(id_foto) for id_foto in ids.split()]
+    for tema, ids in _IDS_POR_TEMA.items()
+}
+
+_HABILIDADES_POR_TEMA = {
+    "python": ["Python", "Pandas", "Django", "FastAPI", "Flask"],
+    "web": ["JavaScript", "TypeScript", "HTML", "CSS", "React", "Next.js", "Node.js", "Vue", "Angular"],
+    "design": ["Figma"],
+    "dados": ["SQL", "PostgreSQL", "MongoDB", "Banco de Dados", "Machine Learning", "Probabilidade e Estatística"],
+    "infra": ["Git", "GitHub", "Docker", "Linux", "AWS", "Redes de Computadores", "Sistemas Operacionais"],
+    "matematica": ["Cálculo 1", "Cálculo 2", "Álgebra Linear", "Matemática Discreta"],
+    "fisica": ["Física 1"],
+    "codigo": ["Java", "C", "C++", "C#", "Go", "Rust", "PHP", "Kotlin", "Swift", "Spring", "Testes automatizados", "Estrutura de Dados", "Algoritmos", "Programação Orientada a Objetos", "Engenharia de Software"],
+}
+TEMA_POR_HABILIDADE = {
+    habilidade: tema
+    for tema, habilidades in _HABILIDADES_POR_TEMA.items()
+    for habilidade in habilidades
+}
 
 CONTAS_FIXAS = [
-    ("ada", "Ada Lovelace", "a primeira a programar"),
-    ("linus", "Linus Torvalds", "just for fun"),
-    ("grace", "Grace Hopper", "caçadora de bugs literais"),
+    ("ada", "Ada Lovelace", "a primeira a programar", "women"),
+    ("linus", "Linus Torvalds", "just for fun", "men"),
+    ("grace", "Grace Hopper", "caçadora de bugs literais", "women"),
 ]
 
 PARES_DE_TROCA = [
@@ -77,6 +113,16 @@ ROTINAS = [
     "Hoje o {hab} venceu: {min} minutos e ainda não entendi. Amanhã eu volto.",
 ]
 
+PROGRESSOS = [
+    "Meu caderno depois de {min} minutos de {hab}. Agora vai.",
+    "Montei meu cantinho de estudo para {hab}: {min} minutos hoje.",
+    "Print do que eu fiz em {hab} hoje, {min} min.",
+    "Registrei meus {min} minutos de {hab}. Aos poucos está saindo.",
+    "Mais uma página de {hab} no caderno depois de {min} minutos.",
+    "Meu progresso em {hab} hoje: {min} minutos focado.",
+    "Separei {min} minutos para {hab} e deixei tudo anotado.",
+]
+
 COMENTARIOS = [
     "Boa! Continua assim.",
     "Também travei nessa parte, depois me conta como resolveu.",
@@ -104,6 +150,15 @@ def _hash(senha: str) -> str:
     return bcrypt.hashpw(senha.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
+def _avatar(genero: str, numero: int) -> str:
+    return RETRATOS.format(genero=genero, numero=numero)
+
+
+def _foto_do_post(nome_habilidade: str | None, sorteio: random.Random) -> str:
+    tema = TEMA_POR_HABILIDADE.get(nome_habilidade, "estudo")
+    return sorteio.choice(FOTOS_POR_TEMA[tema])
+
+
 def _username(nome: str, usados: set[str]) -> str:
     sem_acento = unicodedata.normalize("NFKD", nome).encode("ascii", "ignore").decode()
     partes = re.sub(r"[^a-z ]", "", sem_acento.lower()).split()
@@ -117,19 +172,34 @@ def _username(nome: str, usados: set[str]) -> str:
 
 def _criar_usuarios(db: Session, fake: Faker, sorteio: random.Random) -> list[User]:
     senha = _hash(SENHA_SEED)
-    usados = {username for username, _, _ in CONTAS_FIXAS}
-    usuarios = [
-        User(username=username, name=nome, bio=bio, password_hash=senha)
-        for username, nome, bio in CONTAS_FIXAS
-    ]
+    usados = {username for username, _, _, _ in CONTAS_FIXAS}
+    numeros = {genero: sorteio.sample(range(100), 100) for genero in ("women", "men")}
+    usuarios = []
+    for username, nome, bio, genero in CONTAS_FIXAS:
+        usuarios.append(
+            User(
+                username=username,
+                name=nome,
+                bio=bio,
+                password_hash=senha,
+                avatar_url=_avatar(genero, numeros[genero].pop()),
+            )
+        )
     while len(usuarios) < TOTAL_PARES * 2:
-        nome = fake.unique.first_name() + " " + fake.last_name()
+        genero = sorteio.choice(("women", "men"))
+        primeiro_nome = (
+            fake.unique.first_name_female()
+            if genero == "women"
+            else fake.unique.first_name_male()
+        )
+        nome = primeiro_nome + " " + fake.last_name()
         usuarios.append(
             User(
                 username=_username(nome, usados),
                 name=nome,
                 bio=sorteio.choice(BIOS),
                 password_hash=senha,
+                avatar_url=_avatar(genero, numeros[genero].pop()),
             )
         )
     db.add_all(usuarios)
@@ -196,6 +266,31 @@ def _momento_do_dia(dia: int, sorteio: random.Random) -> datetime:
     return meia_noite - timedelta(days=dia) + timedelta(hours=sorteio.randint(8, 20))
 
 
+def _criar_posts_de_progresso(
+    usuarios: list[User],
+    perfis: dict[int, tuple[set[int], set[int]]],
+    nomes: dict[int, str],
+    sorteio: random.Random,
+) -> list[Post]:
+    agora = agora_utc()
+    posts = []
+    for usuario in sorteio.sample(usuarios, TOTAL_POSTS_DE_PROGRESSO):
+        sei, quero = perfis[usuario.id]
+        habilidade_id = sorteio.choice(sorted(quero | sei))
+        minutos = sorteio.choice([15, 20, 25, 30, 45, 60, 90])
+        posts.append(
+            Post(
+                autor_id=usuario.id,
+                texto=sorteio.choice(PROGRESSOS).format(min=minutos, hab=nomes[habilidade_id]),
+                habilidade_id=habilidade_id,
+                minutos_estudados=minutos,
+                imagem_url=_foto_do_post(nomes[habilidade_id], sorteio),
+                created_at=agora - timedelta(minutes=sorteio.randint(10, 47 * 60)),
+            )
+        )
+    return posts
+
+
 def _criar_posts(
     db: Session,
     usuarios: list[User],
@@ -219,9 +314,15 @@ def _criar_posts(
                     texto=sorteio.choice(ROTINAS).format(min=minutos, hab=nomes[habilidade_id]),
                     habilidade_id=habilidade_id,
                     minutos_estudados=minutos,
+                    imagem_url=(
+                        _foto_do_post(nomes[habilidade_id], sorteio)
+                        if sorteio.random() < FRACAO_COM_FOTO
+                        else None
+                    ),
                     created_at=_momento_do_dia(dia, sorteio),
                 )
             )
+    posts.extend(_criar_posts_de_progresso(usuarios, perfis, nomes, sorteio))
     db.add_all(posts)
     db.flush()
     return posts
