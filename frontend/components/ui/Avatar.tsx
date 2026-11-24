@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 const TAMANHOS = { sm: "size-8 text-xs", md: "size-10 text-sm", lg: "size-16 text-xl" } as const;
 
 const MATIZES = [182, 160, 210, 55, 25, 280];
@@ -19,6 +23,9 @@ export function Avatar({
   tamanho?: keyof typeof TAMANHOS;
   online?: boolean;
 }) {
+  const [imagemFalhou, setImagemFalhou] = useState(false);
+  useEffect(() => setImagemFalhou(false), [url]);
+
   const h = matiz(nome);
   const iniciais = nome
     .split(" ")
@@ -26,11 +33,14 @@ export function Avatar({
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase())
     .join("");
+  const src = url?.startsWith("/")
+    ? `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}${url}`
+    : url;
 
   return (
     <span className={`relative inline-flex shrink-0 ${TAMANHOS[tamanho]}`}>
-      {url ? (
-        <img src={url} alt="" className="size-full rounded-full object-cover ring-1 ring-linha" />
+      {src && !imagemFalhou ? (
+        <img src={src} alt="" onError={() => setImagemFalhou(true)} className="size-full rounded-full object-cover ring-1 ring-linha" />
       ) : (
         <span
           className="flex size-full items-center justify-center rounded-full font-semibold"
