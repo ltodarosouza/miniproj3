@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 
 import { AreaTexto, Campo, Selecao } from "@/components/ui/Campo";
 import { Botao } from "@/components/ui/Botao";
+import { Icone } from "@/components/ui/Icone";
 import { ErroApi } from "@/lib/api";
+import { prepararImagem, removerImagemDoPost } from "@/lib/imagens";
 import {
   editarPost,
   habilidadesAgrupadas,
   LIMITE_MINUTOS,
   LIMITE_TEXTO_POST,
+  enviarImagem,
+  urlDaImagem,
+  validarImagem,
   type HabilidadesAgrupadas,
   type Post,
 } from "@/lib/posts";
@@ -30,7 +35,12 @@ export function EditorPost({
   const [erro, setErro] = useState("");
   const [semCatalogo, setSemCatalogo] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [foto, setFoto] = useState<File | null>(null);
+  const [urlPrevia, setUrlPrevia] = useState("");
+  const [removerFoto, setRemoverFoto] = useState(false);
   const formulario = useRef<HTMLFormElement>(null);
+  const entradaFoto = useRef<HTMLInputElement>(null);
+  const urlAtual = useRef("");
 
   useEffect(() => {
     const area = formulario.current?.querySelector("textarea");
@@ -45,6 +55,40 @@ export function EditorPost({
     };
   }, []);
 
+  useEffect(() => () => {
+    if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
+  }, []);
+
+  async function escolherFoto(evento: ChangeEvent<HTMLInputElement>) {
+    const arquivo = evento.target.files?.[0] ?? null;
+    evento.target.value = "";
+    setErro("");
+    if (!arquivo) return;
+    try {
+      const preparada = await prepararImagem(arquivo);
+      const mensagem = validarImagem(preparada);
+      if (mensagem) throw new Error(mensagem);
+      if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
+      const url = URL.createObjectURL(preparada);
+      urlAtual.current = url;
+      setUrlPrevia(url);
+      setFoto(preparada);
+      setRemoverFoto(false);
+    } catch (falha) {
+      setErro(falha instanceof Error ? falha.message : "Não foi possível preparar a foto.");
+    }
+  }
+
+  function limparFoto() {
+    if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
+    urlAtual.current = "";
+    setUrlPrevia("");
+    setFoto(null);
+    setRemoverFoto(true);
+    setErro("");
+    if (entradaFoto.current) entradaFoto.current.value = "";
+  }
+
   const numeroMinutos = minutos ? Number(minutos) : null;
   const minutosInvalidos =
     numeroMinutos !== null && (!Number.isInteger(numeroMinutos) || numeroMinutos < 1 || numeroMinutos > LIMITE_MINUTOS);
@@ -56,13 +100,25 @@ export function EditorPost({
     setSalvando(true);
     setErro("");
     try {
-      aoSalvar(
-        await editarPost(post.id, {
+      const salvo = await editarPost(post.id, {
           texto: textoLimpo,
           habilidade_id: habilidadeId ? Number(habilidadeId) : null,
           minutos_estudados: numeroMinutos,
-        }),
-      );
+        });
+      let final = salvo;
+      try {
+        if (foto) {
+          final = { ...salvo, imagem_url: await enviarImagem(post.id, foto) };
+        } else if (removerFoto) {
+          await removerImagemDoPost(post.id);
+          final = { ...salvo, imagem_url: null };
+        }
+      } catch (falhaFoto) {
+        // Mantém o editor aberto para a mensagem aparecer; salvar de novo só repete a foto.
+        setErro(`O texto foi salvo, mas não foi possível atualizar a foto: ${falhaFoto instanceof ErroApi ? falhaFoto.message : "tente de novo."}`);
+        return;
+      }
+      aoSalvar(final);
     } catch (falha) {
       setErro(falha instanceof ErroApi ? falha.message : "Não deu para salvar. Tente de novo.");
     } finally {
@@ -122,6 +178,36 @@ export function EditorPost({
           onChange={(evento) => setMinutos(evento.target.value)}
           erro={minutosInvalidos ? "Informe um número inteiro entre 1 e 1440." : undefined}
         />
+      </div>
+      <div className="space-y-2">
+        {(urlPrevia || (!removerFoto && post.imagem_url)) && (
+          <div className="relative">
+            <img
+              src={urlPrevia || urlDaImagem(post.imagem_url!)}
+              alt={urlPrevia ? "Prévia da nova foto" : "Foto atual"}
+              className="max-h-64 w-full rounded-controle object-cover ring-1 ring-linha"
+            />
+            <button
+              type="button"
+              onClick={limparFoto}
+              aria-label="Remover foto"
+              className="absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-full bg-superficie text-texto shadow-cartao ring-1 ring-linha transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
+            >
+              <Icone nome="fechar" tamanho={16} />
+            </button>
+          </div>
+        )}
+        <input ref={entradaFoto} type="file" accept="image/*" className="sr-only" onChange={escolherFoto} />
+        <div className="flex items-center gap-2">
+          <Botao type="button" variante="fantasma" tamanho="sm" onClick={() => entradaFoto.current?.click()} disabled={salvando}>
+            {(post.imagem_url && !removerFoto) || foto ? "Trocar foto" : "Adicionar foto"}
+          </Botao>
+          {((post.imagem_url && !removerFoto) || foto) && (
+            <Botao type="button" variante="fantasma" tamanho="sm" onClick={limparFoto} disabled={salvando}>
+              Remover foto
+            </Botao>
+          )}
+        </div>
       </div>
       {erro && <p role="alert" className="text-sm text-perigo">{erro}</p>}
       <div className="flex justify-end gap-2">
