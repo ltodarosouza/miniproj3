@@ -46,9 +46,9 @@ def retrato_do_seed():
     rodar_seed()
     with SessionLocal() as db:
         return (
-            [(u.username, u.name, u.bio) for u in db.scalars(select(User).order_by(User.id))],
+            [(u.username, u.name, u.bio, u.avatar_url) for u in db.scalars(select(User).order_by(User.id))],
             sorted((uh.usuario_id, uh.habilidade_id, uh.tipo, uh.nivel) for uh in db.scalars(select(UserHabilidade))),
-            [(p.autor_id, p.texto, p.habilidade_id) for p in db.scalars(select(Post).order_by(Post.id))],
+            [(p.autor_id, p.texto, p.habilidade_id, p.imagem_url) for p in db.scalars(select(Post).order_by(Post.id))],
             sorted((f.seguidor_id, f.seguido_id) for f in db.scalars(select(Follow))),
             [(t.proposta_por_id, t.com_id, t.status) for t in db.scalars(select(Troca).order_by(Troca.id))],
         )
@@ -95,3 +95,59 @@ def test_ninguem_curte_o_proprio_post(client):
             .where(Post.autor_id == Curtida.usuario_id)
         )
     assert proprias == 0
+
+
+def test_todo_usuario_do_seed_tem_avatar(client):
+    usuarios = rodar_seed()
+    avatares = [u.avatar_url for u in usuarios]
+    assert all(url and url.startswith("https://randomuser.me/api/portraits/") for url in avatares)
+    assert len(avatares) == len(set(avatares))
+
+
+def test_boa_parte_dos_posts_tem_foto(client):
+    from app.models.post import Post
+
+    rodar_seed()
+    fotos_validas = {url for urls in seed.FOTOS_POR_TEMA.values() for url in urls}
+    with SessionLocal() as db:
+        posts = list(db.scalars(select(Post)))
+    com_foto = [p for p in posts if p.imagem_url]
+    assert posts
+    assert len(com_foto) / len(posts) >= 0.40
+    assert all(p.imagem_url in fotos_validas for p in com_foto)
+
+
+def test_foto_do_post_combina_com_a_habilidade(client):
+    from app.models.habilidade import Habilidade
+    from app.models.post import Post
+    from app.services.habilidades import CATALOGO
+
+    rodar_seed()
+    nomes_catalogo = {nome for nome, _categoria in CATALOGO}
+    assert set(seed.TEMA_POR_HABILIDADE.values()) <= set(seed.FOTOS_POR_TEMA)
+    assert set(seed.TEMA_POR_HABILIDADE) <= nomes_catalogo
+    with SessionLocal() as db:
+        posts = list(db.scalars(select(Post).where(Post.imagem_url.is_not(None))))
+        habilidades = {h.id: h.nome for h in db.scalars(select(Habilidade))}
+    for post in posts:
+        nome = habilidades[post.habilidade_id] if post.habilidade_id is not None else None
+        tema = seed.TEMA_POR_HABILIDADE.get(nome, "estudo")
+        assert post.imagem_url in seed.FOTOS_POR_TEMA[tema]
+
+
+def test_seed_tem_posts_recentes_com_foto(client):
+    from datetime import timedelta
+
+    from app.core.tempo import agora_utc
+    from app.models.post import Post
+
+    rodar_seed()
+    agora = agora_utc()
+    with SessionLocal() as db:
+        recentes = db.scalar(
+            select(func.count())
+            .select_from(Post)
+            .where(Post.imagem_url.is_not(None))
+            .where(Post.created_at >= agora - timedelta(hours=48), Post.created_at <= agora)
+        )
+    assert recentes >= seed.TOTAL_POSTS_DE_PROGRESSO
