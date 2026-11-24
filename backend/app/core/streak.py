@@ -1,6 +1,7 @@
-﻿from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
-FUSO_BRASIL = timezone(timedelta(hours=-3))
+FUSO_BRASIL = ZoneInfo("America/Sao_Paulo")
 
 
 def dia_no_brasil(momento_utc: datetime) -> date:

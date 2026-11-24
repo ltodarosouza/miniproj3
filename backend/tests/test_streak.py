@@ -1,6 +1,6 @@
 ﻿from datetime import date, datetime, timedelta, timezone
 
-from app.core.streak import calcular_streak, dia_no_brasil
+from app.core.streak import FUSO_BRASIL, calcular_streak, dia_no_brasil
 from app.core.tempo import agora_utc
 from app.db import SessionLocal
 from app.models.post import Post
@@ -16,6 +16,12 @@ def dias_atras(*quantos: int) -> set[date]:
 
 def test_dia_no_brasil_converte_utc_naive_para_data_local():
     assert dia_no_brasil(datetime(2026, 11, 22, 1, 30)) == date(2026, 11, 21)
+    assert dia_no_brasil(datetime(2026, 11, 22, 3, 0)) == date(2026, 11, 22)
+
+
+def test_fuso_brasil_e_nomeado_e_virada_exata():
+    assert FUSO_BRASIL.key == "America/Sao_Paulo"
+    assert dia_no_brasil(datetime(2026, 11, 22, 2, 59)) == date(2026, 11, 21)
     assert dia_no_brasil(datetime(2026, 11, 22, 3, 0)) == date(2026, 11, 22)
 
 
