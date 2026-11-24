@@ -106,9 +106,9 @@ function EmAndamento({ itens }: { itens: Match[] }) {
   if (itens.length === 0) return null;
   const quantidade = itens.length === 1 ? "1 conversa em andamento" : `${itens.length} conversas em andamento`;
   return (
-    <details className="group rounded-cartao border border-linha bg-superficie">
+    <details className="group rounded-cartao border border-linha bg-superficie shadow-cartao">
       <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
-        <span className="flex -space-x-2" aria-hidden>
+        <span className="flex min-w-10 -space-x-2" aria-hidden>
           {itens.slice(0, 4).map((m) => (
             <span key={m.usuario.id} className="rounded-full ring-2 ring-superficie">
               <Avatar nome={m.usuario.name} url={m.usuario.avatar_url} tamanho="sm" />
@@ -130,7 +130,9 @@ function EmAndamento({ itens }: { itens: Match[] }) {
               href={`/mensagens/${encodeURIComponent(m.usuario.username)}`}
               className="flex items-center gap-3 px-4 py-3 hover:bg-superficie-2"
             >
-              <Avatar nome={m.usuario.name} url={m.usuario.avatar_url} tamanho="sm" />
+              <span className="flex w-10 shrink-0 justify-center">
+                <Avatar nome={m.usuario.name} url={m.usuario.avatar_url} tamanho="sm" />
+              </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium text-texto">{m.usuario.name}</span>
                 <span className="block truncate text-xs text-texto-2">
