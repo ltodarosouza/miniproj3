@@ -13,6 +13,7 @@ import { Botao } from "@/components/ui/Botao";
 import { Cartao } from "@/components/ui/Cartao";
 import { Icone } from "@/components/ui/Icone";
 import { ErroApi } from "@/lib/api";
+import { prepararImagem } from "@/lib/imagens";
 import {
   criarPost,
   enviarImagem,
@@ -43,10 +44,14 @@ export function FormNovoPost({
   const [foto, setFoto] = useState<File | null>(null);
   const [urlPrevia, setUrlPrevia] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [preparandoFoto, setPreparandoFoto] = useState(false);
+  const [postFotoPendente, setPostFotoPendente] = useState<Post | null>(null);
+  const [reenviandoFoto, setReenviandoFoto] = useState(false);
   const [aberto, setAberto] = useState(false);
   const entradaFoto = useRef<HTMLInputElement>(null);
   const urlAtual = useRef("");
   const envioAtivo = useRef(false);
+  const selecaoFotoAtual = useRef(0);
 
   useEffect(() => {
     let ativo = true;
@@ -72,6 +77,8 @@ export function FormNovoPost({
   }, []);
 
   function limparFoto() {
+    selecaoFotoAtual.current += 1;
+    setPreparandoFoto(false);
     if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
     urlAtual.current = "";
     setUrlPrevia("");
@@ -80,21 +87,51 @@ export function FormNovoPost({
     if (entradaFoto.current) entradaFoto.current.value = "";
   }
 
-  function escolherFoto(evento: ChangeEvent<HTMLInputElement>) {
+  async function escolherFoto(evento: ChangeEvent<HTMLInputElement>) {
     const arquivo = evento.target.files?.[0] ?? null;
     evento.target.value = "";
+    const selecao = ++selecaoFotoAtual.current;
     setErroFoto("");
     if (!arquivo) return;
-    const mensagem = validarImagem(arquivo);
-    if (mensagem) {
-      setErroFoto(mensagem);
-      return;
+    setPreparandoFoto(true);
+    try {
+      const imagem = await prepararImagem(arquivo);
+      if (selecao !== selecaoFotoAtual.current) return;
+      const mensagem = validarImagem(imagem);
+      if (mensagem) {
+        setErroFoto(mensagem);
+        return;
+      }
+      if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
+      const url = URL.createObjectURL(imagem);
+      urlAtual.current = url;
+      setUrlPrevia(url);
+      setFoto(imagem);
+    } catch (erro) {
+      if (selecao === selecaoFotoAtual.current) {
+        setErroFoto(erro instanceof Error ? erro.message : "Não consegui preparar essa foto.");
+      }
+    } finally {
+      if (selecao === selecaoFotoAtual.current) setPreparandoFoto(false);
     }
-    if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
-    const url = URL.createObjectURL(arquivo);
-    urlAtual.current = url;
-    setUrlPrevia(url);
-    setFoto(arquivo);
+  }
+
+  async function tentarEnviarFotoNovamente() {
+    if (!postFotoPendente || !foto || reenviandoFoto) return;
+    setReenviandoFoto(true);
+    try {
+      const imagem_url = await enviarImagem(postFotoPendente.id, foto);
+      aoPublicar({ ...postFotoPendente, imagem_url });
+      setPostFotoPendente(null);
+      setAvisoFoto("");
+      limparFoto();
+    } catch (erro) {
+      setAvisoFoto(
+        `Seu post foi publicado, mas a foto não subiu: ${erro instanceof ErroApi ? erro.message : "tente de novo mais tarde."}`,
+      );
+    } finally {
+      setReenviandoFoto(false);
+    }
   }
 
   function alterarMinutos(valor: string) {
@@ -136,10 +173,13 @@ export function FormNovoPost({
         minutos_estudados: numeroMinutos,
       });
       let final = post;
+      let fotoFalhou = false;
       if (foto) {
         try {
           final = { ...post, imagem_url: await enviarImagem(post.id, foto) };
         } catch (erro) {
+          fotoFalhou = true;
+          setPostFotoPendente(post);
           setAvisoFoto(
             `Seu post foi publicado, mas a foto não subiu: ${erro instanceof ErroApi ? erro.message : "tente de novo mais tarde."}`,
           );
@@ -150,7 +190,10 @@ export function FormNovoPost({
       setTexto("");
       setHabilidadeId("");
       setMinutos("");
-      limparFoto();
+      if (!fotoFalhou) {
+        setPostFotoPendente(null);
+        limparFoto();
+      }
     } catch (erro) {
       setErroEnvio(
         erro instanceof ErroApi
@@ -257,7 +300,7 @@ export function FormNovoPost({
           <input
             ref={entradaFoto}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/*"
             className="sr-only"
             tabIndex={-1}
             aria-hidden="true"
@@ -268,10 +311,11 @@ export function FormNovoPost({
               type="button"
               variante="fantasma"
               tamanho="sm"
+              disabled={preparandoFoto || enviando}
               onClick={() => entradaFoto.current?.click()}
             >
               <Icone nome="imagem" tamanho={17} />
-              {foto ? "Trocar foto" : "Adicionar foto"}
+              {preparandoFoto ? "Preparando foto…" : foto ? "Trocar foto" : "Adicionar foto"}
             </Botao>
             <Botao
               type="submit"
@@ -293,9 +337,14 @@ export function FormNovoPost({
             </p>
           )}
           {avisoFoto && (
-            <p role="alert" className="text-sm text-perigo">
-              {avisoFoto}
-            </p>
+            <div>
+              <p role="alert" className="text-sm text-perigo">{avisoFoto}</p>
+              {postFotoPendente && foto && (
+                <Botao type="button" variante="fantasma" tamanho="sm" disabled={reenviandoFoto} carregando={reenviandoFoto} onClick={tentarEnviarFotoNovamente}>
+                  Tentar enviar a foto de novo
+                </Botao>
+              )}
+            </div>
           )}
         </div>
       </form>
