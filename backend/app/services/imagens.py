@@ -1,9 +1,12 @@
+import io
 import re
 import uuid
+import warnings
 from pathlib import Path
 
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse, Response
+from PIL import Image, ImageFile
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
@@ -15,18 +18,32 @@ from app.services.posts import post_do_autor
 PASTA = Path("uploads")
 TIPOS = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
 MAX_BYTES = 2 * 1024 * 1024
+MAX_PIXELS = 40_000_000
 NOME_VALIDO = re.compile(r"^[0-9a-f]{32}\.(png|jpg|jpeg|webp)$")
 UM_ANO = "public, max-age=31536000, immutable"
 
 
 def detectar_formato(conteudo: bytes) -> str | None:
     if conteudo.startswith(b"\xff\xd8\xff"):
-        return ".jpg"
-    if conteudo.startswith(b"\x89PNG\r\n\x1a\n"):
-        return ".png"
-    if conteudo[0:4] == b"RIFF" and conteudo[8:12] == b"WEBP":
-        return ".webp"
-    return None
+        extensao, formato = ".jpg", "JPEG"
+    elif conteudo.startswith(b"\x89PNG\r\n\x1a\n"):
+        extensao, formato = ".png", "PNG"
+    elif conteudo[0:4] == b"RIFF" and conteudo[8:12] == b"WEBP":
+        extensao, formato = ".webp", "WEBP"
+    else:
+        return None
+
+    ImageFile.LOAD_TRUNCATED_IMAGES = False
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(io.BytesIO(conteudo)) as imagem:
+                if imagem.format != formato or imagem.width * imagem.height > MAX_PIXELS:
+                    return None
+                imagem.load()
+    except (OSError, SyntaxError, ValueError, Image.DecompressionBombError, Image.DecompressionBombWarning):
+        return None
+    return extensao
 
 
 async def salvar(db: Session, eu: User, post_id: int, arquivo: UploadFile) -> str:

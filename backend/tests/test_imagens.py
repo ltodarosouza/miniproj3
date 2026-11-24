@@ -1,12 +1,19 @@
-﻿import base64
+from io import BytesIO
 
 import pytest
-
+from PIL import Image
 from app.services import imagens
 
-PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/pZsAAAAASUVORK5CYII=")
-JPEG = base64.b64decode("/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAF//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABBQJ//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPwF//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPwF//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQAGPwJ//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPyF//9oADAMBAAIAAwAAABAf/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPxB//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPxB//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxB//9k=")
-WEBP = base64.b64decode("UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEAAUAmJaQAA3AA/v89WAAAAA==")
+
+def imagem(formato, tamanho=(2, 2)):
+    buffer = BytesIO()
+    Image.new("RGB", tamanho, color=(40, 120, 200)).save(buffer, format=formato)
+    return buffer.getvalue()
+
+
+PNG = imagem("PNG")
+JPEG = imagem("JPEG")
+WEBP = imagem("WEBP")
 DOIS_MB = 2 * 1024 * 1024
 
 
@@ -214,6 +221,27 @@ def test_limite_de_2_mb(client, pessoa):
 
     assert enviar(client, post_id, ana, conteudo=PNG + b"0" * (DOIS_MB - len(PNG))).status_code == 200
     assert enviar(client, post_id, ana, conteudo=b"0" * (DOIS_MB + 1)).status_code == 413
+
+
+@pytest.mark.parametrize("conteudo", [PNG[: len(PNG) // 2], JPEG[: len(JPEG) // 2]])
+def test_imagem_truncada_nao_substitui_a_anterior(client, pessoa, conteudo):
+    ana = pessoa("ana")
+    post_id = novo_post(client, ana)
+    url = enviar(client, post_id, ana).json()["imagem_url"]
+
+    resposta = enviar(client, post_id, ana, conteudo=conteudo)
+
+    assert resposta.status_code == 422
+    assert client.get(url).status_code == 200
+    assert client.get(f"/posts/{post_id}", headers=ana).json()["imagem_url"] == url
+
+
+def test_imagem_acima_do_limite_de_pixels_e_recusada(client, pessoa, monkeypatch):
+    ana = pessoa("ana")
+    post_id = novo_post(client, ana)
+    monkeypatch.setattr(imagens, "MAX_PIXELS", 3)
+
+    assert enviar(client, post_id, ana).status_code == 422
 
 
 def test_post_inexistente_da_404_e_sem_login_da_401(client, pessoa):

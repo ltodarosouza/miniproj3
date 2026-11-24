@@ -1,10 +1,19 @@
-import base64
+from io import BytesIO
 
 import pytest
+from PIL import Image
+from app.services import imagens
 
-PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/pZsAAAAASUVORK5CYII=")
-JPEG = base64.b64decode("/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAF//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABBQJ//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPwF//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPwF//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQAGPwJ//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPyF//9oADAMBAAIAAwAAABAf/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPxB//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPxB//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxB//9k=")
-WEBP = base64.b64decode("UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEAAUAmJaQAA3AA/v89WAAAAA==")
+
+def imagem(formato, tamanho=(2, 2)):
+    buffer = BytesIO()
+    Image.new("RGB", tamanho, color=(40, 120, 200)).save(buffer, format=formato)
+    return buffer.getvalue()
+
+
+PNG = imagem("PNG")
+JPEG = imagem("JPEG")
+WEBP = imagem("WEBP")
 DOIS_MB = 2 * 1024 * 1024
 
 
@@ -76,6 +85,25 @@ def test_conteudo_invalido_nao_substitui_avatar(client, pessoa, conteudo):
     resposta = enviar(client, ana, nome="foto.png", conteudo=conteudo)
     assert resposta.status_code == 422
     assert client.get(url).content == PNG
+
+
+@pytest.mark.parametrize("conteudo", [PNG[: len(PNG) // 2], JPEG[: len(JPEG) // 2]])
+def test_imagem_truncada_nao_substitui_avatar(client, pessoa, conteudo):
+    ana = pessoa("ana")
+    url = enviar(client, ana).json()["avatar_url"]
+
+    resposta = enviar(client, ana, conteudo=conteudo)
+
+    assert resposta.status_code == 422
+    assert client.get(url).status_code == 200
+    assert client.get("/usuarios/ana").json()["avatar_url"] == url
+
+
+def test_avatar_acima_do_limite_de_pixels_e_recusado(client, pessoa, monkeypatch):
+    ana = pessoa("ana")
+    monkeypatch.setattr(imagens, "MAX_PIXELS", 3)
+
+    assert enviar(client, ana).status_code == 422
 
 
 def test_nome_de_avatar_invalido_ou_inexistente(client):
