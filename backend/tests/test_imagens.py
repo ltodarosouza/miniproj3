@@ -96,8 +96,45 @@ def test_extensao_invalida_da_422(client, pessoa, pasta_de_teste):
     post_id = novo_post(client, ana)
 
     for nome in ("documento.pdf", "programa.exe", "semextensao"):
-        assert enviar(client, post_id, ana, nome=nome).status_code == 422
+        r = client.post(
+            f"/posts/{post_id}/imagem",
+            files={"arquivo": (nome, PNG, "application/pdf")},
+            headers=ana,
+        )
+        assert r.status_code == 422
     assert list(pasta_de_teste.iterdir()) == []
+
+
+def test_content_type_define_extensao_sem_extensao_no_nome(client, pessoa):
+    ana = pessoa("ana")
+    post_id = novo_post(client, ana)
+
+    jpeg = client.post(
+        f"/posts/{post_id}/imagem",
+        files={"arquivo": ("image", PNG, "image/jpeg")},
+        headers=ana,
+    )
+    webp = client.post(
+        f"/posts/{post_id}/imagem",
+        files={"arquivo": ("blob", PNG, "image/webp")},
+        headers=ana,
+    )
+    pdf = client.post(
+        f"/posts/{post_id}/imagem",
+        files={"arquivo": ("foto", PNG, "application/pdf")},
+        headers=ana,
+    )
+
+    assert jpeg.status_code == 200
+    assert jpeg.json()["imagem_url"].endswith(".jpg")
+    assert webp.status_code == 200
+    assert webp.json()["imagem_url"].endswith(".webp")
+    assert pdf.status_code == 422
+
+
+def test_descobrir_extensao_prioriza_extensao_valida():
+    assert imagens.descobrir_extensao("foto.PNG", "image/jpeg") == ".png"
+    assert imagens.descobrir_extensao("foto.jpg", "image/webp") == ".jpg"
 
 
 def test_limite_de_2_mb(client, pessoa):

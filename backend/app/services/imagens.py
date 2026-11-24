@@ -19,9 +19,21 @@ NOME_VALIDO = re.compile(r"^[0-9a-f]{32}\.(png|jpg|jpeg|webp)$")
 UM_ANO = "public, max-age=31536000, immutable"
 
 
+def descobrir_extensao(nome: str | None, content_type: str | None) -> str | None:
+    extensao = Path(nome or "").suffix.lower()
+    if extensao in TIPOS:
+        return extensao
+    extensoes_por_tipo = {
+        "image/jpeg": ".jpg",
+        "image/png": ".png",
+        "image/webp": ".webp",
+    }
+    return extensoes_por_tipo.get(content_type or "")
+
+
 async def salvar(db: Session, eu: User, post_id: int, arquivo: UploadFile) -> str:
     post = post_do_autor(db, eu, post_id)
-    extensao = Path(arquivo.filename or "").suffix.lower()
+    extensao = descobrir_extensao(arquivo.filename, arquivo.content_type)
     if extensao not in TIPOS:
         raise HTTPException(status_code=422, detail="envie uma imagem jpg, png ou webp")
     conteudo = await arquivo.read(MAX_BYTES + 1)
