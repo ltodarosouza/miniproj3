@@ -16,7 +16,14 @@ export const metadata: Metadata = {
   title: NOME_REDE,
   description: "Troque o que você sabe pelo que você quer aprender.",
   appleWebApp: { capable: true, title: NOME_REDE, statusBarStyle: "default" },
-  icons: { apple: "/apple-touch-icon.png" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icone-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
 };
 
 export const viewport: Viewport = {
