@@ -654,3 +654,21 @@ contra a versão que percorre todos os usuários.
   no navegador; o Pillow só valida, e o limite de 2 MB mantém o custo baixo);
   recorte do avatar (o `object-cover` já centraliza); limite do corpo antes do
   parser multipart (exige middleware global, fora da #59).
+
+### 23. Streak conta o dia no fuso do Brasil
+
+- **Contexto:** issue #58. O streak agrupava os posts pelo dia em UTC. Post
+  depois das 21h (horário de Brasília) contava para o dia seguinte, e a chama
+  da navegação apagava à noite mesmo com post feito. Ela também demorava até
+  1 minuto para acender depois de publicar.
+- **Opções:** `zoneinfo("America/Sao_Paulo")`, fuso fixo UTC−3, ou fuso
+  enviado pelo navegador de cada pessoa.
+- **Escolha:**
+  - Backend com fuso fixo UTC−3 (`FUSO_BRASIL` e `dia_no_brasil()` em
+    `core/streak.py`). O Brasil não tem horário de verão desde 2019, e o fixo
+    não depende do pacote `tzdata` no servidor.
+  - Frontend compara "postou hoje" pelo dia local do navegador (`dataLocal`).
+  - `criarPost` e `apagarPost` disparam `troca:posts-mudaram`; `useStreak`
+    escuta esse evento e a volta para a aba, além do intervalo de 60 s.
+- **O que cortamos e por quê:** fuso por pessoa (o público é brasileiro; quem
+  estiver fora do UTC−3 pode ver a virada do dia deslocada).
