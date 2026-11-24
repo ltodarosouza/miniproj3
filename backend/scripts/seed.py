@@ -30,11 +30,12 @@ from app.services.habilidades import garantir_catalogo
 SENHA_SEED = "senha-forte-123"
 SEMENTE = 42
 TOTAL_PARES = 16
+RETRATOS = "https://randomuser.me/api/portraits/{genero}/{numero}.jpg"
 
 CONTAS_FIXAS = [
-    ("ada", "Ada Lovelace", "a primeira a programar"),
-    ("linus", "Linus Torvalds", "just for fun"),
-    ("grace", "Grace Hopper", "caçadora de bugs literais"),
+    ("ada", "Ada Lovelace", "a primeira a programar", "women"),
+    ("linus", "Linus Torvalds", "just for fun", "men"),
+    ("grace", "Grace Hopper", "caçadora de bugs literais", "women"),
 ]
 
 PARES_DE_TROCA = [
@@ -104,6 +105,10 @@ def _hash(senha: str) -> str:
     return bcrypt.hashpw(senha.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
+def _avatar(genero: str, numero: int) -> str:
+    return RETRATOS.format(genero=genero, numero=numero)
+
+
 def _username(nome: str, usados: set[str]) -> str:
     sem_acento = unicodedata.normalize("NFKD", nome).encode("ascii", "ignore").decode()
     partes = re.sub(r"[^a-z ]", "", sem_acento.lower()).split()
@@ -117,19 +122,34 @@ def _username(nome: str, usados: set[str]) -> str:
 
 def _criar_usuarios(db: Session, fake: Faker, sorteio: random.Random) -> list[User]:
     senha = _hash(SENHA_SEED)
-    usados = {username for username, _, _ in CONTAS_FIXAS}
-    usuarios = [
-        User(username=username, name=nome, bio=bio, password_hash=senha)
-        for username, nome, bio in CONTAS_FIXAS
-    ]
+    usados = {username for username, _, _, _ in CONTAS_FIXAS}
+    numeros = {genero: sorteio.sample(range(100), 100) for genero in ("women", "men")}
+    usuarios = []
+    for username, nome, bio, genero in CONTAS_FIXAS:
+        usuarios.append(
+            User(
+                username=username,
+                name=nome,
+                bio=bio,
+                password_hash=senha,
+                avatar_url=_avatar(genero, numeros[genero].pop()),
+            )
+        )
     while len(usuarios) < TOTAL_PARES * 2:
-        nome = fake.unique.first_name() + " " + fake.last_name()
+        genero = sorteio.choice(("women", "men"))
+        primeiro_nome = (
+            fake.unique.first_name_female()
+            if genero == "women"
+            else fake.unique.first_name_male()
+        )
+        nome = primeiro_nome + " " + fake.last_name()
         usuarios.append(
             User(
                 username=_username(nome, usados),
                 name=nome,
                 bio=sorteio.choice(BIOS),
                 password_hash=senha,
+                avatar_url=_avatar(genero, numeros[genero].pop()),
             )
         )
     db.add_all(usuarios)
