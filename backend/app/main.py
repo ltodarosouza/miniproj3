@@ -62,6 +62,8 @@ def semear_se_vazio(db) -> None:
 
 
 def completar_esquema_sqlite(motor: Engine) -> None:
+    """Adiciona colunas e índices que faltam num banco SQLite antigo, mas não constraints:
+    se um model ganhar UNIQUE ou CHECK, apague o backend/app.db e rode make seed."""
     inspetor = inspect(motor)
     with motor.begin() as conexao:
         for tabela in Base.metadata.sorted_tables:
@@ -84,6 +86,13 @@ def completar_esquema_sqlite(motor: Engine) -> None:
                     indice.create(conexao)
 
 
+def recusar_debug_fora_do_dev() -> None:
+    if os.environ.get("DEBUG") != "true":
+        return
+    if os.environ.get("RENDER") or not EH_SQLITE:
+        raise RuntimeError("DEBUG=true proibido fora do dev local")
+
+
 def preparar_banco() -> None:
     if EH_SQLITE:
         Base.metadata.create_all(engine)
@@ -99,6 +108,7 @@ def preparar_banco() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    recusar_debug_fora_do_dev()
     preparar_banco()
     with SessionLocal() as db:
         garantir_catalogo(db)

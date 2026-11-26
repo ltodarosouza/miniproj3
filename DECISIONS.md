@@ -747,3 +747,7 @@ contra a versão que percorre todos os usuários.
   em 16, 32 e 48; salve o de 32 como `frontend/public/icone-32.png` e junte os
   três com Pillow em `frontend/app/favicon.ico`
   (`img48.save(..., format="ICO", sizes=[(16,16),(32,32),(48,48)])`).
+
+### 27 a 41. Rodada da auditoria e da repaginada Colmatch
+
+Cada decisão desta rodada está em `docs/decisoes/<número>-<nome>.md`.
