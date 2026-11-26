@@ -61,6 +61,9 @@
   dos grupos de curtida, o único item cujo horário muda. Na página 1 pedida
   por `offset` > 0, as páginas anteriores por offset não foram guardadas;
   quem pagina com `cursor` desde o início não tem esse limite. Um cursor
-  com mais de um dia perde a proteção contra descurtida. A busca de username de
+  com mais de um dia perde a proteção contra descurtida.
+  Um evento com horário anterior ao recorte, mas gravado só depois da
+  página 1 (janela de milissegundos entre `agora_utc()` e o commit), não
+  aparece naquela sequência; aparece ao recarregar a lista. A busca de username de
   `dms.py` passou a usar `por_username_ou_404` (#73), mas o 404 continua
   com o texto "usuário não encontrado", que o chat do front reconhece.
