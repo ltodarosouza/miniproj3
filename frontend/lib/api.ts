@@ -43,7 +43,9 @@ function camposDoErro(detail: unknown): Record<string, string> {
   return campos;
 }
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+export type OpcoesPedido = { redirecionarNo401?: boolean };
+
+async function request<T>(method: string, path: string, body?: unknown, opcoes: OpcoesPedido = {}): Promise<T> {
   const arquivo = body instanceof FormData;
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
@@ -52,11 +54,11 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     cache: "no-store",
   });
 
-  // 401 com token salvo = token que não vale mais (ex.: o banco foi apagado ou o
-  // servidor do deploy reiniciou). Joga o token fora e volta para o login.
+  // 401 com token salvo = token que não vale mais. Joga o token fora; os pedidos
+  // do chat passam redirecionarNo401: false para mostrar "Sessão encerrada" na própria tela.
   if (res.status === 401 && typeof window !== "undefined" && localStorage.getItem("token")) {
     limparSessao();
-    if (window.location.pathname !== "/login") window.location.href = "/login";
+    if (opcoes.redirecionarNo401 !== false && window.location.pathname !== "/login") window.location.href = "/login";
   }
 
   if (!res.ok) {
@@ -77,12 +79,12 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return res.json();
 }
 
-export function apiGet<T>(path: string): Promise<T> {
-  return request<T>("GET", path);
+export function apiGet<T>(path: string, opcoes?: OpcoesPedido): Promise<T> {
+  return request<T>("GET", path, undefined, opcoes);
 }
 
-export function apiPost<T>(path: string, body?: unknown): Promise<T> {
-  return request<T>("POST", path, body);
+export function apiPost<T>(path: string, body?: unknown, opcoes?: OpcoesPedido): Promise<T> {
+  return request<T>("POST", path, body, opcoes);
 }
 
 export function apiPatch<T>(path: string, body: unknown): Promise<T> {
@@ -188,7 +190,7 @@ export type Avaliacao = {
 
 export function listarMensagens(username: string, depoisDe?: number): Promise<{ items: Mensagem[] }> {
   const filtro = depoisDe === undefined ? "" : `?depois_de=${depoisDe}`;
-  return apiGet(`/dms/${encodeURIComponent(username)}${filtro}`);
+  return apiGet(`/dms/${encodeURIComponent(username)}${filtro}`, { redirecionarNo401: false });
 }
 
 export function listarHabilidades(): Promise<{ items: HabilidadeResumo[] }> {
@@ -203,9 +205,9 @@ export function mapearHabilidade(texto: string): Promise<{ habilidade: Habilidad
   return apiPost("/habilidades/mapear", { texto });
 }
 
-export function listarTrocas(comUsername?: string): Promise<{ items: Troca[] }> {
+export function listarTrocas(comUsername?: string, opcoes?: OpcoesPedido): Promise<{ items: Troca[] }> {
   const filtro = comUsername ? `?com=${encodeURIComponent(comUsername)}` : "";
-  return apiGet(`/trocas${filtro}`);
+  return apiGet(`/trocas${filtro}`, opcoes);
 }
 
 export function confirmarTroca(id: number): Promise<Troca> {

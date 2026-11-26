@@ -73,7 +73,7 @@ export default function PaginaConversa() {
   }), [mensagens, trocas]);
 
   const carregarConversa = useCallback(
-    () => Promise.all([listarMensagens(username), listarConversasComStatus(), listarTrocas(username)]),
+    () => Promise.all([listarMensagens(username), listarConversasComStatus(), listarTrocas(username, { redirecionarNo401: false })]),
     [username],
   );
 
@@ -189,7 +189,7 @@ export default function PaginaConversa() {
     ciclosPolling.current += 1;
     const buscarTrocasAgora = ciclosPolling.current % 2 === 0;
     try {
-      const [respostaBase, respostaTrocas] = await Promise.all([listarMensagens(username, cursorRef.current), buscarTrocasAgora ? listarTrocas(username) : Promise.resolve(null)]);
+      const [respostaBase, respostaTrocas] = await Promise.all([listarMensagens(username, cursorRef.current), buscarTrocasAgora ? listarTrocas(username, { redirecionarNo401: false }) : Promise.resolve(null)]);
       const resposta = respostaBase as RespostaMensagens;
       cursorRef.current = maiorIdRecebido(resposta.items, cursorRef.current);
       setMensagens((atuais) => aplicarEntreguesAte(atuais, resposta.entregues_ate_id, username));

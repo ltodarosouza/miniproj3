@@ -5,6 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { apiGet, apiPost, ErroApi, type Mensagem, type User } from "@/lib/api";
 import { meuId } from "@/lib/sessao";
 
+const SEM_REDIRECIONAR = { redirecionarNo401: false } as const;
+
 export type ConversaComStatus = {
   com: User;
   ultima_mensagem: string;
@@ -18,19 +20,19 @@ export type ConversaComStatus = {
 export type NaoLidasMensagens = { total: number; por_conversa: Record<string, number> };
 
 export function listarConversasComStatus(): Promise<{ items: ConversaComStatus[] }> {
-  return apiGet("/dms");
+  return apiGet("/dms", SEM_REDIRECIONAR);
 }
 
 export function buscarNaoLidas(): Promise<NaoLidasMensagens> {
-  return apiGet("/dms/nao-lidas");
+  return apiGet("/dms/nao-lidas", SEM_REDIRECIONAR);
 }
 
 export function marcarConversaLida(username: string): Promise<{ lidas_ate_id: number | null }> {
-  return apiPost(`/dms/${encodeURIComponent(username)}/lidas`);
+  return apiPost(`/dms/${encodeURIComponent(username)}/lidas`, undefined, SEM_REDIRECIONAR);
 }
 
 export function enviarMensagemComId(username: string, texto: string, clienteId: string): Promise<Mensagem & { cliente_id?: string | null; entregue_em?: string | null; lida_em?: string | null }> {
-  return apiPost(`/dms/${encodeURIComponent(username)}`, { texto, cliente_id: clienteId });
+  return apiPost(`/dms/${encodeURIComponent(username)}`, { texto, cliente_id: clienteId }, SEM_REDIRECIONAR);
 }
 
 export function useNaoLidas() {
