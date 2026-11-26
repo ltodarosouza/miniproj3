@@ -60,8 +60,8 @@ function TabelaPares({
         <p className="text-sm text-texto-2">{vazio}</p>
       ) : (
         <table role="table" aria-label={rotulo} className="block w-full">
-          <thead role="rowgroup" className="block">
-            <tr role="row" className={`sr-only ${colunas} items-center gap-4 pl-4 pr-1 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3 sm:not-sr-only sm:grid`}>
+          <thead role="rowgroup" className="sr-only sm:not-sr-only sm:block">
+            <tr role="row" className={`${colunas} items-center gap-4 pl-4 pr-1 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3 sm:grid`}>
               <th role="columnheader" scope="col" className="text-left font-normal">Pessoa</th>
               <th role="columnheader" scope="col" className="text-left font-normal">Te ensina</th>
               {troca && <th role="columnheader" scope="col" className="text-left font-normal">Você ensina</th>}
