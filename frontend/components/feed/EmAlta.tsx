@@ -12,9 +12,9 @@ export function EmAlta({ habilidades }: { habilidades: HabilidadeEmAlta[] }) {
       <caption className="sr-only">Habilidades mais estudadas nesta semana</caption>
       <thead>
         <tr className="border-b border-linha text-[0.8125rem] text-texto-2 font-semibold">
-          <th scope="col" className="py-1.5 text-left font-normal">Habilidade</th>
-          <th scope="col" className="w-16 py-1.5 text-right font-normal">Horas</th>
-          <th scope="col" className="w-12 py-1.5 text-right font-normal">Posts</th>
+          <th scope="col" className="py-1.5 text-left font-semibold">Habilidade</th>
+          <th scope="col" className="w-16 py-1.5 text-right font-semibold">Horas</th>
+          <th scope="col" className="w-12 py-1.5 text-right font-semibold">Posts</th>
         </tr>
       </thead>
       <tbody>

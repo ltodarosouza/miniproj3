@@ -44,9 +44,9 @@ function TabelaPares({
         <table role="table" aria-label={rotulo} className="block w-full">
           <thead role="rowgroup" className="sr-only sm:not-sr-only sm:block">
             <tr role="row" className={`${colunas} items-center gap-4 pl-4 pr-1 text-[0.8125rem] text-texto-2 sm:grid font-semibold`}>
-              <th role="columnheader" scope="col" className="text-left font-normal">Pessoa</th>
-              <th role="columnheader" scope="col" className="text-left font-normal">Te ensina</th>
-              {troca && <th role="columnheader" scope="col" className="text-left font-normal">Você ensina</th>}
+              <th role="columnheader" scope="col" className="text-left font-semibold">Pessoa</th>
+              <th role="columnheader" scope="col" className="text-left font-semibold">Te ensina</th>
+              {troca && <th role="columnheader" scope="col" className="text-left font-semibold">Você ensina</th>}
               <th role="columnheader" scope="col"><span className="sr-only">Ação</span></th>
             </tr>
           </thead>
