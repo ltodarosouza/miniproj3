@@ -18,9 +18,15 @@ export function Estrelas({
 
   if (!aoMudar) {
     return (
-      <span className="inline-flex items-center gap-0.5 text-estrela" role="img" aria-label={`${valor.toFixed(1)} de 5 estrelas`}>
+      <span className="inline-flex items-center gap-0.5" role="img" aria-label={`${valor.toFixed(1)} de 5 estrelas`}>
         {[1, 2, 3, 4, 5].map((n) => (
-          <Icone key={n} nome="estrela" tamanho={tamanho} preenchido={n <= Math.round(valor)} className={n <= Math.round(valor) ? "" : "text-linha-forte"} />
+          <Icone
+            key={n}
+            nome="estrela"
+            tamanho={tamanho}
+            preenchido={n <= Math.round(valor)}
+            className={n <= Math.round(valor) ? "stroke-texto-2 fill-estrela" : "stroke-texto-2"}
+          />
         ))}
       </span>
     );
@@ -43,7 +49,7 @@ export function Estrelas({
             nome="estrela"
             tamanho={tamanho + 6}
             preenchido={n <= ativo}
-            className={`transition-colors duration-[var(--rapido)] ${n <= ativo ? "text-estrela" : "text-linha-forte"}`}
+            className={`transition-colors duration-[var(--rapido)] stroke-texto-2 ${n <= ativo ? "fill-estrela" : ""}`}
           />
         </button>
       ))}

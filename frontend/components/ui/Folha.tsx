@@ -96,7 +96,7 @@ export function Folha({
           evento.clientY <= caixa.bottom;
         if (!dentro) aoFechar();
       }}
-      className={`m-auto w-[min(28rem,calc(100vw-2rem))] rounded-cartao border border-linha bg-superficie p-5 text-texto shadow-alta backdrop:bg-[rgb(18_17_16/0.55)] max-sm:mt-auto max-sm:mb-0 max-sm:w-full max-sm:max-w-none max-sm:rounded-t-cartao max-sm:rounded-b-none max-sm:pb-[calc(1.25rem+env(safe-area-inset-bottom))] max-sm:open:animate-[subir-folha_var(--medio)_var(--ease-saida)_both] sm:open:animate-[aparecer-escala_var(--medio)_var(--ease-saida)_both] motion-reduce:open:animate-none ${className ?? ""}`}
+      className={`m-auto w-[min(28rem,calc(100vw-2rem))] rounded-cartao border border-linha bg-superficie p-5 text-texto backdrop:bg-[rgb(18_17_16/0.55)] max-sm:mt-auto max-sm:mb-0 max-sm:w-full max-sm:max-w-none max-sm:rounded-t-cartao max-sm:rounded-b-none max-sm:pb-[calc(1.25rem+env(safe-area-inset-bottom))] max-sm:open:animate-[subir-folha_var(--medio)_var(--ease-saida)_both] sm:open:animate-[aparecer-escala_var(--medio)_var(--ease-saida)_both] motion-reduce:open:animate-none ${className ?? ""}`}
     >
       <button
         type="button"
