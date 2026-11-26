@@ -43,9 +43,7 @@ function camposDoErro(detail: unknown): Record<string, string> {
   return campos;
 }
 
-export type OpcoesPedido = { redirecionarNo401?: boolean };
-
-async function request<T>(method: string, path: string, body?: unknown, opcoes: OpcoesPedido = {}): Promise<T> {
+async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const arquivo = body instanceof FormData;
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
@@ -60,7 +58,7 @@ async function request<T>(method: string, path: string, body?: unknown, opcoes: 
     limparSessao();
     const pathname = window.location.pathname;
     const conversaAberta = /^\/mensagens\/[^/]+\/?$/.test(pathname);
-    if (opcoes.redirecionarNo401 !== false && pathname !== "/login" && !conversaAberta) {
+    if (pathname !== "/login" && !conversaAberta) {
       window.location.href = "/login";
     }
   }
@@ -83,12 +81,12 @@ async function request<T>(method: string, path: string, body?: unknown, opcoes: 
   return res.json();
 }
 
-export function apiGet<T>(path: string, opcoes?: OpcoesPedido): Promise<T> {
-  return request<T>("GET", path, undefined, opcoes);
+export function apiGet<T>(path: string): Promise<T> {
+  return request<T>("GET", path);
 }
 
-export function apiPost<T>(path: string, body?: unknown, opcoes?: OpcoesPedido): Promise<T> {
-  return request<T>("POST", path, body, opcoes);
+export function apiPost<T>(path: string, body?: unknown): Promise<T> {
+  return request<T>("POST", path, body);
 }
 
 export function apiPatch<T>(path: string, body: unknown): Promise<T> {
@@ -194,7 +192,7 @@ export type Avaliacao = {
 
 export function listarMensagens(username: string, depoisDe?: number): Promise<{ items: Mensagem[] }> {
   const filtro = depoisDe === undefined ? "" : `?depois_de=${depoisDe}`;
-  return apiGet(`/dms/${encodeURIComponent(username)}${filtro}`, { redirecionarNo401: false });
+  return apiGet(`/dms/${encodeURIComponent(username)}${filtro}`);
 }
 
 export function listarHabilidades(): Promise<{ items: HabilidadeResumo[] }> {
@@ -209,9 +207,9 @@ export function mapearHabilidade(texto: string): Promise<{ habilidade: Habilidad
   return apiPost("/habilidades/mapear", { texto });
 }
 
-export function listarTrocas(comUsername?: string, opcoes?: OpcoesPedido): Promise<{ items: Troca[] }> {
+export function listarTrocas(comUsername?: string): Promise<{ items: Troca[] }> {
   const filtro = comUsername ? `?com=${encodeURIComponent(comUsername)}` : "";
-  return apiGet(`/trocas${filtro}`, opcoes);
+  return apiGet(`/trocas${filtro}`);
 }
 
 export function confirmarTroca(id: number): Promise<Troca> {

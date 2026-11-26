@@ -5,8 +5,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { apiGet, apiPost, ErroApi, type Mensagem, type User } from "@/lib/api";
 import { meuId } from "@/lib/sessao";
 
-const SEM_REDIRECIONAR = { redirecionarNo401: false } as const;
-
 export type ConversaComStatus = {
   com: User;
   ultima_mensagem: string;
@@ -28,11 +26,11 @@ export function buscarNaoLidas(): Promise<NaoLidasMensagens> {
 }
 
 export function marcarConversaLida(username: string): Promise<{ lidas_ate_id: number | null }> {
-  return apiPost(`/dms/${encodeURIComponent(username)}/lidas`, undefined, SEM_REDIRECIONAR);
+  return apiPost(`/dms/${encodeURIComponent(username)}/lidas`);
 }
 
 export function enviarMensagemComId(username: string, texto: string, clienteId: string): Promise<Mensagem & { cliente_id?: string | null; entregue_em?: string | null; lida_em?: string | null }> {
-  return apiPost(`/dms/${encodeURIComponent(username)}`, { texto, cliente_id: clienteId }, SEM_REDIRECIONAR);
+  return apiPost(`/dms/${encodeURIComponent(username)}`, { texto, cliente_id: clienteId });
 }
 
 export function useNaoLidas() {
