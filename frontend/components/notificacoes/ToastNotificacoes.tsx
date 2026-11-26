@@ -50,7 +50,7 @@ export function ToastNotificacoes() {
               setPausado(false);
             }
           }}
-          className={`flex items-start gap-3 rounded-[4px] bg-[var(--grafite,var(--texto))] p-3 text-[var(--grafite-texto,var(--fundo))] shadow-alta transition-[opacity,translate] duration-200 motion-reduce:transition-none ${visivel ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0 sm:-translate-y-2"}`}
+          className={`flex items-start gap-3 rounded-controle bg-grafite p-3 text-grafite-texto shadow-alta transition-[opacity,translate] duration-200 motion-reduce:transition-none ${visivel ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0 sm:-translate-y-2"}`}
         >
           <Avatar nome={ultimaNova.ator.name} url={ultimaNova.ator.avatar_url} tamanho="sm" />
           <div className="min-w-0 flex-1">
@@ -67,7 +67,7 @@ export function ToastNotificacoes() {
             type="button"
             aria-label="Fechar aviso"
             onClick={fechar}
-            className="-mr-1 -mt-1 inline-flex size-8 shrink-0 items-center justify-center rounded-[4px] text-lg leading-none opacity-70 transition-colors hover:bg-current/10 hover:opacity-100 motion-reduce:transition-none"
+            className="-mr-1 -mt-1 inline-flex size-8 shrink-0 items-center justify-center rounded-controle text-lg leading-none opacity-70 transition-colors hover:bg-current/10 hover:opacity-100 motion-reduce:transition-none"
           >
             ×
           </button>

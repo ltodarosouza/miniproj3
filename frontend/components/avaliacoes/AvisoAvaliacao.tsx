@@ -106,7 +106,7 @@ export function AvisoAvaliacao() {
 
   return (
     <div className={`fixed inset-x-3 bottom-[calc(0.75rem+var(--altura-barra-inferior))] z-50 transition-[opacity,translate] duration-[var(--lento)] ease-saida motion-reduce:transition-none md:inset-x-auto md:right-6 md:bottom-[calc(1.5rem+var(--altura-barra-inferior))] md:w-[22rem] ${visivel ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}>
-      <Cartao role="dialog" aria-labelledby="titulo-avaliacao" className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto rounded-[6px] p-0 shadow-alta">
+      <Cartao role="dialog" aria-labelledby="titulo-avaliacao" className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-0">
         {sucesso ? (
           <div className="flex items-start gap-3 p-4" aria-live="polite">
             <Icone nome="confirmar" tamanho={22} className="shrink-0 text-sucesso" />
@@ -131,12 +131,12 @@ export function AvisoAvaliacao() {
               <div className="mx-4 mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-y border-linha py-2 text-sm">
                 <div className="min-w-0">
                   <span className="block font-mono text-[11px] uppercase tracking-[0.08em] text-texto-3">Ensinou</span>
-                  <span className="block wrap-anywhere text-texto">{troca.proposta_por.id === usuarioId ? troca.habilidade_ensino?.nome ?? "—" : troca.habilidade_aprendo?.nome ?? "—"}</span>
+                  <span className="block wrap-anywhere font-mono text-xs text-texto">{troca.proposta_por.id === usuarioId ? troca.habilidade_ensino?.nome ?? "—" : troca.habilidade_aprendo?.nome ?? "—"}</span>
                 </div>
                 <span className="text-texto-3" aria-hidden="true">⇄</span>
                 <div className="min-w-0 text-right">
                   <span className="block font-mono text-[11px] uppercase tracking-[0.08em] text-texto-3">Aprendeu</span>
-                  <span className="block wrap-anywhere text-texto">{troca.proposta_por.id === usuarioId ? troca.habilidade_aprendo?.nome ?? "—" : troca.habilidade_ensino?.nome ?? "—"}</span>
+                  <span className="block wrap-anywhere font-mono text-xs text-texto">{troca.proposta_por.id === usuarioId ? troca.habilidade_aprendo?.nome ?? "—" : troca.habilidade_ensino?.nome ?? "—"}</span>
                 </div>
               </div>
             )}
