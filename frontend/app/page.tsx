@@ -136,7 +136,6 @@ export default function Inicio() {
 
       <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-linha py-6 text-sm text-texto-3">
         <span>{NOME_REDE} · troca de conhecimento entre estudantes</span>
-        <span className="font-mono text-xs">Projeto acadêmico</span>
       </footer>
     </div>
   );
