@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.catalogo import normalizar
 from app.core.contadores import contador_iniciais
 from app.core.matches import indice_matches
 from app.models.habilidade import Habilidade
@@ -27,17 +28,22 @@ from app.services import avaliacoes, follows, posts, streak
 def listar(
     db: Session, offset: int, limit: int, busca: str | None = None
 ) -> tuple[list[UserItemOut], int]:
-    consulta = select(User)
-    termo = (busca or "").strip().lower()
+    termo = (busca or "").strip()
     if termo:
-        consulta = consulta.where(
-            func.lower(User.username).contains(termo, autoescape=True)
-            | func.lower(User.name).contains(termo, autoescape=True)
+        alvo = normalizar(termo)
+        filtrados = [
+            usuario
+            for usuario in db.scalars(select(User).order_by(User.username))
+            if alvo in normalizar(usuario.username) or alvo in normalizar(usuario.name)
+        ]
+        total = len(filtrados)
+        users = filtrados[offset : offset + limit]
+    else:
+        consulta = select(User)
+        total = db.scalar(select(func.count()).select_from(consulta.subquery())) or 0
+        users = list(
+            db.scalars(consulta.order_by(User.username).offset(offset).limit(limit))
         )
-    total = db.scalar(select(func.count()).select_from(consulta.subquery())) or 0
-    users = list(
-        db.scalars(consulta.order_by(User.username).offset(offset).limit(limit))
-    )
     habilidades_por_usuario = _habilidades_por_usuario(db, [usuario.id for usuario in users])
     items = [
         UserItemOut(
