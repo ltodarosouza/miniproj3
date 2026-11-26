@@ -4,11 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ItemNotificacao } from "@/components/notificacoes/ItemNotificacao";
 import { Botao, BotaoLink } from "@/components/ui/Botao";
-import { Cartao } from "@/components/ui/Cartao";
 import { ErroApi } from "@/lib/api";
 import {
   grupoDaData,
-  listarNotificacoes,
+  chaveDaNotificacao,
+  listarPaginaNotificacoes,
   marcarLidas,
   type GrupoData,
   type Notificacao,
@@ -19,23 +19,22 @@ const ORDEM_GRUPOS: GrupoData[] = ["Hoje", "Esta semana", "Antes"];
 
 export default function Pagina() {
   const [dados, setDados] = useState<Notificacao[] | null>(null);
-  const [total, setTotal] = useState(0);
-  const [offsetServidor, setOffsetServidor] = useState(0);
+  const [cursor, setCursor] = useState<string | null>(null);
   const [carregandoMais, setCarregandoMais] = useState(false);
   const [erroMais, setErroMais] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [logado, setLogado] = useState<boolean | null>(null);
   const montada = useRef(false);
+  const carregandoMaisRef = useRef(false);
 
   const carregar = useCallback(async () => {
     const id = meuId();
     setErro(null);
     try {
-      const resposta = await listarNotificacoes(0, 50);
+      const resposta = await listarPaginaNotificacoes(50);
       if (!montada.current || meuId() !== id) return;
       setDados(resposta.items);
-      setTotal(resposta.total);
-      setOffsetServidor(resposta.items.length);
+      setCursor(resposta.proximo_cursor);
       await marcarLidas().catch(() => {});
     } catch (err) {
       if (!montada.current || meuId() !== id) return;
@@ -53,34 +52,23 @@ export default function Pagina() {
   }, []);
 
   const carregarMais = useCallback(async () => {
-    if (!dados || carregandoMais) return;
+    if (!dados?.length || cursor === null || carregandoMaisRef.current) return;
+    const id = meuId();
+    carregandoMaisRef.current = true;
     setCarregandoMais(true);
     setErroMais(false);
     try {
-      const resposta = await listarNotificacoes(offsetServidor, 50);
-      setOffsetServidor((atual) => atual + resposta.items.length);
-      setDados((atuais) => {
-        if (!atuais) return resposta.items;
-        const chaves = new Set(
-          atuais.map((item) => `${item.tipo}-${item.em}-${item.ator.id}`),
-        );
-        return [
-          ...atuais,
-          ...resposta.items.filter((item) => {
-            const chave = `${item.tipo}-${item.em}-${item.ator.id}`;
-            if (chaves.has(chave)) return false;
-            chaves.add(chave);
-            return true;
-          }),
-        ];
-      });
-      setTotal(resposta.total);
+      const resposta = await listarPaginaNotificacoes(50, cursor);
+      if (!montada.current || meuId() !== id) return;
+      setDados((anteriores) => anteriores ? [...anteriores, ...resposta.items] : resposta.items);
+      setCursor(resposta.proximo_cursor);
     } catch {
-      setErroMais(true);
+      if (montada.current && meuId() === id) setErroMais(true);
     } finally {
-      setCarregandoMais(false);
+      carregandoMaisRef.current = false;
+      if (montada.current && meuId() === id) setCarregandoMais(false);
     }
-  }, [dados, carregandoMais, offsetServidor]);
+  }, [dados, cursor]);
 
   useEffect(() => {
     montada.current = true;
@@ -106,7 +94,7 @@ export default function Pagina() {
           Notificações
         </h1>
         <p className="mt-1 text-sm text-texto-2">
-          Curtidas, comentários, seguidores e trocas.
+          Registro de curtidas, comentários, seguidores e trocas.
         </p>
       </header>
 
@@ -120,32 +108,36 @@ export default function Pagina() {
       )}
 
       {logado && erro && (
-        <Cartao className="flex items-center justify-between gap-3 p-3">
+        <div className="flex items-center justify-between gap-3 border-y border-linha py-4">
           <p role="alert" className="text-sm text-texto-2">
             {erro}
           </p>
           <Botao variante="secundario" tamanho="sm" onClick={carregar}>
             Tentar de novo
           </Botao>
-        </Cartao>
+        </div>
       )}
 
       {logado && !dados && !erro && (
         <div role="status" aria-busy="true">
           <span className="sr-only">Carregando notificações</span>
-          <ul className="space-y-2" aria-hidden>
+          <ul className="divide-y divide-linha border-y border-linha" aria-hidden>
             {[0, 1, 2].map((i) => (
               <li
                 key={i}
-                className="h-16 animate-pulse rounded-cartao bg-superficie-2 motion-reduce:animate-none"
-              />
+                className="flex h-14 animate-pulse items-center gap-3 motion-reduce:animate-none"
+              >
+                <span className="h-3 w-10 rounded-[2px] bg-superficie-2" />
+                <span className="size-10 rounded-[4px] bg-superficie-2" />
+                <span className="h-3 flex-1 rounded-[2px] bg-superficie-2" />
+              </li>
             ))}
           </ul>
         </div>
       )}
 
       {logado && dados && dados.length === 0 && (
-        <Cartao className="flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col items-start gap-4 border-y border-linha py-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm leading-relaxed text-texto-2">
             Quando alguém curtir, comentar ou propor uma troca, aparece aqui.
           </p>
@@ -156,21 +148,19 @@ export default function Pagina() {
           >
             Ir para o feed
           </BotaoLink>
-        </Cartao>
+        </div>
       )}
 
       {logado && dados && grupos.length > 0 && (
-        <div className="space-y-6">
-          {grupos.map((grupo) => (
-            <section key={grupo.titulo} className="space-y-3">
-              <h2 className="text-sm font-semibold text-texto-2">
-                {grupo.titulo}
+        <div className="space-y-8">
+          {grupos.map((grupo, indice) => (
+            <section key={grupo.titulo}>
+              <h2 className="pb-2 border-b border-linha font-mono text-xs uppercase tracking-[0.08em] text-texto-3 tabular-nums">
+                {String(indice + 1).padStart(2, "0")} · {grupo.titulo}
               </h2>
-              <ul className="-mx-3 space-y-1">
+              <ul className="divide-y divide-linha border-b border-linha">
                 {grupo.itens.map((item) => (
-                  <li
-                    key={`${item.tipo}-${item.em}-${item.ator.id}`}
-                  >
+                  <li key={chaveDaNotificacao(item)}>
                     <ItemNotificacao notificacao={item} />
                   </li>
                 ))}
@@ -180,8 +170,8 @@ export default function Pagina() {
         </div>
       )}
 
-      {logado && dados && offsetServidor < total && (
-        <div className="flex flex-col items-center gap-2">
+      {logado && dados && cursor !== null && (
+        <div className="flex flex-col items-start gap-2">
           {erroMais && (
             <p role="alert" className="text-sm text-perigo">
               não consegui carregar mais, tente de novo

@@ -61,7 +61,7 @@ export function BotaoSeguirDeVolta({ username, nome }: { username: string; nome:
         {seguindo ? "Seguindo" : "Seguir de volta"}
       </Botao>
       {erro && (
-        <span role="alert" className="text-xs text-perigo">
+        <span role="alert" className="font-mono text-[11px] text-perigo">
           sem conexão, tente de novo
         </span>
       )}

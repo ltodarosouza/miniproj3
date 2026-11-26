@@ -50,21 +50,24 @@ export function ToastNotificacoes() {
               setPausado(false);
             }
           }}
-          className={`flex items-start gap-3 rounded-cartao border border-linha bg-superficie p-3 shadow-[var(--sombra-alta)] transition-[opacity,translate] duration-200 motion-reduce:transition-none ${visivel ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0 sm:-translate-y-2"}`}
+          className={`flex items-start gap-3 rounded-controle bg-grafite p-3 text-grafite-texto shadow-alta transition-[opacity,translate] duration-200 motion-reduce:transition-none ${visivel ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0 sm:-translate-y-2"}`}
         >
           <Avatar nome={ultimaNova.ator.name} url={ultimaNova.ator.avatar_url} tamanho="sm" />
-          <Link
-            href={linkDaNotificacao(ultimaNova)}
-            onClick={fechar}
-            className="min-w-0 flex-1 text-sm text-texto hover:underline"
-          >
-            {textoDoToast(ultimaNova)}
-          </Link>
+          <div className="min-w-0 flex-1">
+            <span className="block font-mono text-[11px] uppercase tracking-[0.08em] opacity-70">Nova atividade</span>
+            <Link
+              href={linkDaNotificacao(ultimaNova)}
+              onClick={fechar}
+              className="text-sm hover:underline"
+            >
+              {textoDoToast(ultimaNova)}
+            </Link>
+          </div>
           <button
             type="button"
             aria-label="Fechar aviso"
             onClick={fechar}
-            className="-mr-1 -mt-1 inline-flex size-8 shrink-0 items-center justify-center rounded-full text-lg leading-none text-texto-3 transition-colors hover:bg-superficie-2 hover:text-texto motion-reduce:transition-none"
+            className="-mr-1 -mt-1 inline-flex size-8 shrink-0 items-center justify-center rounded-controle text-lg leading-none opacity-70 transition-colors hover:bg-current/10 hover:opacity-100 motion-reduce:transition-none"
           >
             ×
           </button>
