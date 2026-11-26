@@ -4,10 +4,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import bcrypt
-from sqlalchemy import select
+from sqlalchemy import create_engine, event, select
+from sqlalchemy.orm import Session
 
 import refazer_posts
 from app.db import SessionLocal
+from app.db import Base
 from app.models.comentario import Comentario
 from app.models.curtida import Curtida
 from app.models.post import Post
@@ -163,3 +165,48 @@ def test_bio_seed_com_outra_senha_nao_e_bot(client):
         ))
         db.commit()
         assert "real_bio_conhecida" not in {u.username for u in refazer_posts.encontrar_bots(db)}
+
+
+def test_restaurar_com_foreign_keys_ativas(tmp_path):
+    motor = create_engine(f"sqlite:///{tmp_path / 'fk.db'}")
+
+    @event.listens_for(motor, "connect")
+    def habilitar_chaves(conexao, _):
+        conexao.execute("PRAGMA foreign_keys=ON")
+
+    Base.metadata.create_all(motor)
+    backup = tmp_path / "fk.json"
+    try:
+        with Session(motor) as db:
+            seed.seed_fake(db)
+            bot = next(u for u in refazer_posts.encontrar_bots(db) if u.username != "ada")
+            post = db.scalar(select(Post).where(Post.autor_id == bot.id))
+            db.add(Comentario(post_id=post.id, autor_id=bot.id, texto="comentário teste"))
+            db.commit()
+            refazer_posts.refazer(db, "bots", backup)
+            refazer_posts.restaurar(db, backup)
+            assert db.scalar(select(Comentario.texto).where(Comentario.texto == "comentário teste"))
+    finally:
+        motor.dispose()
+
+
+def test_backup_existente_nao_e_sobrescrito(client, tmp_path):
+    with SessionLocal() as db:
+        seed.seed_fake(db)
+        caminho = tmp_path / "backup.json"
+        refazer_posts.refazer(db, "bots", caminho)
+        conteudo = caminho.read_bytes()
+        posts = list(db.scalars(select(Post.id).order_by(Post.id)))
+        try:
+            refazer_posts.refazer(db, "bots", caminho)
+        except SystemExit as erro:
+            assert "já existe" in str(erro)
+        else:
+            raise AssertionError("backup existente deveria ser recusado")
+        assert caminho.read_bytes() == conteudo
+        assert list(db.scalars(select(Post.id).order_by(Post.id))) == posts
+
+
+def test_travar_tabelas_sqlite_nao_faz_nada(client):
+    with SessionLocal() as db:
+        refazer_posts._travar_tabelas(db)

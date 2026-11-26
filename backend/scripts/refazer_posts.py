@@ -3,7 +3,9 @@ import base64
 from functools import lru_cache
 import json
 import random
+import os
 import sys
+import tempfile
 from datetime import date, datetime
 from pathlib import Path
 
@@ -129,10 +131,19 @@ def fazer_backup(
                "autores": None if escopo == "todos" else [u.id for u in bots],
                "posts_reais": list(posts_reais), "tabelas": tabelas}
     caminho.parent.mkdir(parents=True, exist_ok=True)
-    temporario = caminho.with_name(caminho.name + ".tmp")
+    descritor, nome_temporario = tempfile.mkstemp(
+        dir=caminho.parent, prefix=caminho.name + ".", suffix=".tmp"
+    )
+    temporario = Path(nome_temporario)
     try:
-        temporario.write_text(json.dumps(arquivo, ensure_ascii=False, indent=1), encoding="utf-8")
-        temporario.replace(caminho)
+        with os.fdopen(descritor, "w", encoding="utf-8") as destino:
+            destino.write(json.dumps(arquivo, ensure_ascii=False, indent=1))
+            destino.flush()
+            os.fsync(destino.fileno())
+        try:
+            os.link(temporario, caminho)
+        except FileExistsError as erro:
+            raise SystemExit(f"o backup {caminho} já existe; escolha outro --backup") from erro
     finally:
         if temporario.exists():
             temporario.unlink()
@@ -155,18 +166,43 @@ def _dados_novos(db: Session, bots: list[User]):
     return sorteio, seed.gerar_posts(bots, perfis, nomes, sorteio)
 
 
+def _travar_tabelas(db: Session) -> None:
+    if db.bind.dialect.name != "postgresql":
+        return
+    try:
+        db.execute(text("SET LOCAL lock_timeout = '30s'"))
+        db.execute(text(
+            "LOCK TABLE posts, likes, comentarios, imagens_post, notificacoes_entregues "
+            "IN EXCLUSIVE MODE"
+        ))
+    except Exception as erro:
+        origem = getattr(erro, "orig", None)
+        sqlstate = getattr(origem, "sqlstate", None) or getattr(origem, "pgcode", None)
+        if (
+            "lock timeout" in str(erro).lower()
+            or origem.__class__.__name__ == "LockNotAvailable"
+            or sqlstate == "55P03"
+        ):
+            db.rollback()
+            raise RuntimeError("tempo limite ao travar as tabelas; tente de novo (nada foi alterado)") from erro
+        raise
+
+
 def refazer(
     db: Session, escopo: str, caminho_backup: Path, posts_reais: list[int] = (),
     bots: list[User] | None = None,
 ) -> dict:
-    bots = encontrar_bots(db) if bots is None else bots
-    if not bots:
-        raise SystemExit("nenhum usuário bot do seed foi encontrado; nada foi alterado")
-    if escopo == "todos" and posts_reais:
-        raise SystemExit("--posts-reais não pode ser usado com --escopo todos")
-    ids = posts_do_escopo(db, escopo, bots, posts_reais)
-    apagados = fazer_backup(db, escopo, bots, ids, caminho_backup, posts_reais)
+    if caminho_backup.exists():
+        raise SystemExit(f"o backup {caminho_backup} já existe; escolha outro --backup")
     try:
+        _travar_tabelas(db)
+        bots = encontrar_bots(db) if bots is None else bots
+        if not bots:
+            raise SystemExit("nenhum usuário bot do seed foi encontrado; nada foi alterado")
+        if escopo == "todos" and posts_reais:
+            raise SystemExit("--posts-reais não pode ser usado com --escopo todos")
+        ids = posts_do_escopo(db, escopo, bots, posts_reais)
+        apagados = fazer_backup(db, escopo, bots, ids, caminho_backup, posts_reais)
         apagar_posts(db, ids)
         sorteio, novos = _dados_novos(db, bots)
         db.add_all(novos)
@@ -174,14 +210,19 @@ def refazer(
         if len(bots) >= 2 and len(novos) >= 25 and len(bots) * len(novos) > 120:
             seed.criar_curtidas_e_comentarios(db, bots, novos, sorteio)
         db.commit()
-    except Exception:
+    except BaseException:
         db.rollback()
         raise
     return {"apagados": apagados, "posts_novos": len(novos), "com_foto": sum(p.imagem_url is not None for p in novos), "backup": str(caminho_backup)}
 
 
 def restaurar(db: Session, caminho: Path) -> dict:
-    arquivo = json.loads(caminho.read_text(encoding="utf-8"))
+    try:
+        _travar_tabelas(db)
+        arquivo = json.loads(caminho.read_text(encoding="utf-8"))
+    except BaseException:
+        db.rollback()
+        raise
     autores = arquivo["autores"]
     if autores is None:
         ids = list(db.scalars(select(Post.id)))
@@ -192,6 +233,7 @@ def restaurar(db: Session, caminho: Path) -> dict:
             select(Post.id).where(Post.id.in_(ids_backup), Post.autor_id.not_in(autores))
         )) if ids_backup else []
         if colisoes:
+            db.rollback()
             raise SystemExit(f"ids do backup já pertencem a posts que não são de bots: {colisoes}")
     contagens = {nome: len(linhas) for nome, linhas in arquivo["tabelas"].items()}
     try:
@@ -210,10 +252,14 @@ def restaurar(db: Session, caminho: Path) -> dict:
                     dados[chave] = valor
                 objetos.append(modelo(**dados))
             db.add_all(objetos)
-        db.flush()
+            db.flush()
         if db.bind.dialect.name == "postgresql":
             for tabela in ("posts", "likes", "comentarios", "notificacoes_entregues"):
-                db.execute(text(f"SELECT setval(pg_get_serial_sequence('{tabela}', 'id'), COALESCE((SELECT MAX(id) FROM {tabela}), 1))"))
+                db.execute(text(
+                    f"SELECT setval(pg_get_serial_sequence('{tabela}', 'id'), "
+                    f"GREATEST(COALESCE((SELECT MAX(id) FROM {tabela}), 1), "
+                    f"COALESCE(pg_sequence_last_value(pg_get_serial_sequence('{tabela}', 'id')::regclass), 1)))"
+                ))
         db.commit()
     except Exception:
         db.rollback()
