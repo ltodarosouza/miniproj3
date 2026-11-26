@@ -40,7 +40,6 @@ export function useNaoLidas() {
   const porConversaAnterior = useRef<Record<string, number> | null>(null);
 
   const atualizar = useCallback(async () => {
-    if (indisponivel) return;
     const numero = ++pedido.current;
     const usuario = meuId();
     try {
@@ -63,13 +62,21 @@ export function useNaoLidas() {
         }
       }
     } catch (erro) {
-      if (numero !== pedido.current || usuario !== meuId()) return;
+      if (numero !== pedido.current) return;
+      const usuarioAtual = meuId();
+      if (erro instanceof ErroApi && erro.status === 401 && (usuarioAtual === null || usuario === usuarioAtual)) {
+        setDados(null);
+        setIndisponivel(true);
+        return;
+      }
+      if (usuario !== usuarioAtual) return;
       if (erro instanceof ErroApi && erro.status === 404) setIndisponivel(true);
       else setDados(null);
     }
-  }, [indisponivel]);
+  }, []);
 
   useEffect(() => {
+    if (indisponivel) return;
     let ativo = true;
     void atualizar();
     let temporizador: number;
@@ -90,7 +97,7 @@ export function useNaoLidas() {
     };
     document.addEventListener("visibilitychange", visibilidade);
     return () => { ativo = false; pedido.current++; window.clearTimeout(temporizador); document.removeEventListener("visibilitychange", visibilidade); };
-  }, [atualizar]);
+  }, [atualizar, indisponivel]);
 
   return dados;
 }

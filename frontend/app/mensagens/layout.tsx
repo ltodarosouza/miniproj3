@@ -18,7 +18,7 @@ export default function MensagensLayout({ children }: Readonly<{ children: React
   }
 
   return (
-    <div className="h-[calc(100dvh-var(--altura-navegacao)-var(--altura-barra-inferior)-3.5rem)] lg:h-[calc(100dvh-5rem)] min-h-[28rem] overflow-hidden rounded-cartao border border-linha bg-superficie shadow-cartao">
+    <div className="h-[calc(100dvh-var(--altura-navegacao)-var(--altura-barra-inferior)-3.5rem)] lg:h-[calc(100dvh-5rem)] min-h-[28rem] overflow-hidden rounded-[6px] border border-linha bg-superficie">
       <div className="flex h-full min-h-0">
         <aside className={`${ativa ? "hidden md:flex" : "flex"} w-full shrink-0 flex-col border-r border-linha md:w-80`}>
           <ListaConversas ativa={ativa} naoLidas={naoLidas} />
