@@ -26,7 +26,8 @@ Pedido direto do dono, sem issue, depois de usar a Mesa e as trocas.
   - O grid da Mesa passa de 60rem com vão de 2rem para 64rem com vão de 3rem
     (`lg`) e 4rem (`xl`). Medido com `getBoundingClientRect`, o vão entre posts
     e coluna fica em 48 px em 1024 e 1100 px e 84 px em 1440 px. O Diário
-    continua com 600 px a partir de 1280 px e não há rolagem horizontal.
+    tem 513 px em 1024, 589 px em 1100, 596 px em 1280 e volta aos 600 px
+    em 1440; não há rolagem horizontal.
   - A avaliação acontece **no cartão da ordem, dentro da conversa**. Ela segue
     a mesma regra da decisão 28: a troca precisa estar confirmada, o horário
     precisa ter passado e a pessoa ainda não pode ter avaliado
