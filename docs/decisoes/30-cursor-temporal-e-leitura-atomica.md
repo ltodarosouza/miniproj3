@@ -25,7 +25,10 @@
   do último item: `em`, `tipo`, `ator_id` e uma chave interna. Com `cursor=`,
   o servidor ignora cada evento posterior ao recorte antes de agrupar
   curtidas, ordena por (`em` desc, `tipo`, `ator_id`, chave) e devolve os
-  itens estritamente depois da posição.
+  itens estritamente depois da posição. Como toda curtida de um grupo cai no
+  mesmo dia, só um grupo do dia da posição pode descer para baixo dela se
+  alguém descurtir; por isso o cursor também leva os `post_id` dos grupos
+  de curtida já entregues naquele dia, e a página seguinte os exclui.
 
   `antes_de=<iso>` continua por compatibilidade e recorta cada evento com
   `em < antes_de` antes de agrupar. Os dois parâmetros juntos ou um cursor
@@ -38,7 +41,8 @@
   numa nova transação. `_lidas_ate_id` e `_entregues_ate_id` viraram uma
   função com a coluna como parâmetro.
 - **O que cortamos e por quê:** snapshot persistido no banco (tabela de
-  notificações), que mudaria a decisão 21 inteira. Descurtir entre páginas
-  ainda pode baixar o horário de um grupo e repeti-lo; o front pode
-  deduplicar pela chave. A troca da busca de username em `dms.py` por
-  `por_username_ou_404` fica para quando a #73 entrar.
+  notificações), que mudaria a decisão 21 inteira. Na página 1 pedida por
+  `offset` > 0, o cursor só conhece os grupos daquela página; quem pagina
+  com `cursor` desde o início não tem esse limite. A troca da busca de
+  username em `dms.py` por `por_username_ou_404` fica para quando a #73
+  entrar.
