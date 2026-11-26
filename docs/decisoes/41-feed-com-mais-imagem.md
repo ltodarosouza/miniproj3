@@ -11,8 +11,9 @@ Pedido direto do dono, sem issue.
   do seed (o feed de cada pessoa mostra só os próprios posts e os de quem ela segue, de quem pode ensinar e de quem estuda as mesmas habilidades, então ali a proporção fica perto de metade, sem alternância
   garantida): 56 posts, 28 com
   foto e 28 sem. O seed mantém oito pessoas constantes postando por quatro
-  dias seguidos, incluindo hoje, e as outras 24 postando uma vez nos últimos
-  sete dias. Os dias seguem o fuso da sequência (São Paulo); a menos de
+  dias seguidos, incluindo hoje, e as outras 24 postando uma vez em um dos
+  sete dias locais que terminam no último dia da sequência (hoje, ou ontem perto
+  da virada). Os dias seguem o fuso da sequência (São Paulo); a menos de
   duas horas da meia-noite, a sequência termina ontem, o que o cálculo do
   streak aceita. Todos os horários são distintos e anteriores ao momento do seed. Os textos têm até 90 caracteres: legendas próprias acompanham
   fotos, e posts sem foto usam frases de rotina. As fotos do Unsplash seguem o
