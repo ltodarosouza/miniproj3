@@ -28,11 +28,16 @@
   itens estritamente depois da posição.
 
   Descurtir entre páginas baixaria o horário de um grupo já entregue e o
-  faria reaparecer. Por isso, a cada página com próxima, o servidor guarda
-  em `notificacoes_entregues` (migração 0006) a posição original de cada
-  grupo de curtida entregue (pessoa, recorte, post, dia, `em`, ator). Nas
-  páginas seguintes do mesmo recorte, esse grupo é ordenado pela posição
-  guardada, então continua acima do cursor. Levar a lista no próprio cursor
+  faria reaparecer. Por isso, cada página 1 abre uma sequência com id
+  próprio (vai no cursor), e a cada página com próxima o servidor guarda em
+  `notificacoes_entregues` (migração 0006) a posição original de cada grupo
+  de curtida entregue (pessoa, sequência, post, dia, `em`, ator). Nas
+  páginas seguintes da mesma sequência, esse grupo é ordenado pela posição
+  guardada, então continua acima do cursor. A gravação usa ON CONFLICT DO
+  NOTHING e confere as posições antes de emitir o cursor; se outra
+  requisição gravou outra posição, a página é recalculada (até 3 vezes,
+  depois 409). O id da sequência separa duas paginações com o mesmo
+  `antes_de`. Levar a lista no próprio cursor
   foi a primeira tentativa, mas ela crescia a cada página e estourava o
   limite do parâmetro. Na tabela, o cursor tem tamanho fixo, e repetir o
   mesmo cursor devolve a mesma página. Linhas com recorte de mais de um dia
