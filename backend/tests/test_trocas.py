@@ -1,8 +1,12 @@
+import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
+from pathlib import Path
 from time import sleep
 from urllib.parse import parse_qs, urlparse
 
+import pytest
 from sqlalchemy import select
 
 from app.core.tempo import agora_utc
@@ -312,3 +316,29 @@ def test_propostas_simultaneas_do_par_criam_so_uma(client, pessoa, monkeypatch):
     with SessionLocal() as db:
         pendentes = db.scalars(select(Troca).where(Troca.status == "proposta")).all()
     assert len(pendentes) == 1
+
+
+def test_username_da_troca_ignora_maiusculas(client, pessoa):
+    ana = pessoa("ana")
+    pessoa("bia")
+    ids = habilidades(client)
+
+    resposta = criar(client, ana, proposta(ids, "Bia"))
+
+    assert resposta.status_code == 201
+    assert resposta.json()["com"]["username"] == "bia"
+    assert len(client.get("/trocas?com=BIA", headers=ana).json()["items"]) == 1
+    assert client.get("/trocas/opcoes/Bia", headers=ana).status_code == 200
+
+
+@pytest.mark.parametrize(
+    "modulo", ["app.services.trocas", "app.services.avaliacoes", "app.services.users"]
+)
+def test_servicos_importam_sozinhos_sem_ciclo(modulo):
+    resultado = subprocess.run(
+        [sys.executable, "-c", f"import {modulo}"],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+    )
+    assert resultado.returncode == 0, resultado.stderr

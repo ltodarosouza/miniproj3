@@ -13,6 +13,7 @@ from app.models.user_habilidade import UserHabilidade
 from app.schemas.match import HabilidadeComNivel
 from app.schemas.troca import HabilidadeResumo, OpcoesTroca, TrocaCreate, TrocaOut
 from app.schemas.user import UserOut
+from app.services import users
 
 
 def link_google_agenda(
@@ -135,9 +136,7 @@ def _pendente_do_par(db: Session, um_id: int, outro_id: int) -> Troca | None:
 
 
 def criar(db: Session, pessoa: User, dados: TrocaCreate) -> TrocaOut:
-    com = db.scalar(select(User).where(User.username == dados.com_username))
-    if com is None:
-        raise HTTPException(status_code=404, detail="pessoa não encontrada")
+    com = users.por_username_ou_404(db, dados.com_username)
     if com.id == pessoa.id:
         raise HTTPException(status_code=422, detail="não é possível propor para si")
     if dados.data_hora <= agora_utc():
@@ -218,9 +217,7 @@ def listar(db: Session, pessoa: User, com_username: str | None) -> list[TrocaOut
         or_(Troca.proposta_por_id == pessoa.id, Troca.com_id == pessoa.id)
     )
     if com_username is not None:
-        com = db.scalar(select(User).where(User.username == com_username))
-        if com is None:
-            raise HTTPException(status_code=404, detail="pessoa não encontrada")
+        com = users.por_username_ou_404(db, com_username)
         consulta = consulta.where(
             or_(
                 (Troca.proposta_por_id == pessoa.id) & (Troca.com_id == com.id),
@@ -263,9 +260,7 @@ def _em_comum(
 
 
 def opcoes(db: Session, pessoa: User, com_username: str) -> OpcoesTroca:
-    com = db.scalar(select(User).where(User.username == com_username))
-    if com is None:
-        raise HTTPException(status_code=404, detail="pessoa não encontrada")
+    com = users.por_username_ou_404(db, com_username)
     if com.id == pessoa.id:
         raise HTTPException(status_code=422, detail="não é possível propor para si")
     minhas = _habilidades_por_tipo(db, pessoa.id)
