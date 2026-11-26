@@ -44,6 +44,8 @@ export function SegmentosNivel({ nivel }: { nivel: number }) {
 function SeletorNivel({ nome, nivel, aoEscolher }: { nome: string; nivel: number; aoEscolher: (n: number) => void }) {
   const grupo = useRef<HTMLDivElement>(null);
   const maximo = NIVEIS[NIVEIS.length - 1];
+  // Nível fora da escala (dado antigo) ainda deixa o primeiro segmento alcançável pelo Tab.
+  const focavel = NIVEIS.includes(nivel) ? nivel : NIVEIS[0];
 
   function teclar(evento: KeyboardEvent<HTMLDivElement>) {
     let novo: number | null = null;
@@ -66,7 +68,7 @@ function SeletorNivel({ nome, nivel, aoEscolher }: { nome: string; nivel: number
           role="radio"
           aria-checked={nivel === n}
           aria-label={`Nível ${n}`}
-          tabIndex={nivel === n ? 0 : -1}
+          tabIndex={focavel === n ? 0 : -1}
           onClick={() => aoEscolher(n)}
           className={`relative h-3 w-4 rounded-[1px] transition-colors duration-[var(--rapido)] motion-reduce:transition-none after:absolute after:-inset-x-px after:-inset-y-3 after:content-[''] ${FOCO} ${
             n <= nivel ? "bg-marca" : "bg-texto-3/30 hover:bg-texto-3/60"

@@ -126,6 +126,7 @@ export default function PerfilPage() {
 
   const carregarPerfil = useCallback(async () => {
     setCarregandoPerfil(true);
+    setPerfil(null);
     setErro(null);
     try {
       const dados = await buscarPerfil(username);
@@ -140,7 +141,7 @@ export default function PerfilPage() {
           : "sem conexão com o servidor, tente de novo",
       );
     } finally {
-      setCarregandoPerfil(false);
+      if (usernameAtual.current === username) setCarregandoPerfil(false);
     }
   }, [username]);
 
@@ -156,8 +157,10 @@ export default function PerfilPage() {
       } catch {
         // Posts são secundários: não quebramos a tela, só ignoramos o erro.
       } finally {
-        setCarregandoPosts(false);
-        setCarregandoMais(false);
+        if (usernameAtual.current === username) {
+          setCarregandoPosts(false);
+          setCarregandoMais(false);
+        }
       }
     },
     [username],
@@ -188,6 +191,7 @@ export default function PerfilPage() {
   useEffect(() => {
     setPosts([]);
     setTotalPosts(0);
+    setCarregandoMais(false);
     void carregarPerfil();
     void carregarPosts(0);
   }, [carregarPerfil, carregarPosts]);
