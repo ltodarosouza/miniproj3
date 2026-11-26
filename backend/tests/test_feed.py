@@ -1,4 +1,5 @@
-﻿from app.core.matches import indice_matches
+﻿from app.core.limite import limitador_posts
+from app.core.matches import indice_matches
 
 
 def seguir(client, quem, username):
@@ -186,7 +187,8 @@ def test_feed_exige_login_e_valida_paginacao(client, pessoa):
     assert client.get("/feed?offset=-1", headers=ana).status_code == 422
 
 
-def test_descobrir_nao_muda_entre_paginas_quando_alguem_publica(client, pessoa):
+def test_descobrir_nao_muda_entre_paginas_quando_alguem_publica(client, pessoa, monkeypatch):
+    monkeypatch.setattr(limitador_posts, "max_chamadas", 100)
     ana = pessoa("ana")
     bia = pessoa("bia")
     marcar(client, ana, "Python")

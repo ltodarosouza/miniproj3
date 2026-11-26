@@ -154,3 +154,20 @@ def test_editar_de_outra_pessoa_nao_marca_editado(client, pessoa):
     client.patch(f"/posts/{post_id}", json={"texto": "invadido"}, headers=bia)
 
     assert client.get(f"/posts/{post_id}", headers=ana).json()["editado_em"] is None
+
+def test_sexto_post_em_um_minuto_da_429(client, pessoa):
+    ana = pessoa("ana")
+    respostas = [
+        client.post("/posts", json={"texto": f"post {n}"}, headers=ana).status_code
+        for n in range(6)
+    ]
+    assert respostas == [201, 201, 201, 201, 201, 429]
+
+
+def test_limite_de_posts_e_por_pessoa(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    for n in range(5):
+        assert client.post("/posts", json={"texto": f"ana {n}"}, headers=ana).status_code == 201
+    r = client.post("/posts", json={"texto": "bia 0"}, headers=bia)
+    assert r.status_code == 201 

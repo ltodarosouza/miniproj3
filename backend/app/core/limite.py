@@ -27,3 +27,4 @@ class LimitadorDeTaxa:
 
 
 limitador_mapear = LimitadorDeTaxa(20, 60)
+limitador_posts = LimitadorDeTaxa(5, 60)

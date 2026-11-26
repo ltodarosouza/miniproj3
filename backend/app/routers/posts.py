@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, Query, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
+from app.core.limite import limitador_posts
 from app.db import get_db
 from app.deps import get_current_user
 from app.models.user import User
@@ -19,6 +20,11 @@ def criar_post(
     db: Session = Depends(get_db),
     eu: User = Depends(get_current_user),
 ) -> PostOut:
+    if not limitador_posts.permitir(eu.id):
+        raise HTTPException(
+            status_code=429,
+            detail="Você publicou muitos posts seguidos. Espere um minuto e tente de novo.",
+        )
     return posts.criar(db, eu, dados)
 
 

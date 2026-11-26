@@ -86,3 +86,11 @@ def pessoa(client, monkeypatch):
         return {"X-User-Id": str(r.json()["id"])}
 
     return _pessoa
+
+@pytest.fixture(autouse=True)
+def limpar_limitador_posts():
+    from app.core.limite import limitador_posts
+
+    limitador_posts.limpar()
+    yield
+    limitador_posts.limpar()
