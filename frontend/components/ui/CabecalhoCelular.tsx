@@ -11,6 +11,7 @@ import { Logo } from "./Logo";
 import { SeloContador } from "./SeloContador";
 import { Streak } from "./Streak";
 import { Folha } from "./Folha";
+import { rotuloMensagens, totalMensagens, type NaoLidas } from "./useSelos";
 
 export function CabecalhoCelular({
   nomeRede,
@@ -18,7 +19,7 @@ export function CabecalhoCelular({
   streak,
 }: {
   nomeRede: string;
-  naoLidas: { mensagens: number | null; notificacoes: number | null };
+  naoLidas: NaoLidas;
   streak: { dias: number; postouHoje: boolean } | null;
 }) {
   const caminho = usePathname();
@@ -62,12 +63,12 @@ export function CabecalhoCelular({
           </Link>
           <Link
             href="/mensagens"
-            aria-label={rotuloComContagem("Mensagens", naoLidas.mensagens)}
+            aria-label={rotuloMensagens(naoLidas)}
             aria-current={linkAtivo("/mensagens") ? "page" : undefined}
             className={`relative inline-flex size-11 items-center justify-center rounded-controle transition-colors duration-[var(--rapido)] hover:text-texto ${linkAtivo("/mensagens") ? "text-texto before:absolute before:inset-x-2.5 before:top-0 before:h-[2px] before:bg-marca before:content-['']" : "text-texto-2"}`}
           >
             <Icone nome="mensagem" tamanho={20} />
-            <span className="absolute right-0.5 top-1.5"><SeloContador total={naoLidas.mensagens} /></span>
+            <span className="absolute right-0.5 top-1.5"><SeloContador total={totalMensagens(naoLidas)} /></span>
           </Link>
           <button
             type="button"
