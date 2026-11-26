@@ -1,5 +1,9 @@
-from datetime import timedelta
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta
+from time import sleep
 from urllib.parse import parse_qs, urlparse
+
+from sqlalchemy import select
 
 from app.core.tempo import agora_utc
 from app.db import SessionLocal
@@ -87,17 +91,18 @@ def test_confirmar_recusar_e_permissoes(client, pessoa):
     bia = pessoa("bia")
     caio = pessoa("caio")
     ids = habilidades(client)
-    primeira = criar(client, ana, proposta(ids)).json()["id"]
-    segunda = criar(client, ana, proposta(ids)).json()["id"]
-
-    assert criar(client, ana, proposta(ids)).json()["respondida_em"] is None
+    criada = criar(client, ana, proposta(ids)).json()
+    primeira = criada["id"]
+    assert criada["respondida_em"] is None
     confirmada = client.post(f"/trocas/{primeira}/confirmar", headers=bia)
     assert confirmada.status_code == 200
     assert confirmada.json()["respondida_em"].endswith("Z")
-    assert client.post(f"/trocas/{segunda}/recusar", headers=bia).json()["status"] == "recusada"
-    assert client.post(f"/trocas/{primeira}/confirmar", headers=bia).status_code == 409
+
+    segunda = criar(client, ana, proposta(ids)).json()["id"]
     assert client.post(f"/trocas/{segunda}/confirmar", headers=ana).status_code == 403
     assert client.post(f"/trocas/{segunda}/confirmar", headers=caio).status_code == 404
+    assert client.post(f"/trocas/{segunda}/recusar", headers=bia).json()["status"] == "recusada"
+    assert client.post(f"/trocas/{primeira}/confirmar", headers=bia).status_code == 409
     assert client.post("/trocas/99999/confirmar", headers=bia).status_code == 404
 
 
@@ -107,7 +112,14 @@ def test_lista_ordena_futuras_e_passadas_e_filtra_por_pessoa(client, pessoa):
     pessoa("caio")
     ids = habilidades(client)
     datas = ["2030-01-10T10:00:00Z", "2030-01-12T10:00:00Z", "2030-01-14T10:00:00Z", "2030-01-16T10:00:00Z"]
-    trocas = [criar(client, ana, proposta(ids, "bia", data)).json() for data in datas]
+    trocas = []
+    for data in datas:
+        troca = criar(client, ana, proposta(ids, "bia", data)).json()
+        trocas.append(troca)
+        if data != datas[-1]:
+            with SessionLocal() as db:
+                db.get(Troca, troca["id"]).status = "confirmada"
+                db.commit()
     with SessionLocal() as db:
         for troca, horas in zip(trocas[:2], (4, 2)):
             registro = db.get(Troca, troca["id"])
@@ -119,8 +131,32 @@ def test_lista_ordena_futuras_e_passadas_e_filtra_por_pessoa(client, pessoa):
     assert [item["id"] for item in resposta.json()["items"]] == [trocas[2]["id"], trocas[3]["id"], trocas[1]["id"], trocas[0]["id"]]
     filtrada = client.get("/trocas?com=bia", headers=ana)
     assert len(filtrada.json()["items"]) == 4
+    assert resposta.json()["items"][1]["status"] == "proposta"
     assert client.get("/trocas?com=ausente", headers=ana).status_code == 404
     assert client.get("/trocas?com=caio", headers=ana).json()["items"] == []
+
+
+def test_segunda_proposta_pendente_do_par_da_409(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    pessoa("caio")
+    ids = habilidades(client)
+
+    primeira = criar(client, ana, proposta(ids))
+    assert primeira.status_code == 201
+    repetida = criar(client, ana, proposta(ids))
+    assert repetida.status_code == 409
+    assert repetida.json()["detail"] == "já existe uma proposta sua aguardando resposta"
+    inversa = criar(client, bia, proposta(ids, "ana"))
+    assert inversa.status_code == 409
+    assert inversa.json()["detail"] == "esta pessoa já te enviou uma proposta, responda antes de propor outra"
+    assert criar(client, ana, proposta(ids, "caio")).status_code == 201
+    recusada = client.post(f"/trocas/{primeira.json()['id']}/recusar", headers=bia)
+    assert recusada.status_code == 200
+    segunda = criar(client, ana, proposta(ids))
+    assert segunda.status_code == 201
+    assert client.post(f"/trocas/{segunda.json()['id']}/confirmar", headers=bia).status_code == 200
+    assert criar(client, ana, proposta(ids)).status_code == 201
 
 
 def test_link_vindo_do_formulario_e_ignorado(client, pessoa):
@@ -195,3 +231,84 @@ def test_opcoes_com_mesma_habilidade_em_sei_e_quero(client, pessoa):
 def test_opcoes_comigo_mesmo(client, pessoa):
     ana = pessoa("ana")
     assert client.get("/trocas/opcoes/ana", headers=ana).status_code == 422
+
+
+def test_confirmar_proposta_com_horario_passado_da_422(client, pessoa, monkeypatch):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    id_troca = criar(client, ana, proposta(habilidades(client))).json()["id"]
+    monkeypatch.setattr(
+        "app.services.trocas.agora_utc",
+        lambda: datetime(2030, 1, 10, 13, 0, 1),
+    )
+
+    confirmacao = client.post(f"/trocas/{id_troca}/confirmar", headers=bia)
+    assert confirmacao.status_code == 422
+    assert confirmacao.json()["detail"] == "o horário desta proposta já passou, proponha outra"
+    assert client.get("/trocas", headers=ana).json()["items"][0]["status"] == "proposta"
+    avaliacao = client.post(
+        f"/trocas/{id_troca}/avaliar",
+        json={"estrelas": 5, "feedback": "Boa"},
+        headers=ana,
+    )
+    assert avaliacao.status_code == 409
+
+    recusa = client.post(f"/trocas/{id_troca}/recusar", headers=bia)
+    assert recusa.status_code == 200
+    assert recusa.json()["status"] == "recusada"
+    confirmacao_repetida = client.post(f"/trocas/{id_troca}/confirmar", headers=bia)
+    assert confirmacao_repetida.status_code == 409
+
+
+def test_confirmar_usa_o_mesmo_instante_para_validar_e_gravar(client, pessoa, monkeypatch):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    ids = habilidades(client)
+    horario = datetime(2030, 1, 10, 13, 0)
+    no_horario = criar(client, ana, proposta(ids)).json()["id"]
+
+    monkeypatch.setattr("app.services.trocas.agora_utc", lambda: horario)
+    assert client.post(f"/trocas/{no_horario}/confirmar", headers=bia).status_code == 422
+    assert client.post(f"/trocas/{no_horario}/recusar", headers=bia).status_code == 200
+
+    monkeypatch.setattr("app.services.trocas.agora_utc", agora_utc)
+    antes = criar(client, ana, proposta(ids)).json()["id"]
+    leituras = iter([horario - timedelta(microseconds=1), horario])
+    monkeypatch.setattr("app.services.trocas.agora_utc", lambda: next(leituras))
+    confirmada = client.post(f"/trocas/{antes}/confirmar", headers=bia)
+
+    assert confirmada.status_code == 200
+    with SessionLocal() as db:
+        assert db.get(Troca, antes).respondida_em == horario - timedelta(microseconds=1)
+
+
+def test_propostas_simultaneas_do_par_criam_so_uma(client, pessoa, monkeypatch):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    ids = habilidades(client)
+    from app.services import trocas
+
+    original = trocas._pendente_do_par
+
+    def pausar_depois_da_consulta(db, um_id, outro_id):
+        resultado = original(db, um_id, outro_id)
+        sleep(0.3)
+        return resultado
+
+    monkeypatch.setattr(trocas, "_pendente_do_par", pausar_depois_da_consulta)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futuros = [
+            executor.submit(criar, client, ana, proposta(ids)),
+            executor.submit(criar, client, bia, proposta(ids, "ana")),
+        ]
+        respostas = [futuro.result() for futuro in futuros]
+
+    assert sorted(resposta.status_code for resposta in respostas) == [201, 409]
+    erro = next(resposta for resposta in respostas if resposta.status_code == 409)
+    assert erro.json()["detail"] in {
+        "já existe uma proposta sua aguardando resposta",
+        "esta pessoa já te enviou uma proposta, responda antes de propor outra",
+    }
+    with SessionLocal() as db:
+        pendentes = db.scalars(select(Troca).where(Troca.status == "proposta")).all()
+    assert len(pendentes) == 1

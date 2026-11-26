@@ -82,8 +82,8 @@ def test_proposta_e_recusada_nao_ficam_pendentes(client, pessoa):
     ana = pessoa("ana")
     pessoa("bia")
     ids = habilidades(client)
-    proposta = criar_troca(client, ana, ids, status="proposta")
     recusada = criar_troca(client, ana, ids, status="recusada")
+    proposta = criar_troca(client, ana, ids, status="proposta")
     itens = client.get("/trocas/pendentes-avaliacao", headers=ana).json()["items"]
     assert all(item["id"] not in (proposta, recusada) for item in itens)
     assert avaliar(client, proposta, ana).status_code == 409
