@@ -10,7 +10,7 @@ import { Icone } from "@/components/ui/Icone";
 import { BalaoMensagem } from "@/components/mensagens/BalaoMensagem";
 import { CaixaMensagem } from "@/components/mensagens/CaixaMensagem";
 import { aplicarEntreguesAte, chaveMensagem, confirmarEnvio, maiorIdRecebido, reconciliarMensagens, type MensagemLocal } from "@/components/mensagens/mensagemLocal";
-import { ErroApi, listarMensagens, listarTrocas, type Troca } from "@/lib/api";
+import { ErroApi, listarMensagens, listarTrocas, trocasPendentesAvaliacao, type Troca } from "@/lib/api";
 import { chaveDoDia, formatarDia } from "@/lib/datas";
 import { meuId } from "@/lib/sessao";
 import { CartaoTroca } from "@/components/trocas/CartaoTroca";
@@ -26,12 +26,27 @@ function ehSessaoEncerrada(erro: unknown) {
 
 type ItemLinhaDoTempo = { tipo: "mensagem"; mensagem: MensagemLocal } | { tipo: "troca"; troca: Troca };
 
+// Ids das trocas pendentes de avaliação com a pessoa desta conversa, sem as que acabaram de ser avaliadas aqui
+// (uma resposta que saiu antes do envio ainda as traria de volta).
+function pendentesDaConversa(trocas: Troca[], username: string, avaliadas: Set<number>): Set<number> {
+  const usuarioId = meuId();
+  const alvo = username.toLocaleLowerCase("pt-BR");
+  return new Set(trocas.filter((troca) => {
+    const outraPessoa = troca.proposta_por.id === usuarioId ? troca.com : troca.proposta_por;
+    return outraPessoa.username.toLocaleLowerCase("pt-BR") === alvo && !avaliadas.has(troca.id);
+  }).map((troca) => troca.id));
+}
+
 export default function PaginaConversa() {
   const parametros = useParams<{ username: string }>();
   const username = decodeURIComponent(parametros.username);
+  const conversaAtivaRef = useRef(username);
+  conversaAtivaRef.current = username;
   const [idUsuario, setIdUsuario] = useState<number | null>(null);
   const [mensagens, setMensagens] = useState<MensagemLocal[]>([]);
   const [trocas, setTrocas] = useState<Troca[]>([]);
+  const [pendentes, setPendentes] = useState<Set<number>>(() => new Set());
+  const avaliadasRef = useRef<Set<number>>(new Set());
   const [idsRecentes, setIdsRecentes] = useState<number[]>([]);
   const [conversa, setConversa] = useState<ConversaComStatus | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -73,12 +88,12 @@ export default function PaginaConversa() {
   }), [mensagens, trocas]);
 
   const carregarConversa = useCallback(
-    () => Promise.all([listarMensagens(username), listarConversasComStatus(), listarTrocas(username)]),
+    () => Promise.all([listarMensagens(username), listarConversasComStatus(), listarTrocas(username), trocasPendentesAvaliacao().catch(() => null)]),
     [username],
   );
 
   const aplicarCarga = useCallback(
-    ([resposta, conversas, trocasCarregadas]: Awaited<ReturnType<typeof carregarConversa>>) => {
+    ([resposta, conversas, trocasCarregadas, pendentesCarregadas]: Awaited<ReturnType<typeof carregarConversa>>) => {
       const dados = resposta as RespostaMensagens;
       cursorRef.current = maiorIdRecebido(dados.items, cursorRef.current);
       setMensagens((atuais) => reconciliarMensagens(atuais.filter((mensagem) => mensagem.id < 0), dados.items, username));
@@ -87,6 +102,7 @@ export default function PaginaConversa() {
         setMensagens((atuais) => atuais.map((mensagem) => mensagem.de_username !== username && mensagem.id > 0 && mensagem.id <= dados.lidas_ate_id! && !mensagem.lida_em ? { ...mensagem, entregue_em: mensagem.entregue_em ?? mensagem.em, lida_em: new Date().toISOString() } : mensagem));
       }
       setTrocas(trocasCarregadas.items);
+      if (pendentesCarregadas) setPendentes(pendentesDaConversa(pendentesCarregadas.items, username, avaliadasRef.current));
       setConversa(conversas.items.find((item) => item.com.username === username) ?? null);
       setSemConexao(false);
       cargaInicialConcluida.current = true;
@@ -129,6 +145,8 @@ export default function PaginaConversa() {
     setCarregando(true);
     setMensagens([]);
     setTrocas([]);
+    setPendentes(new Set());
+    conversaAtivaRef.current = username;
     setConversa(null);
     setNaoEncontrado(false);
     setErroInicial(false);
@@ -189,7 +207,8 @@ export default function PaginaConversa() {
     ciclosPolling.current += 1;
     const buscarTrocasAgora = ciclosPolling.current % 2 === 0;
     try {
-      const [respostaBase, respostaTrocas] = await Promise.all([listarMensagens(username, cursorRef.current), buscarTrocasAgora ? listarTrocas(username) : Promise.resolve(null)]);
+      const [respostaBase, respostaTrocas, respostaPendentes] = await Promise.all([listarMensagens(username, cursorRef.current), buscarTrocasAgora ? listarTrocas(username) : Promise.resolve(null), buscarTrocasAgora ? trocasPendentesAvaliacao().catch(() => null) : Promise.resolve(null)]);
+      if (conversaAtivaRef.current !== username) return;
       const resposta = respostaBase as RespostaMensagens;
       cursorRef.current = maiorIdRecebido(resposta.items, cursorRef.current);
       setMensagens((atuais) => aplicarEntreguesAte(atuais, resposta.entregues_ate_id, username));
@@ -197,6 +216,7 @@ export default function PaginaConversa() {
       const idsTrocasAtuais = new Set(trocasRef.current.map((troca) => troca.id));
       const trocasNovas = respostaTrocas?.items.filter((troca) => !idsTrocasAtuais.has(troca.id)) ?? [];
       if (respostaTrocas) setTrocas(respostaTrocas.items);
+      if (respostaPendentes) setPendentes(pendentesDaConversa(respostaPendentes.items, username, avaliadasRef.current));
       if (!resposta.items.length) {
         setSemConexao(false);
         if (trocasNovas.length) {
@@ -315,7 +335,7 @@ export default function PaginaConversa() {
           <div aria-live="polite" className="mx-auto flex max-w-3xl flex-col">
             {linhaDoTempo.map((item, indice) => {
               if (item.tipo === "troca") {
-                return <div key={`troca-${item.troca.id}`} className="my-4"><CartaoTroca troca={item.troca} aoAtualizar={(atualizada) => { setTrocas((atuais) => atuais.map((troca) => troca.id === atualizada.id ? atualizada : troca)); requestAnimationFrame(() => rolarAteFim("smooth")); }} /></div>;
+                return <div key={`troca-${item.troca.id}`} className="my-4"><CartaoTroca troca={item.troca} pendenteAvaliacao={pendentes.has(item.troca.id)} aoAvaliar={(id) => { avaliadasRef.current.add(id); setPendentes((atuais) => { const proximas = new Set(atuais); proximas.delete(id); return proximas; }); }} aoAtualizar={(atualizada) => { setTrocas((atuais) => atuais.map((troca) => troca.id === atualizada.id ? atualizada : troca)); requestAnimationFrame(() => rolarAteFim("smooth")); }} /></div>;
               }
               const mensagem = item.mensagem;
               const anterior = linhaDoTempo[indice - 1];
@@ -337,6 +357,7 @@ export default function PaginaConversa() {
         )}
         {novas && <div className="sticky bottom-2 flex justify-center"><Botao tamanho="sm" variante="secundario" onClick={() => rolarAteFim("smooth")}>Novas mensagens</Botao></div>}
       </div>
+      {pendentes.size > 0 && <div className="flex items-center justify-between gap-3 border-t border-linha bg-superficie px-4 py-2 text-sm text-texto-2"><span>Como foi a troca? Avalie no cartão da ordem.</span><Botao variante="fantasma" tamanho="sm" onClick={() => { const id = pendentes.values().next().value as number | undefined; if (id === undefined) return; document.getElementById(`troca-${id}`)?.scrollIntoView({ behavior: prefereMenosMovimento() ? "auto" : "smooth", block: "center" }); }}>Avaliar</Botao></div>}
       <CaixaMensagem aoEnviar={aoEnviar} desabilitada={carregando || naoEncontrado} />
       <FormAgendarTroca comUsername={username} comNome={com?.name || username} aberto={formAberto} aoFechar={() => setFormAberto(false)} aoCriar={(troca) => { setTrocas((atuais) => atuais.some((item) => item.id === troca.id) ? atuais : [...atuais, troca]); requestAnimationFrame(() => rolarAteFim("smooth")); }} />
     </div>
