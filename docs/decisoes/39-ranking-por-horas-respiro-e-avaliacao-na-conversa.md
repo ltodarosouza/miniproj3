@@ -25,9 +25,11 @@ Pedido direto do dono, sem issue, depois de usar a Mesa e as trocas.
     da coluna basta e a faixa só repetia o mesmo conteúdo.
   - O grid da Mesa passa de 60rem com vão de 2rem para 64rem com vão de 3rem
     (`lg`) e 4rem (`xl`). Medido com `getBoundingClientRect`, o vão entre posts
-    e coluna fica em 48 px em 1024 e 1100 px e 84 px em 1440 px. O Diário
-    tem 513 px em 1024, 589 px em 1100, 596 px em 1280 e volta aos 600 px
-    em 1440; não há rolagem horizontal.
+    e coluna fica em 48 px em 1024 e 1100 px e 84 px em 1440 px. A largura
+    do Diário depende da barra de rolagem do navegador: no navegador do Orca,
+    com a barra visível, ela ficou em 513 px em 1024, 589 px em 1100, 596 px em
+    1280 e 600 px em 1440; no Chrome headless, sem barra, ficou em 524 e 600 px
+    em 1024 e 1100. Não há rolagem horizontal em nenhum dos dois.
   - A avaliação acontece **no cartão da ordem, dentro da conversa**. Ela segue
     a mesma regra da decisão 28: a troca precisa estar confirmada, o horário
     precisa ter passado e a pessoa ainda não pode ter avaliado
