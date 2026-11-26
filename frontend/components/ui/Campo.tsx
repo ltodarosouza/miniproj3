@@ -3,7 +3,7 @@
 import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 
 const BASE =
-  "w-full rounded-controle border bg-superficie px-3 text-base md:text-[0.9375rem] text-texto placeholder:text-texto-3 transition-[border-color,box-shadow] duration-[var(--rapido)] ease-saida focus:outline-none focus:border-marca focus:ring-2 focus:ring-marca/40";
+  "w-full rounded-controle border bg-superficie px-3 text-base md:text-[0.9375rem] text-texto placeholder:text-texto-2 transition-[border-color,outline-color] duration-[var(--rapido)] ease-saida focus:border-foco focus-visible:outline-2 focus-visible:outline-foco focus-visible:outline-offset-2";
 
 function Rotulo({
   id,
@@ -29,7 +29,7 @@ function Rotulo({
           {erro}
         </p>
       ) : dica ? (
-        <p id={`${id}-msg`} className="text-sm text-texto-3">
+        <p id={`${id}-msg`} className="text-sm text-texto-2">
           {dica}
         </p>
       ) : null}

@@ -11,6 +11,7 @@
   --texto-3: #8A857A;
   --marca: #F2A900;
   --marca-forte: #A86A00;
+  --foco: var(--marca-forte);
   --logo-match: var(--marca-forte);
   --marca-suave: #FBF0D2;
   --marca-texto: #1B1A17;
@@ -50,6 +51,7 @@
     --texto-3: #858073;
     --marca: #F2A900;
     --marca-forte: #F5B82E;
+    --foco: var(--marca);
     --logo-match: var(--marca);
     --marca-suave: #2E2614;
     --marca-texto: #1B1A17;
@@ -82,6 +84,7 @@
   --texto-3: #858073;
   --marca: #F2A900;
   --marca-forte: #F5B82E;
+  --foco: var(--marca);
   --logo-match: var(--marca);
   --marca-suave: #2E2614;
   --marca-texto: #1B1A17;
@@ -113,6 +116,7 @@
   --color-texto-3: var(--texto-3);
   --color-marca: var(--marca);
   --color-marca-forte: var(--marca-forte);
+  --color-foco: var(--foco);
   --color-marca-suave: var(--marca-suave);
   --color-marca-texto: var(--marca-texto);
   --color-troca: var(--troca);
@@ -179,7 +183,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--marca);
+  outline: 2px solid var(--foco);
   outline-offset: 2px;
   border-radius: 4px;
 }
