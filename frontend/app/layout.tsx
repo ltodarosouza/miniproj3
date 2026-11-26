@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
 
 import { Navegacao } from "@/components/ui/Navegacao";
 import { AvisoAvaliacao } from "@/components/avaliacoes/AvisoAvaliacao";
@@ -9,12 +9,13 @@ import { SCRIPT_TEMA } from "@/lib/tema";
 
 import "./globals.css";
 
-const geist = Geist({ subsets: ["latin"], variable: "--fonte-geist" });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--fonte-geist-mono" });
+const grotesk = Space_Grotesk({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--fonte-grotesk" });
+const plexSans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--fonte-plex-sans" });
+const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--fonte-plex-mono" });
 
 export const metadata: Metadata = {
   title: NOME_REDE,
-  description: "Troque o que você sabe pelo que você quer aprender.",
+  description: "Bolsa de troca de conhecimento entre estudantes: ensine o que você sabe, aprenda o que falta.",
   appleWebApp: { capable: true, title: NOME_REDE, statusBarStyle: "default" },
   icons: {
     icon: [
@@ -30,14 +31,14 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7fbfa" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f1a1a" },
+    { media: "(prefers-color-scheme: light)", color: "#F7F6F2" },
+    { media: "(prefers-color-scheme: dark)", color: "#121110" },
   ],
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html lang="pt-BR" className={`${grotesk.variable} ${plexSans.variable} ${plexMono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
         <script dangerouslySetInnerHTML={{ __html: 'try{document.documentElement.dataset.logado=localStorage.getItem("token")?"sim":"nao"}catch(e){}' }} />
