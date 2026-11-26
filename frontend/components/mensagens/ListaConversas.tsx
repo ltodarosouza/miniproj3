@@ -62,9 +62,9 @@ export function ListaConversas({ ativa, naoLidas }: { ativa?: string; naoLidas: 
     <section className="flex h-full min-h-0 flex-col" aria-label="Lista de conversas">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-linha px-4">
         <h1 className="font-display text-lg font-semibold tracking-tight text-texto">Mensagens</h1>
-        {conversas.length > 0 && <span className="font-mono text-xs tabular-nums text-texto-3">{conversas.length}</span>}
+        {usuarioId !== null && conversas.length > 0 && <span className="font-mono text-xs tabular-nums text-texto-3">{conversas.length}</span>}
       </header>
-      {conversas.length > 0 && <ConviteAvisos temConversas />}
+      {usuarioId !== null && conversas.length > 0 && <ConviteAvisos temConversas />}
       <div className="min-h-0 flex-1 overflow-y-auto">
         {usuarioId === null ? (
           <div className="px-4 py-6 text-sm leading-relaxed text-texto-2">
