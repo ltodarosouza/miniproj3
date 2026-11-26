@@ -72,10 +72,10 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
         <div className="border-y border-linha py-2.5">
           <div className="space-y-2">
             {habilidadeEnsino && (
-              <p className="flex min-w-0 items-center justify-between gap-3 text-sm">
+              <p className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 text-sm">
                 <span className="min-w-0 truncate text-texto-2">{propus ? "Você ensina" : `${nomeOutraPessoa} ensina`}</span>
                 <span aria-hidden className="shrink-0 text-texto-3">→</span>
-                <span className="min-w-0 truncate font-medium text-texto">{habilidadeEnsino.nome}</span>
+                <span className="min-w-0 truncate text-right font-medium text-texto">{habilidadeEnsino.nome}</span>
               </p>
             )}
             {habilidadeEnsino && habilidadeAprendo && (
@@ -86,10 +86,10 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
               </div>
             )}
             {habilidadeAprendo && (
-              <p className="flex min-w-0 items-center justify-between gap-3 text-sm">
+              <p className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 text-sm">
                 <span className="min-w-0 truncate text-texto-2">{propus ? `${nomeOutraPessoa} ensina` : "Você ensina"}</span>
                 <span aria-hidden className="shrink-0 text-texto-3">→</span>
-                <span className="min-w-0 truncate font-medium text-texto">{habilidadeAprendo.nome}</span>
+                <span className="min-w-0 truncate text-right font-medium text-texto">{habilidadeAprendo.nome}</span>
               </p>
             )}
           </div>
