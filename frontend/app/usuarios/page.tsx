@@ -7,13 +7,16 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Botao } from "@/components/ui/Botao";
 import { BotaoSeguir } from "@/components/ui/BotaoSeguir";
 import { Campo } from "@/components/ui/Campo";
+import { TagHabilidade } from "@/components/ui/TagHabilidade";
 import { ErroApi, buscarUsuarios, type User } from "@/lib/api";
+import type { HabilidadePerfil } from "@/lib/perfil";
 import { meuId } from "@/lib/sessao";
 
 const POR_PAGINA = 20;
+type UsuarioComHabilidades = User & { habilidades?: HabilidadePerfil[] };
 
 export default function EncontrarPessoasPage() {
-  const [usuarios, setUsuarios] = useState<User[]>([]);
+  const [usuarios, setUsuarios] = useState<UsuarioComHabilidades[]>([]);
   const [total, setTotal] = useState(0);
   const [proximoOffset, setProximoOffset] = useState(0);
   const [termo, setTermo] = useState("");
@@ -85,7 +88,7 @@ export default function EncontrarPessoasPage() {
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6">
       <header>
-        <h1 className="text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">
+        <h1 className="font-display text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">
           Encontrar pessoas
         </h1>
         <p className="mt-1 text-sm text-texto-2">
@@ -166,7 +169,17 @@ export default function EncontrarPessoasPage() {
                     {usuario.name}
                   </Link>
                   <p className="truncate font-mono text-xs text-texto-3">@{usuario.username}</p>
-                  {usuario.bio && <p className="truncate text-sm text-texto-2">{usuario.bio}</p>}
+                  {usuario.habilidades?.length ? (
+                    <ul className="mt-1 flex min-w-0 flex-wrap gap-1" aria-label="Habilidades públicas">
+                      {usuario.habilidades.map((habilidade) => (
+                        <li key={`${habilidade.tipo}/${habilidade.id}`} className="min-w-0 max-w-full [&>span]:h-auto [&>span]:min-h-6 [&>span]:max-w-full [&>span]:[overflow-wrap:anywhere]">
+                          <TagHabilidade nome={habilidade.nome} tipo={habilidade.tipo} nivel={habilidade.nivel} />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : usuario.bio ? (
+                    <p className="truncate text-sm text-texto-2">{usuario.bio}</p>
+                  ) : null}
                 </div>
                 <span className="shrink-0">
                   <BotaoSeguir username={usuario.username} tamanho="sm" />
