@@ -1,7 +1,9 @@
 // Fetch tipado, único ponto de contato com o backend.
 // Já preparado para receber o token da auth (guia 01, Parte 2).
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+import { limparSessao } from "@/lib/sessao";
+
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 function headers(json = true): HeadersInit {
   const h: Record<string, string> = json ? { "Content-Type": "application/json" } : {};
@@ -43,7 +45,7 @@ function camposDoErro(detail: unknown): Record<string, string> {
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const arquivo = body instanceof FormData;
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers: headers(!arquivo),
     body: body === undefined ? undefined : arquivo ? body : JSON.stringify(body),
@@ -53,8 +55,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   // 401 com token salvo = token que não vale mais (ex.: o banco foi apagado ou o
   // servidor do deploy reiniciou). Joga o token fora e volta para o login.
   if (res.status === 401 && typeof window !== "undefined" && localStorage.getItem("token")) {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuario_id");
+    limparSessao();
     if (window.location.pathname !== "/login") window.location.href = "/login";
   }
 
@@ -153,13 +154,6 @@ export type Mensagem = {
   em: string;
 };
 
-export type Conversa = {
-  com: User;
-  ultima_mensagem: string;
-  ultima_de_mim: boolean;
-  em: string;
-};
-
 export type HabilidadeResumo = {
   id: number;
   nome: string;
@@ -182,14 +176,6 @@ export type Troca = {
   link_google_agenda: string;
 };
 
-export type NovaTroca = {
-  com_username: string;
-  data_hora: string;
-  link_meet: string;
-  habilidade_ensino_id: number | null;
-  habilidade_aprendo_id: number | null;
-};
-
 export type Avaliacao = {
   id: number;
   troca_id: number;
@@ -200,23 +186,9 @@ export type Avaliacao = {
   em: string;
 };
 
-export type ResumoAvaliacoes = {
-  media: number | null;
-  total: number;
-  items: Avaliacao[];
-};
-
-export function listarConversas(): Promise<{ items: Conversa[] }> {
-  return apiGet("/dms");
-}
-
 export function listarMensagens(username: string, depoisDe?: number): Promise<{ items: Mensagem[] }> {
   const filtro = depoisDe === undefined ? "" : `?depois_de=${depoisDe}`;
   return apiGet(`/dms/${encodeURIComponent(username)}${filtro}`);
-}
-
-export function enviarMensagem(username: string, texto: string): Promise<Mensagem> {
-  return apiPost(`/dms/${encodeURIComponent(username)}`, { texto });
 }
 
 export function listarHabilidades(): Promise<{ items: HabilidadeResumo[] }> {
@@ -236,10 +208,6 @@ export function listarTrocas(comUsername?: string): Promise<{ items: Troca[] }> 
   return apiGet(`/trocas${filtro}`);
 }
 
-export function proporTroca(dados: NovaTroca): Promise<Troca> {
-  return apiPost("/trocas", dados);
-}
-
 export function confirmarTroca(id: number): Promise<Troca> {
   return apiPost(`/trocas/${id}/confirmar`);
 }
@@ -254,10 +222,6 @@ export function trocasPendentesAvaliacao(): Promise<{ items: Troca[] }> {
 
 export function avaliarTroca(id: number, estrelas: number, feedback: string): Promise<Avaliacao> {
   return apiPost(`/trocas/${id}/avaliar`, { estrelas, feedback });
-}
-
-export function avaliacoesDe(username: string): Promise<ResumoAvaliacoes> {
-  return apiGet(`/usuarios/${encodeURIComponent(username)}/avaliacoes`);
 }
 
 // ---- follow (frente C) ----

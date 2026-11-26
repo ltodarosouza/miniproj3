@@ -3,14 +3,13 @@ import {
   apiGet,
   apiPatch,
   apiPost,
+  BASE_URL,
   ErroApi,
   listarHabilidades,
   type HabilidadeResumo,
   type Page,
   type User,
 } from "@/lib/api";
-
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export type Motivo = "meu" | "seguindo" | "pode_te_ensinar" | "descobrir";
 
@@ -75,7 +74,7 @@ export function descurtirPost(id: number): Promise<void> {
 }
 
 export function urlDaImagem(caminho: string): string {
-  return caminho.startsWith("http") ? caminho : `${BASE}${caminho}`;
+  return caminho.startsWith("http") ? caminho : `${BASE_URL}${caminho}`;
 }
 
 export function formatarTempoEstudado(minutos: number): string {

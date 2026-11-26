@@ -65,6 +65,10 @@ export function useNaoLidas() {
     } catch (erro) {
       if (numero !== pedido.current || usuario !== meuId()) return;
       if (erro instanceof ErroApi && erro.status === 404) setIndisponivel(true);
+      else if (erro instanceof ErroApi && erro.status === 401) {
+        setDados(null);
+        setIndisponivel(true);
+      }
       else setDados(null);
     }
   }, [indisponivel]);
