@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { SegmentosNivel } from "@/components/perfil/EditorHabilidades";
 import { CartaoPost } from "@/components/posts/CartaoPost";
@@ -116,6 +116,9 @@ export default function PerfilPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [eu, setEu] = useState<number | null>(null);
   const [infoTroca, setInfoTroca] = useState<InfoTroca>(null);
+  // Username da tela atual: respostas atrasadas de outro perfil são descartadas.
+  const usernameAtual = useRef(username);
+  usernameAtual.current = username;
 
   useEffect(() => {
     setEu(meuId());
@@ -125,8 +128,10 @@ export default function PerfilPage() {
     setCarregandoPerfil(true);
     setErro(null);
     try {
-      setPerfil(await buscarPerfil(username));
+      const dados = await buscarPerfil(username);
+      if (usernameAtual.current === username) setPerfil(dados);
     } catch (err) {
+      if (usernameAtual.current !== username) return;
       setErro(
         err instanceof ErroApi
           ? err.status === 404
@@ -145,6 +150,7 @@ export default function PerfilPage() {
       else setCarregandoMais(true);
       try {
         const pagina = await listarPostsDoUsuario(username, offset, POSTS_POR_PAGINA);
+        if (usernameAtual.current !== username) return;
         setPosts((atuais) => (offset === 0 ? pagina.items : [...atuais, ...pagina.items]));
         setTotalPosts(pagina.total);
       } catch {
@@ -159,9 +165,12 @@ export default function PerfilPage() {
 
   // Verifica se há match de troca com este usuário
   useEffect(() => {
+    setInfoTroca(null);
     if (!eu) return;
+    let ativo = true;
     listarMatches()
       .then((matches) => {
+        if (!ativo) return;
         const match = matches.troca.find((m) => m.usuario.username === username);
         if (!match) return;
         const euEnsino = match.eu_ensino[0]?.nome;
@@ -171,9 +180,14 @@ export default function PerfilPage() {
         }
       })
       .catch(() => {});
+    return () => {
+      ativo = false;
+    };
   }, [username, eu]);
 
   useEffect(() => {
+    setPosts([]);
+    setTotalPosts(0);
     void carregarPerfil();
     void carregarPosts(0);
   }, [carregarPerfil, carregarPosts]);

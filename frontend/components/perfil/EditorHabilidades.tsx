@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
 import { Botao } from "@/components/ui/Botao";
 import { Icone } from "@/components/ui/Icone";
@@ -40,9 +40,25 @@ export function SegmentosNivel({ nivel }: { nivel: number }) {
 }
 
 // Nível em 5 segmentos clicáveis: cada segmento escolhe aquele nível.
+// Radiogroup com tabindex móvel: um Tab entra no grupo e as setas mudam o nível.
 function SeletorNivel({ nome, nivel, aoEscolher }: { nome: string; nivel: number; aoEscolher: (n: number) => void }) {
+  const grupo = useRef<HTMLDivElement>(null);
+  const maximo = NIVEIS[NIVEIS.length - 1];
+
+  function teclar(evento: KeyboardEvent<HTMLDivElement>) {
+    let novo: number | null = null;
+    if (evento.key === "ArrowRight" || evento.key === "ArrowUp") novo = Math.min(nivel + 1, maximo);
+    else if (evento.key === "ArrowLeft" || evento.key === "ArrowDown") novo = Math.max(nivel - 1, NIVEIS[0]);
+    else if (evento.key === "Home") novo = NIVEIS[0];
+    else if (evento.key === "End") novo = maximo;
+    if (novo === null) return;
+    evento.preventDefault();
+    aoEscolher(novo);
+    grupo.current?.querySelectorAll<HTMLButtonElement>("button")[novo - NIVEIS[0]]?.focus();
+  }
+
   return (
-    <div role="radiogroup" aria-label={`Nível em ${nome}`} className="flex shrink-0 gap-0.5">
+    <div ref={grupo} role="radiogroup" aria-label={`Nível em ${nome}`} onKeyDown={teclar} className="flex shrink-0 gap-0.5">
       {NIVEIS.map((n) => (
         <button
           key={n}
@@ -50,6 +66,7 @@ function SeletorNivel({ nome, nivel, aoEscolher }: { nome: string; nivel: number
           role="radio"
           aria-checked={nivel === n}
           aria-label={`Nível ${n}`}
+          tabIndex={nivel === n ? 0 : -1}
           onClick={() => aoEscolher(n)}
           className={`relative h-3 w-4 rounded-[1px] transition-colors duration-[var(--rapido)] motion-reduce:transition-none after:absolute after:-inset-x-px after:-inset-y-3 after:content-[''] ${FOCO} ${
             n <= nivel ? "bg-marca" : "bg-texto-3/30 hover:bg-texto-3/60"
