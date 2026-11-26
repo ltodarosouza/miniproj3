@@ -1,5 +1,9 @@
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
+from time import sleep
 from urllib.parse import parse_qs, urlparse
+
+from sqlalchemy import select
 
 from app.core.tempo import agora_utc
 from app.db import SessionLocal
@@ -276,3 +280,35 @@ def test_confirmar_usa_o_mesmo_instante_para_validar_e_gravar(client, pessoa, mo
     assert confirmada.status_code == 200
     with SessionLocal() as db:
         assert db.get(Troca, antes).respondida_em == horario - timedelta(microseconds=1)
+
+
+def test_propostas_simultaneas_do_par_criam_so_uma(client, pessoa, monkeypatch):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    ids = habilidades(client)
+    from app.services import trocas
+
+    original = trocas._pendente_do_par
+
+    def pausar_depois_da_consulta(db, um_id, outro_id):
+        resultado = original(db, um_id, outro_id)
+        sleep(0.3)
+        return resultado
+
+    monkeypatch.setattr(trocas, "_pendente_do_par", pausar_depois_da_consulta)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futuros = [
+            executor.submit(criar, client, ana, proposta(ids)),
+            executor.submit(criar, client, bia, proposta(ids, "ana")),
+        ]
+        respostas = [futuro.result() for futuro in futuros]
+
+    assert sorted(resposta.status_code for resposta in respostas) == [201, 409]
+    erro = next(resposta for resposta in respostas if resposta.status_code == 409)
+    assert erro.json()["detail"] in {
+        "já existe uma proposta sua aguardando resposta",
+        "esta pessoa já te enviou uma proposta, responda antes de propor outra",
+    }
+    with SessionLocal() as db:
+        pendentes = db.scalars(select(Troca).where(Troca.status == "proposta")).all()
+    assert len(pendentes) == 1

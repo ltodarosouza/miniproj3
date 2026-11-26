@@ -120,6 +120,20 @@ def para_saidas(db: Session, trocas: list[Troca]) -> list[TrocaOut]:
     return saidas
 
 
+def _pendente_do_par(db: Session, um_id: int, outro_id: int) -> Troca | None:
+    return db.scalar(
+        select(Troca)
+        .where(
+            Troca.status == "proposta",
+            or_(
+                (Troca.proposta_por_id == um_id) & (Troca.com_id == outro_id),
+                (Troca.proposta_por_id == outro_id) & (Troca.com_id == um_id),
+            ),
+        )
+        .limit(1)
+    )
+
+
 def criar(db: Session, pessoa: User, dados: TrocaCreate) -> TrocaOut:
     com = db.scalar(select(User).where(User.username == dados.com_username))
     if com is None:
@@ -141,19 +155,13 @@ def criar(db: Session, pessoa: User, dados: TrocaCreate) -> TrocaOut:
         and dados.habilidade_ensino_id == dados.habilidade_aprendo_id
     ):
         raise HTTPException(status_code=422, detail="escolha habilidades diferentes")
-    pendente = db.scalar(
-        select(Troca)
-        .where(
-            Troca.status == "proposta",
-            or_(
-                (Troca.proposta_por_id == pessoa.id) & (Troca.com_id == com.id),
-                (Troca.proposta_por_id == com.id) & (Troca.com_id == pessoa.id),
-            ),
-        )
-        .limit(1)
-    )
+    # O UPDATE sem alteração trava o menor id do par antes da checagem.
+    db.execute(update(User).where(User.id == min(pessoa.id, com.id)).values(id=User.id))
+    pendente = _pendente_do_par(db, pessoa.id, com.id)
     if pendente is not None:
-        if pendente.proposta_por_id == pessoa.id:
+        minha = pendente.proposta_por_id == pessoa.id
+        db.rollback()
+        if minha:
             raise HTTPException(
                 status_code=409,
                 detail="já existe uma proposta sua aguardando resposta",
