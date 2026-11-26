@@ -12,6 +12,7 @@ from app.models.leitura_notificacoes import LeituraNotificacoes
 from app.models.post import Post
 from app.models.troca import Troca
 from app.models.user import User
+from app.services import notificacoes
 
 
 def habilidades(client):
@@ -443,6 +444,99 @@ def test_cursor_nao_repete_grupo_apos_descurtida_com_duas_paginas(client, pessoa
     ).json()
     assert [item["post_id"] for item in terceira["items"]] == [posts["C"]]
     assert terceira["proximo_cursor"] is None
+
+
+def test_limpeza_nao_apaga_sequencia_de_antes_de_antigo(client, pessoa):
+    ana, bia, caio, duda = (pessoa(n) for n in ("ana", "bia", "caio", "duda"))
+    post_a = client.post("/posts", json={"texto": "A"}, headers=ana).json()["id"]
+    post_b = client.post("/posts", json={"texto": "B"}, headers=ana).json()["id"]
+    for post_id, ator in ((post_a, bia), (post_a, caio), (post_b, duda)):
+        client.post(f"/posts/{post_id}/curtir", headers=ator)
+    tres_dias_atras = agora_utc() - timedelta(days=3)
+
+    def horario(minuto):
+        return tres_dias_atras.replace(hour=10, minute=minuto, second=0, microsecond=0)
+
+    with SessionLocal() as db:
+        curtidas = list(db.scalars(select(Curtida)))
+        minutos = {post_a: {"bia": 0, "caio": 5}, post_b: {"duda": 3}}
+        for curtida in curtidas:
+            username = db.get(User, curtida.usuario_id).username
+            curtida.created_at = horario(minutos[curtida.post_id][username])
+        db.commit()
+
+    limite = horario(6).isoformat() + "Z"
+    primeira = client.get(f"/notificacoes?antes_de={limite}&limit=1", headers=ana).json()
+    assert [item["post_id"] for item in primeira["items"]] == [post_a]
+    cursor_x = primeira["proximo_cursor"]
+    assert cursor_x
+    assert client.get("/notificacoes", headers=ana).status_code == 200
+    assert client.delete(f"/posts/{post_a}/curtir", headers=caio).status_code == 204
+
+    final = client.get(f"/notificacoes?cursor={cursor_x}&limit=10", headers=ana).json()
+    assert [item["post_id"] for item in final["items"]] == [post_b]
+    assert final["proximo_cursor"] is None
+
+
+def test_conferencia_cobre_grupo_fixado_fora_da_pagina(client, pessoa, monkeypatch):
+    ana, bia, caio = (pessoa(n) for n in ("ana", "bia", "caio"))
+    posts = {
+        nome: client.post("/posts", json={"texto": nome}, headers=ana).json()["id"]
+        for nome in ("A", "B", "C", "D")
+    }
+    for nome, ator in (("A", bia), ("B", bia), ("C", bia), ("C", caio), ("D", bia)):
+        client.post(f"/posts/{posts[nome]}/curtir", headers=ator)
+    with SessionLocal() as db:
+        curtidas = list(db.scalars(select(Curtida)))
+        minutos = {
+            "A": {"bia": 5}, "B": {"bia": 3},
+            "C": {"bia": 1, "caio": 4}, "D": {"bia": 0},
+        }
+        for curtida in curtidas:
+            nome = next(nome for nome, post_id in posts.items() if post_id == curtida.post_id)
+            username = db.get(User, curtida.usuario_id).username
+            curtida.created_at = horario_utc(10, minutos[nome][username])
+        db.commit()
+
+    primeira = client.get("/notificacoes?limit=1", headers=ana).json()
+    assert [item["post_id"] for item in primeira["items"]] == [posts["A"]]
+    cursor_x = primeira["proximo_cursor"]
+    assert cursor_x
+    sequencia = json.loads(
+        base64.urlsafe_b64decode(cursor_x + "=" * (-len(cursor_x) % 4))
+    )["s"]
+    with SessionLocal() as db:
+        ana_id = db.scalar(select(User.id).where(User.username == "ana"))
+        mapa_antes_da_requisicao_1 = notificacoes._carregar_entregues(db, ana_id, sequencia)
+
+    sobreposta = client.get(f"/notificacoes?cursor={cursor_x}&limit=2", headers=ana).json()
+    assert [item["post_id"] for item in sobreposta["items"]] == [posts["C"], posts["B"]]
+    assert client.delete(f"/posts/{posts['C']}/curtir", headers=caio).status_code == 204
+
+    original = notificacoes._carregar_entregues
+    chamadas = []
+
+    def com_leitura_antiga(db, usuario_id, sequencia):
+        chamadas.append(sequencia)
+        if len(chamadas) == 1:
+            return mapa_antes_da_requisicao_1
+        return original(db, usuario_id, sequencia)
+
+    monkeypatch.setattr("app.services.notificacoes._carregar_entregues", com_leitura_antiga)
+    corrida = client.get(f"/notificacoes?cursor={cursor_x}&limit=1", headers=ana).json()
+
+    itens = list(corrida["items"])
+    proximo = corrida["proximo_cursor"]
+    for _ in range(10):
+        if proximo is None:
+            break
+        pagina = client.get(f"/notificacoes?cursor={proximo}&limit=1", headers=ana).json()
+        itens.extend(pagina["items"])
+        proximo = pagina["proximo_cursor"]
+    assert proximo is None
+    post_ids = [item["post_id"] for item in itens]
+    assert posts["C"] in post_ids
+    assert len(post_ids) == len(set(post_ids))
 
 
 def test_antes_de_no_limite_minimo_nao_quebra(client, pessoa):
