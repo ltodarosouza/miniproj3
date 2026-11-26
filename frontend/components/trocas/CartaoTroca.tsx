@@ -7,7 +7,7 @@ import { Cartao } from "@/components/ui/Cartao";
 import { Icone } from "@/components/ui/Icone";
 import { celebrar } from "@/components/ui/Celebrar";
 import { dataDaOrdem, numeroDaOrdem, ROTULO_STATUS, statusDaOrdem } from "@/lib/trocas";
-import { formatarQuando, jaPassou } from "@/lib/datas";
+import { formatarQuando } from "@/lib/datas";
 import { confirmarTroca, recusarTroca, type Troca } from "@/lib/api";
 import { meuId } from "@/lib/sessao";
 import { vibrar } from "@/lib/movimento";
@@ -33,11 +33,10 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
     concluida: "bg-texto-2",
     recusada: "bg-perigo",
   }[status];
-  const passou = jaPassou(troca.data_hora);
   const momento = troca.respondida_em ?? troca.criada_em;
   const quando = formatarQuando(momento);
   const quandoTexto = quando.includes(":") ? `às ${quando}` : quando === "ontem" ? "ontem" : `em ${quando}`;
-  const acao = troca.status === "confirmada" ? "Confirmada" : troca.status === "recusada" ? "Recusada" : "Proposta";
+  const acao = status === "confirmada" || status === "concluida" ? "Confirmada" : status === "recusada" ? "Recusada" : "Proposta";
 
   const executarAcao = async (acao: "confirmar" | "recusar") => {
     setCarregando(acao);
@@ -73,9 +72,9 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
           <div className="space-y-2">
             {habilidadeEnsino && (
               <p className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 text-sm">
-                <span className="min-w-0 truncate text-texto-2">{propus ? "Você ensina" : `${nomeOutraPessoa} ensina`}</span>
+                <span className="min-w-0 break-words text-texto-2">{propus ? "Você ensina" : `${nomeOutraPessoa} ensina`}</span>
                 <span aria-hidden className="shrink-0 text-texto-3">→</span>
-                <span className="min-w-0 truncate text-right font-medium text-texto">{habilidadeEnsino.nome}</span>
+                <span className="min-w-0 break-words text-right font-medium text-texto">{habilidadeEnsino.nome}</span>
               </p>
             )}
             {habilidadeEnsino && habilidadeAprendo && (
@@ -87,9 +86,9 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
             )}
             {habilidadeAprendo && (
               <p className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 text-sm">
-                <span className="min-w-0 truncate text-texto-2">{propus ? `${nomeOutraPessoa} ensina` : "Você ensina"}</span>
+                <span className="min-w-0 break-words text-texto-2">{propus ? `${nomeOutraPessoa} ensina` : "Você ensina"}</span>
                 <span aria-hidden className="shrink-0 text-texto-3">→</span>
-                <span className="min-w-0 truncate text-right font-medium text-texto">{habilidadeAprendo.nome}</span>
+                <span className="min-w-0 break-words text-right font-medium text-texto">{habilidadeAprendo.nome}</span>
               </p>
             )}
           </div>
@@ -119,8 +118,8 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
 
       {erro && <p role="alert" className="text-sm text-perigo">{erro.charAt(0).toLocaleUpperCase("pt-BR") + erro.slice(1)}</p>}
 
-      {troca.status === "confirmada" && (
-        passou ? (
+      {(status === "confirmada" || status === "concluida") && (
+        status === "concluida" ? (
           <p className="text-sm text-texto-2">A troca já aconteceu</p>
         ) : (
           <div className="flex flex-col gap-2">
