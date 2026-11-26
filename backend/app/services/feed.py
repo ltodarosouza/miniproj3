@@ -28,7 +28,7 @@ def _quem_estuda_o_mesmo(db: Session, eu: User) -> set[int]:
 
 def _motivos(db: Session, eu: User) -> dict[int, str]:
     seguidos = set(db.scalars(select(Follow.seguido_id).where(Follow.seguidor_id == eu.id)))
-    professores = indice_matches.quem_pode_ensinar(eu.id)
+    professores = indice_matches.pode_me_ensinar(eu.id)
     motivos = {autor: "pode_te_ensinar" for autor in professores}
     motivos.update({autor: "seguindo" for autor in seguidos})
     motivos[eu.id] = "meu"

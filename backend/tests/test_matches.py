@@ -36,7 +36,6 @@ def test_indice_pode_me_ensinar_e_troca():
     )
     assert indice.pode_me_ensinar(1) == {2, 3}
     assert indice.match_de_troca(1) == {2}
-    assert indice.quem_pode_ensinar(1) == {2, 3}
 
     indice.remover(2, 20, "quero_aprender")
     assert indice.match_de_troca(1) == set()
