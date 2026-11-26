@@ -1,7 +1,7 @@
 type Tipo = "sei" | "quero" | "quero_aprender" | "neutra";
 
 const ESTILOS: Record<Tipo, string> = {
-  sei: "bg-marca-suave text-marca-forte border-transparent",
+  sei: "bg-marca-suave text-texto-2 border-transparent",
   quero: "bg-transparent text-texto-2 border-dashed border-linha-forte",
   quero_aprender: "bg-transparent text-texto-2 border-dashed border-linha-forte",
   neutra: "bg-superficie-2 text-texto-2 border-transparent",

@@ -52,9 +52,9 @@ function Secao({
   return (
     <section className="grid gap-5 border-t border-linha pt-8 md:grid-cols-[14rem_1fr] md:gap-10">
       <div>
-        <p className="font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3">
+        <h2 className="font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-2">
           {numero} · {titulo}
-        </p>
+        </h2>
         <p className="mt-2 text-sm text-texto-2">{descricao}</p>
       </div>
       <div className="min-w-0">{children}</div>
@@ -94,7 +94,7 @@ export default function DesignPage() {
             {(["sm", "md", "lg"] as const).map((s) => (
               <div key={s} className="space-y-2">
                 <Logo tamanho={s} />
-                <p className="font-mono text-xs text-texto-3">completo · {s}</p>
+                <p className="font-mono text-xs text-texto-2">completo · {s}</p>
               </div>
             ))}
           </div>
@@ -102,13 +102,13 @@ export default function DesignPage() {
             {(["sm", "md", "lg"] as const).map((s) => (
               <div key={s} className="space-y-2">
                 <Logo variante="simbolo" tamanho={s} />
-                <p className="font-mono text-xs text-texto-3">símbolo · {s}</p>
+                <p className="font-mono text-xs text-texto-2">símbolo · {s}</p>
               </div>
             ))}
           </div>
           <p className="text-sm text-texto-2">
-            No tema escuro o “match” passa sozinho para o mel claro (token{" "}
-            <code className="font-mono">marca-forte</code>).
+            No tema claro, “match” usa o token <code className="font-mono">marca-forte</code>; no tema
+            escuro, usa <code className="font-mono">marca</code>.
           </p>
         </div>
       </Secao>
@@ -119,7 +119,7 @@ export default function DesignPage() {
             <div key={nome}>
               <div className={`h-12 rounded-controle border border-linha ${classe}`} />
               <p className="mt-1.5 font-mono text-xs">{nome}</p>
-              <p className="text-xs text-texto-3">{papel}</p>
+              <p className="text-xs text-texto-2">{papel}</p>
             </div>
           ))}
         </div>
@@ -235,7 +235,7 @@ export default function DesignPage() {
                   <Avatar nome={nome} tamanho="sm" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm">
-                      {nome} <span className="font-mono text-xs text-texto-3">{user}</span>
+                      {nome} <span className="font-mono text-xs text-texto-2">{user}</span>
                     </p>
                   </div>
                   <TagHabilidade nome={habilidade} tipo="sei" />
@@ -251,7 +251,7 @@ export default function DesignPage() {
       </Secao>
 
       <Secao numero="09" titulo="Rótulo numerado" descricao="Toda seção de tela abre com um rótulo assim.">
-        <div className="space-y-2 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3">
+        <div className="space-y-2 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-2">
           <p>01 · Pares de troca</p>
           <p>02 · Pode te ensinar</p>
         </div>
@@ -269,9 +269,9 @@ export default function DesignPage() {
           <TagHabilidade nome="Python" tipo="sei" />
           <TagHabilidade nome="Cálculo 1" tipo="sei" />
           <span className={`${STATUS} text-texto-2 border-linha-forte`}>aberta</span>
-          <span className={`${STATUS} text-marca-forte border-marca`}>confirmada</span>
-          <span className={`${STATUS} text-alta border-alta`}>concluída</span>
-          <span className={`${STATUS} text-baixa border-baixa`}>recusada</span>
+          <span className={`${STATUS} text-texto-2 border-marca`}>confirmada</span>
+          <span className={`${STATUS} text-texto-2 border-alta`}>concluída</span>
+          <span className={`${STATUS} text-texto-2 border-baixa`}>recusada</span>
         </div>
       </Secao>
 
@@ -282,7 +282,7 @@ export default function DesignPage() {
       >
         <table className="w-full font-mono text-sm numeros">
           <thead>
-            <tr className="border-b border-linha text-xs text-texto-3">
+            <tr className="border-b border-linha text-xs text-texto-2">
               <th className="py-2 text-left font-normal">Habilidade</th>
               <th className="py-2 text-right font-normal">Horas (semana)</th>
               <th className="py-2 text-right font-normal">Variação</th>
@@ -300,6 +300,7 @@ export default function DesignPage() {
                 <td className="py-2.5 text-right">{horas}</td>
                 <td className={`py-2.5 text-right ${direcao === "alta" ? "text-alta" : "text-baixa"}`}>
                   <span className="inline-flex items-center gap-1">
+                    <span className="sr-only">{direcao === "alta" ? "Alta de " : "Queda de "}</span>
                     <Icone nome={direcao as "alta" | "baixa"} preenchido tamanho={12} />
                     {variacao}
                   </span>
