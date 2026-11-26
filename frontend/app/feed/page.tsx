@@ -27,7 +27,7 @@ import {
 import { meuId } from "@/lib/sessao";
 
 const POR_PAGINA = 20;
-// "Você chegou ao fim do feed" só aparece em feeds com mais posts que isso.
+// "Fim do Diário." só aparece quando a lista tem mais posts que isso.
 const MINIMO_PARA_AVISAR_FIM = 10;
 // Pede a próxima página quando faltam umas duas telas para o fim da lista.
 const ANTECIPAR_CARREGAMENTO = "1500px 0px";
@@ -47,7 +47,7 @@ function Cotacao({ habilidades }: { habilidades: HabilidadeEmAlta[] }) {
       {habilidades.map((h, i) => {
         return (
           <li key={h.id} className="shrink-0 whitespace-nowrap numeros">
-            <span className="text-marca-forte">{i + 1}º</span> <span className="text-texto">{h.nome}</span>{" "}
+            <span className="text-marca-forte">{i + 1}º</span> <span className="inline-block max-w-[12rem] truncate align-bottom text-texto">{h.nome}</span>{" "}
             {h.minutos > 0 ? formatarTempoEstudado(h.minutos) : `${h.posts} ${h.posts === 1 ? "post" : "posts"}`}
           </li>
         );
@@ -215,7 +215,7 @@ function Feed() {
   if (!logado) {
     conteudo = (
       <p className="text-sm leading-relaxed text-texto-2">
-        Entre na sua conta para ver o feed.{" "}
+        Entre na sua conta para ver a Mesa.{" "}
         <Link className="font-medium text-marca-forte underline" href="/login">
           Entrar
         </Link>
@@ -236,7 +236,7 @@ function Feed() {
     conteudo = (
       <div className="space-y-3">
         <p className="text-sm leading-relaxed text-texto-2">
-          Não consegui carregar o feed. Confira se o backend está rodando e tente de novo.
+          Não consegui carregar o Diário. Confira se o backend está rodando e tente de novo.
         </p>
         <Botao variante="secundario" tamanho="sm" onClick={tentarDeNovo}>
           Tentar de novo

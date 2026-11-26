@@ -224,7 +224,7 @@ export function FormNovoPost({
   const minutosValidos = minutos && !erroMinutos ? Number(minutos) : null;
 
   return (
-    <div className="rounded-cartao border border-linha bg-superficie p-4">
+    <div className="rounded-controle border border-linha bg-superficie p-4">
       <form
         onSubmit={publicar}
         onFocus={() => setAberto(true)}

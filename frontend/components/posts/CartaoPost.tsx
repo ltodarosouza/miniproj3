@@ -23,6 +23,7 @@ import { meuId } from "@/lib/sessao";
 // Coluna da hora: hora para posts de hoje, "dd/mm" para os outros dias deste ano e "mês/aa" para anos anteriores.
 function horaDoDiario(iso: string): string {
   const data = new Date(iso);
+  if (Number.isNaN(data.getTime())) return "";
   const hoje = new Date();
   if (data.toDateString() === hoje.toDateString()) return formatarHora(iso);
   if (data.getFullYear() !== hoje.getFullYear()) {

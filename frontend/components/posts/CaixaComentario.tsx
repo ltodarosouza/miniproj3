@@ -74,10 +74,10 @@ export function CaixaComentario({ aoComentar }: { aoComentar: (texto: string) =>
         />
       </div>
       <div className="flex min-h-8 items-center justify-between gap-3">
-        {erro ? <p role="alert" className="text-sm text-perigo">{erro}</p> : <span />}
+        <p role="alert" className="text-sm text-perigo">{erro}</p>
         <div className="flex shrink-0 items-center gap-3">
           {texto.length >= 450 && (
-            <span className="numeros text-xs text-texto-3">
+            <span className="font-mono text-xs text-texto-3 numeros">
               {texto.length}/{LIMITE_TEXTO_COMENTARIO}
             </span>
           )}
