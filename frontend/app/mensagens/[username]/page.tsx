@@ -265,19 +265,19 @@ export default function PaginaConversa() {
   }
 
   if (idUsuario === null) {
-    return <div className="flex h-full items-center justify-center px-6 text-center"><div className="max-w-sm"><p className="text-texto">Entre na sua conta para ver suas mensagens.</p><Link className="mt-3 inline-block text-sm font-medium text-marca-forte" href="/login">Entrar</Link></div></div>;
+    return <div className="flex h-full flex-col justify-center px-6"><div className="max-w-sm"><p className="text-texto">Entre na sua conta para ver suas mensagens.</p><Link className="mt-3 inline-block text-sm font-medium text-marca-forte" href="/login">Entrar</Link></div></div>;
   }
 
   if (sessaoEncerrada) {
-    return <div className="flex h-full items-center justify-center px-6 text-center"><div className="max-w-sm"><p className="text-texto">Sessão encerrada. Entre de novo.</p><Link className="mt-3 inline-block text-sm font-medium text-marca-forte" href="/login">Entrar</Link></div></div>;
+    return <div className="flex h-full flex-col justify-center px-6"><div className="max-w-sm"><p className="text-texto">Sessão encerrada. Entre de novo.</p><Link className="mt-3 inline-block text-sm font-medium text-marca-forte" href="/login">Entrar</Link></div></div>;
   }
 
   if (naoEncontrado) {
-    return <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"><p className="text-lg font-medium text-texto">Não encontramos @{username}</p><Link href="/mensagens" className="text-sm font-medium text-marca-forte">Voltar para as conversas</Link></div>;
+    return <div className="flex h-full flex-col justify-center px-6"><div className="max-w-sm"><p className="text-lg font-medium text-texto">Não encontramos @{username}</p><Link href="/mensagens" className="mt-3 inline-block text-sm font-medium text-marca-forte">Voltar para as conversas</Link></div></div>;
   }
 
   if (erroInicial && mensagens.length === 0) {
-    return <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"><p className="max-w-sm text-texto-2">Não conseguimos carregar esta conversa. Confira sua conexão e tente de novo.</p><Botao variante="secundario" onClick={() => { setErroInicial(false); setCarregando(true); void carregarConversa().then(aplicarCarga).catch((erro: unknown) => { if (ehSessaoEncerrada(erro)) encerrarSessao(); else { setErroInicial(true); setSemConexao(true); } }).finally(() => setCarregando(false)); }}>Tentar de novo</Botao></div>;
+    return <div className="flex h-full flex-col justify-center px-6"><div className="max-w-sm"><p className="text-texto-2">Não conseguimos carregar esta conversa. Confira sua conexão e tente de novo.</p><Botao className="mt-3" variante="secundario" onClick={() => { setErroInicial(false); setCarregando(true); void carregarConversa().then(aplicarCarga).catch((erro: unknown) => { if (ehSessaoEncerrada(erro)) encerrarSessao(); else { setErroInicial(true); setSemConexao(true); } }).finally(() => setCarregando(false)); }}>Tentar de novo</Botao></div></div>;
   }
 
   const com = conversa?.com;
@@ -285,15 +285,15 @@ export default function PaginaConversa() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-linha px-4">
-        <Link href="/mensagens" aria-label="Voltar para as conversas" className="-ml-2 flex size-10 items-center justify-center rounded-full text-texto-2 transition-colors duration-[var(--rapido)] ease-saida hover:bg-superficie-2 hover:text-texto md:hidden"><Icone nome="voltar" tamanho={19} /></Link>
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-linha px-4">
+        <Link href="/mensagens" aria-label="Voltar para as conversas" className="-ml-2 flex size-10 items-center justify-center rounded-[4px] text-texto-2 transition-colors duration-[var(--rapido)] ease-saida hover:bg-superficie-2 hover:text-texto md:hidden"><Icone nome="voltar" tamanho={19} /></Link>
         {com && <Avatar nome={com.name} url={com.avatar_url} />}
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[0.9375rem] font-semibold text-texto">{titulo}</h1>
-          {com && <p className="truncate text-xs text-texto-3">@{username}</p>}
+          <h1 className="truncate font-display text-[0.9375rem] font-semibold tracking-tight text-texto">{titulo}</h1>
+          {com && <p className="truncate font-mono text-xs text-texto-3">@{username}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Botao variante="secundario" tamanho="sm" aria-label="Agendar troca" onClick={() => setFormAberto(true)}>
+          <Botao tamanho="sm" aria-label="Agendar troca" onClick={() => setFormAberto(true)}>
             <Icone nome="calendario" tamanho={16} />
             <span className="hidden sm:inline">Agendar troca</span>
           </Botao>
@@ -301,9 +301,9 @@ export default function PaginaConversa() {
       </header>
 
       <div ref={lista} className="relative flex-1 overflow-y-auto px-4 py-6">
-        {semConexao && <p className="sticky top-0 z-10 mb-3 rounded-controle bg-superficie-2 px-3 py-2 text-center text-xs text-texto-2" role="status">Sem conexão, tentando de novo…</p>}
-        {carregando ? <p className="py-8 text-center text-sm text-texto-3">Carregando mensagens…</p> : mensagens.length === 0 && trocas.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center text-center">
+        {semConexao && <p className="sticky top-0 z-10 mb-3 rounded-[4px] border border-linha bg-superficie px-3 py-2 text-xs text-texto-2" role="status">Sem conexão, tentando de novo…</p>}
+        {carregando ? <p className="mx-auto max-w-3xl py-8 font-mono text-xs text-texto-3">Carregando mensagens…</p> : mensagens.length === 0 && trocas.length === 0 ? (
+          <div className="mx-auto flex h-full max-w-3xl flex-col justify-center">
             <Avatar nome={titulo} url={com?.avatar_url} tamanho="lg" />
             <h2 className="mt-4 text-lg font-semibold text-texto">Comece a conversa com @{username}</h2>
             <p className="mt-2 max-w-sm text-sm leading-relaxed text-texto-2">Contem o que cada um sabe e quer aprender e, quando combinarem, agendem a troca.</p>
@@ -326,7 +326,7 @@ export default function PaginaConversa() {
               const horaAoFinal = !mensagemProxima || mensagemProxima.de_username !== mensagem.de_username || new Date(mensagemProxima.em).getTime() - new Date(mensagem.em).getTime() >= 5 * 60 * 1000;
               return (
                 <div key={`mensagem-${chaveMensagem(mensagem, username)}`}>
-                  {!mesmoDia && <p className="my-5 text-center text-xs text-texto-3">{formatarDia(mensagem.em)}</p>}
+                  {!mesmoDia && <div className="my-5 flex items-center gap-3" role="separator" aria-label={formatarDia(mensagem.em)}><span className="h-px flex-1 bg-linha" aria-hidden="true" /><span className="font-mono text-[0.6875rem] uppercase tracking-[0.08em] tabular-nums text-texto-3" aria-hidden="true">{formatarDia(mensagem.em)}</span><span className="h-px flex-1 bg-linha" aria-hidden="true" /></div>}
                   <BalaoMensagem mensagem={mensagem} minha={mensagem.de_username !== username} mostrarHora={horaAoFinal} agrupadaComAnterior={agrupada} recemChegada={idsRecentes.includes(mensagem.id)} aoTentarDeNovo={tentarEnviarDeNovo} />
                 </div>
               );
