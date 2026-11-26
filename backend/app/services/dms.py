@@ -54,22 +54,12 @@ def _saida(mensagem: Mensagem, de_username: str, para_username: str) -> Mensagem
     )
 
 
-def _lidas_ate_id(db: Session, eu: User, outro: User) -> int | None:
+def _ultimo_id_com(db: Session, eu: User, outro: User, coluna) -> int | None:
     return db.scalar(
         select(func.max(Mensagem.id)).where(
             Mensagem.de_id == eu.id,
             Mensagem.para_id == outro.id,
-            Mensagem.lida_em.is_not(None),
-        )
-    )
-
-
-def _entregues_ate_id(db: Session, eu: User, outro: User) -> int | None:
-    return db.scalar(
-        select(func.max(Mensagem.id)).where(
-            Mensagem.de_id == eu.id,
-            Mensagem.para_id == outro.id,
-            Mensagem.entregue_em.is_not(None),
+            coluna.is_not(None),
         )
     )
 
@@ -145,14 +135,12 @@ def listar(
             )
             for mensagem in mensagens
         ],
-        lidas_ate_id=_lidas_ate_id(db, eu, outro),
-        entregues_ate_id=_entregues_ate_id(db, eu, outro),
+        lidas_ate_id=_ultimo_id_com(db, eu, outro, Mensagem.lida_em),
+        entregues_ate_id=_ultimo_id_com(db, eu, outro, Mensagem.entregue_em),
     )
 
 
-def marcar_lidas(db: Session, eu: User, username: str) -> LidasOut:
-    outro = _destinatario(db, username, eu)
-    agora = agora_utc()
+def _marcar_mensagens(db: Session, eu: User, outro: User, agora: datetime) -> None:
     db.execute(
         update(Mensagem)
         .where(
@@ -162,7 +150,9 @@ def marcar_lidas(db: Session, eu: User, username: str) -> LidasOut:
         )
         .values(lida_em=agora, entregue_em=func.coalesce(Mensagem.entregue_em, agora))
     )
-    db.commit()
+
+
+def _atualizar_leitura(db: Session, eu: User, outro: User, agora: datetime) -> None:
     atualizada = db.execute(
         update(LeituraConversa)
         .where(
@@ -179,23 +169,21 @@ def marcar_lidas(db: Session, eu: User, username: str) -> LidasOut:
         )
     ) is None:
         db.add(LeituraConversa(user_id=eu.id, com_id=outro.id, lida_em=agora))
-        try:
-            db.commit()
-        except IntegrityError:
-            db.rollback()
-            db.execute(
-                update(LeituraConversa)
-                .where(
-                    LeituraConversa.user_id == eu.id,
-                    LeituraConversa.com_id == outro.id,
-                    LeituraConversa.lida_em < agora,
-                )
-                .values(lida_em=agora)
-            )
-            db.commit()
-    else:
+
+
+def marcar_lidas(db: Session, eu: User, username: str) -> LidasOut:
+    outro = _destinatario(db, username, eu)
+    agora = agora_utc()
+    _marcar_mensagens(db, eu, outro, agora)
+    _atualizar_leitura(db, eu, outro, agora)
+    try:
         db.commit()
-    return LidasOut(lidas_ate_id=_lidas_ate_id(db, eu, outro))
+    except IntegrityError:
+        db.rollback()
+        _marcar_mensagens(db, eu, outro, agora)
+        _atualizar_leitura(db, eu, outro, agora)
+        db.commit()
+    return LidasOut(lidas_ate_id=_ultimo_id_com(db, eu, outro, Mensagem.lida_em))
 
 
 def _contagens_nao_lidas(db: Session, eu: User) -> dict[int, int]:
