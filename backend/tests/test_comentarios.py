@@ -1,6 +1,8 @@
-﻿from sqlalchemy import text
+﻿from conftest import simular_post_apagado_antes_do_commit
+from sqlalchemy import text
 
 from app.db import SessionLocal
+from app.services import comentarios
 
 
 def test_comentarios_em_ordem_cronologica(client, pessoa):
@@ -93,3 +95,15 @@ def test_apagar_post_leva_os_comentarios_junto(client, pessoa):
 
     with SessionLocal() as db:
         assert db.scalar(text("select count(*) from comentarios")) == 0
+
+
+def test_comentar_post_apagado_no_meio_da_404(client, pessoa, monkeypatch):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    post_id = client.post("/posts", json={"texto": "vai sumir"}, headers=bia).json()["id"]
+    simular_post_apagado_antes_do_commit(monkeypatch, comentarios, post_id)
+
+    r = client.post(f"/posts/{post_id}/comentarios", json={"texto": "oi"}, headers=ana)
+
+    assert r.status_code == 404
+    assert r.json()["detail"] == "post não existe mais"

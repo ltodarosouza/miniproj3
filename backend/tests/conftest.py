@@ -87,6 +87,7 @@ def pessoa(client, monkeypatch):
 
     return _pessoa
 
+
 @pytest.fixture(autouse=True)
 def limpar_limitador_posts():
     from app.core.limite import limitador_posts
@@ -94,3 +95,31 @@ def limpar_limitador_posts():
     limitador_posts.limpar()
     yield
     limitador_posts.limpar()
+
+
+def simular_post_apagado_antes_do_commit(monkeypatch, servico, post_id: int) -> None:
+    """Apaga o post logo depois da checagem do serviço e faz o commit falhar como
+    o Postgres faria (chave estrangeira violada). O SQLite dos testes não confere FK."""
+    from sqlalchemy import delete
+    from sqlalchemy.exc import IntegrityError
+
+    from app.db import SessionLocal
+    from app.models.post import Post
+
+    buscar_original = servico.buscar
+
+    def buscar_e_apagar(db, pid):
+        post = buscar_original(db, pid)
+        with SessionLocal() as outra:
+            outra.execute(delete(Post).where(Post.id == post_id))
+            outra.commit()
+        commit_original = db.commit
+
+        def commit_que_falha():
+            db.commit = commit_original
+            raise IntegrityError("INSERT", {}, Exception("FOREIGN KEY constraint failed"))
+
+        db.commit = commit_que_falha
+        return post
+
+    monkeypatch.setattr(servico, "buscar", buscar_e_apagar)
