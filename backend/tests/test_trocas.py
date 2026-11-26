@@ -252,3 +252,25 @@ def test_confirmar_proposta_com_horario_passado_da_422(client, pessoa, monkeypat
     assert recusa.json()["status"] == "recusada"
     confirmacao_repetida = client.post(f"/trocas/{id_troca}/confirmar", headers=bia)
     assert confirmacao_repetida.status_code == 409
+
+
+def test_confirmar_usa_o_mesmo_instante_para_validar_e_gravar(client, pessoa, monkeypatch):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    ids = habilidades(client)
+    horario = datetime(2030, 1, 10, 13, 0)
+    no_horario = criar(client, ana, proposta(ids)).json()["id"]
+
+    monkeypatch.setattr("app.services.trocas.agora_utc", lambda: horario)
+    assert client.post(f"/trocas/{no_horario}/confirmar", headers=bia).status_code == 422
+    assert client.post(f"/trocas/{no_horario}/recusar", headers=bia).status_code == 200
+
+    monkeypatch.setattr("app.services.trocas.agora_utc", agora_utc)
+    antes = criar(client, ana, proposta(ids)).json()["id"]
+    leituras = iter([horario - timedelta(microseconds=1), horario])
+    monkeypatch.setattr("app.services.trocas.agora_utc", lambda: next(leituras))
+    confirmada = client.post(f"/trocas/{antes}/confirmar", headers=bia)
+
+    assert confirmada.status_code == 200
+    with SessionLocal() as db:
+        assert db.get(Troca, antes).respondida_em == horario - timedelta(microseconds=1)
