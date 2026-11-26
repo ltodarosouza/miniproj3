@@ -1,4 +1,4 @@
-### 34. A proposta de troca vira uma ordem numerada, e confirmar celebra
+### 37. A proposta de troca vira uma ordem numerada, e confirmar celebra
 
 - **Contexto:** a troca é o momento mais importante do produto, mas o cartão
   parecia uma mensagem qualquer: título solto, habilidades em pílulas e um
