@@ -22,10 +22,10 @@ type ErrosCampos = Partial<Record<"horario" | "habilidades", string>>;
 
 function RotuloDoBloco({ numero, texto, detalhe }: { numero: string; texto: string; detalhe?: string }) {
   return (
-    <span className="flex items-baseline gap-2">
+    <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 [overflow-wrap:anywhere]">
       <span className="font-mono text-xs text-texto-3">{numero} ·</span>
       <span className="text-sm font-medium text-texto">{texto}</span>
-      {detalhe && <span className="text-xs text-texto-2">{detalhe}</span>}
+      {detalhe && <span className="min-w-0 text-xs text-texto-2">{detalhe}</span>}
     </span>
   );
 }
@@ -214,16 +214,16 @@ export function FormAgendarTroca({
       className="m-auto w-[min(32rem,calc(100vw-2rem))] overflow-y-auto rounded-cartao border border-linha bg-superficie p-6 text-texto shadow-alta backdrop:bg-[oklch(0.16_0.012_200/0.55)] backdrop:backdrop-blur-sm open:animate-[aparecer-escala_var(--medio)_var(--ease-saida)_both] motion-reduce:open:animate-none max-sm:mt-auto max-sm:mb-0 max-sm:w-full max-sm:rounded-t-cartao max-sm:rounded-b-none max-sm:p-5"
     >
       <form onSubmit={enviar} noValidate className="flex max-h-[calc(100dvh-5.5rem)] flex-col gap-5 max-sm:max-h-[calc(100dvh-5rem)]">
-        <header className="space-y-1">
-          <h2 id="titulo-agendar-troca" className="text-lg font-semibold tracking-tight">
-            Agendar troca com {primeiroNome}
-          </h2>
-          <p className="text-sm leading-relaxed text-texto-2">
-            {primeiroNome} recebe a proposta e confirma. Depois, cada um salva no Google Agenda com o Meet.
-          </p>
-        </header>
+        <div className="min-h-24 space-y-5 overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable]">
+          <header className="space-y-1 [overflow-wrap:anywhere]">
+            <h2 id="titulo-agendar-troca" className="text-lg font-semibold tracking-tight">
+              Agendar troca com {primeiroNome}
+            </h2>
+            <p className="text-sm leading-relaxed text-texto-2">
+              {primeiroNome} recebe a proposta e confirma. Depois, cada um salva no Google Agenda com o Meet.
+            </p>
+          </header>
 
-        <div className="space-y-5 overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable]">
           <div className="space-y-4">
             {opcoes === null && <p className="text-sm text-texto-3" role="status">Carregando habilidades em comum…</p>}
             {erroOpcoes && (
@@ -262,7 +262,7 @@ export function FormAgendarTroca({
               aoEscolher={setAprendo}
             >
               {outra === "aprendo" ? (
-                <div className="space-y-2">
+                <div className="space-y-2 [overflow-wrap:anywhere]">
                   <AutocompleteHabilidade
                     rotulo={`Outra habilidade que ${primeiroNome} te ensina`}
                     value={busca}
@@ -283,10 +283,16 @@ export function FormAgendarTroca({
           <SeletorDeHorario key={abertura} rotulo={<RotuloDoBloco numero="03" texto="Quando" />} data={data} hora={hora} aoMudarData={setData} aoMudarHora={setHora} erro={erros.horario} />
         </div>
 
-        <section aria-label="Resumo da ordem" className="min-w-0 rounded-controle border border-linha bg-superficie-2 px-3 py-2.5 text-sm">
+        <section aria-label="Resumo da ordem" className="min-w-0 rounded-controle border border-linha bg-superficie-2 px-3 py-2.5 text-sm [overflow-wrap:anywhere]">
           <p className="font-mono text-xs uppercase tracking-wide text-texto-3">Resumo da ordem</p>
-          <p className="flex min-w-0 gap-1"><span className="shrink-0">Você ensina <span aria-hidden="true">→</span></span><span className="min-w-0 break-words">{nomeEnsino}</span></p>
-          <p className="flex min-w-0 gap-1"><span className="shrink-0">{primeiroNome} ensina <span aria-hidden="true">→</span></span><span className="min-w-0 break-words">{nomeAprendo}</span></p>
+          <p className="flex flex-wrap gap-x-1">
+            <span>Você ensina <span aria-hidden="true">→</span></span>
+            <span className="min-w-0">{nomeEnsino}</span>
+          </p>
+          <p className="flex flex-wrap gap-x-1">
+            <span className="min-w-0">{primeiroNome} ensina <span aria-hidden="true">→</span></span>
+            <span className="min-w-0">{nomeAprendo}</span>
+          </p>
           <p className={`font-mono numeros ${data && hora ? "" : "text-texto-3"}`}>
             {data && hora ? dataDaOrdem(localParaIsoUtc(data, hora)) : "escolha o dia e o horário"}
           </p>
