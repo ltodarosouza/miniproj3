@@ -22,7 +22,7 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
   pessoas conversam, agendam a troca e se avaliam.
 - **Como saberíamos que funcionou:** uma troca agendada termina com avaliação
   dos dois lados, e a pessoa volta para marcar outra.
-- **Onde o nicho aparece:** o catálogo reúne habilidades de programação e disciplinas da base (`backend/app/services/habilidades.py`, `CATALOGO`); o seed monta 32 pessoas, pares de troca garantidos e posts de rotina de estudo (`backend/scripts/seed.py`); a interface traz a Mesa/Diário com “O que você estudou hoje?” e o livro de pares em `/matches` (decisões [32](docs/decisoes/32-identidade-colmatch-bolsa-de-saberes.md), [33](docs/decisoes/33-mesa-diario-e-cotacao.md) e [36](docs/decisoes/36-pares-e-busca.md)).
+- **Onde o nicho aparece:** o catálogo reúne habilidades de programação e disciplinas da base (`backend/app/services/habilidades.py`, `CATALOGO`); o seed monta 32 pessoas, pares de troca garantidos e posts de rotina de estudo (`backend/scripts/seed.py`); a interface traz o Feed/Diário com “O que você estudou hoje?” e o livro de pares em `/matches` (decisões [32](docs/decisoes/32-identidade-colmatch-bolsa-de-saberes.md), [33](docs/decisoes/33-mesa-diario-e-cotacao.md) e [36](docs/decisoes/36-pares-e-busca.md)).
 
 ## Decisões em destaque
 
@@ -705,6 +705,7 @@ Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada de
 - [31. Erro honesto em post apagado, limite de 5 posts por minuto e validação única de upload](docs/decisoes/31-erro-honesto-e-limite-de-posts.md).
 - [32. Identidade Colmatch e sistema visual “Bolsa de saberes”](docs/decisoes/32-identidade-colmatch-bolsa-de-saberes.md).
 - [33. Mesa, Diário e cotação da semana](docs/decisoes/33-mesa-diario-e-cotacao.md).
+  Atualizada a pedido do dono: a tela volta a se chamar Feed.
 - [34. Mensagens e sessão encerrada](docs/decisoes/34-mensagens-e-sessao-encerrada.md).
 - [36. Livro de pares e busca em paleta](docs/decisoes/36-pares-e-busca.md).
   Com aval do dono, o escopo da #83 passou a incluir as habilidades públicas
@@ -713,6 +714,7 @@ Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada de
 - [38. Notificações como registro de atividade, com cursor opaco no front](docs/decisoes/38-notificacoes-registro-e-cursor.md).
 - [39. Mais estudadas por horas, coluna com respiro e avaliação dentro da conversa](docs/decisoes/39-ranking-por-horas-respiro-e-avaliacao-na-conversa.md).
   Pedido direto do dono; substitui o cartão flutuante de avaliação da decisão 8.
+  Atualizada a pedido do dono: a coluna encosta na borda direita em telas largas.
 - [40. Símbolo do Colmatch vira uma colmeia](docs/decisoes/40-logo-colmeia.md).
   Pedido direto do dono; substitui o desenho de três células da decisão 32.
 
@@ -739,7 +741,7 @@ de outra pessoa, as duas aparecem com o número do PR.
 | Deploy | @ltodarosouza | Bônus de +10 e banca testando na URL. |
 | Notificações | @ltodarosouza | Mantêm a pessoa informada sobre atividade e mensagens. |
 | Busca de pessoas e habilidades | @gecbeltrao (busca, #56); @ltodarosouza (repaginada em paleta, #87) | Ajuda a encontrar pessoas e habilidades relevantes. |
-| Mesa/Diário com cotação da semana | @gecbeltrao | Reúne a rotina de estudo e o contexto das habilidades em alta. |
+| Feed/Diário com cotação da semana (antes chamado Mesa) | @gecbeltrao | Reúne a rotina de estudo e o contexto das habilidades em alta. |
 | Fotos de post e de perfil | @NicoleAlverga (foto do post, #31); @ltodarosouza (foto de perfil por arquivo, #65) | Dá contexto visual às publicações e aos perfis. |
 | Identidade Colmatch | @ltodarosouza | Dá unidade visual e nome à rede. |
 

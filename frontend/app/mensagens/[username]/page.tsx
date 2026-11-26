@@ -314,12 +314,14 @@ export default function PaginaConversa() {
     <div className="flex h-full flex-col">
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-linha px-4">
         <Link href="/mensagens" aria-label="Voltar para as conversas" className="-ml-2 flex size-10 items-center justify-center rounded-[4px] text-texto-2 transition-colors duration-[var(--rapido)] ease-saida hover:bg-superficie-2 hover:text-texto md:hidden"><Icone nome="voltar" tamanho={19} /></Link>
-        {com && <Avatar nome={com.name} url={com.avatar_url} />}
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate font-display text-[0.9375rem] font-semibold tracking-tight text-texto">{titulo}</h1>
-          {com && <p className="truncate font-mono text-xs text-texto-3">@{username}</p>}
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <Link href={`/perfil/${encodeURIComponent(username)}`} aria-label={`Ver perfil de ${titulo}`} className="group flex min-w-0 items-center gap-3 -mx-1 rounded-controle p-1">
+          {com && <Avatar nome={com.name} url={com.avatar_url} />}
+          <div className="min-w-0">
+            <h1 className="truncate font-display text-[0.9375rem] font-semibold tracking-tight text-texto group-hover:underline">{titulo}</h1>
+            {com && <span className="block truncate font-mono text-xs text-texto-3">@{username}</span>}
+          </div>
+        </Link>
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           <Botao tamanho="sm" aria-label="Agendar troca" onClick={() => setFormAberto(true)}>
             <Icone nome="calendario" tamanho={16} />
             <span className="hidden sm:inline">Agendar troca</span>

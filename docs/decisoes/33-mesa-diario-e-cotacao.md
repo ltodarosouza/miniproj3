@@ -27,3 +27,7 @@
   curtas e discretas.
 - **Composer.** Fechado, é um campo de uma linha com o botão "Registrar
   estudo". Ao abrir, mostra o formulário completo, com habilidade, tempo e foto.
+- **Atualização (pedido direto do dono, nov/2026).** O nome Mesa não dizia
+  nada para quem usa: o menu já chamava a tela de Feed e o título dizia outra
+  coisa. A página volta a se chamar **Feed** (título, aviso para entrar e
+  "Voltar ao Feed" no post). A lista continua sendo o Diário.
