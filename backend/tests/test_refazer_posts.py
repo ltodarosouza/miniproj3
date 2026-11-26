@@ -210,3 +210,57 @@ def test_backup_existente_nao_e_sobrescrito(client, tmp_path):
 def test_travar_tabelas_sqlite_nao_faz_nada(client):
     with SessionLocal() as db:
         refazer_posts._travar_tabelas(db)
+
+
+def test_restaurar_preserva_posts_e_interacoes_posteriores(client, logar, tmp_path):
+    _, _ = _montar(client, logar)
+    backup = tmp_path / "posterior.json"
+    with SessionLocal() as db:
+        refazer_posts.refazer(db, "bots", backup)
+        ids_novos = __import__("json").loads(Path(str(backup) + ".novos.json").read_text())["posts_novos"]
+        post_gerado = db.get(Post, ids_novos[0])
+        bot = next(u for u in refazer_posts.encontrar_bots(db) if u.username != "ada")
+        post_bot = Post(autor_id=bot.id, texto="post posterior do bot")
+        db.add(post_bot)
+        db.flush()
+        id_bot = post_bot.id
+        real = db.scalar(select(User).where(User.username == "pessoa_real"))
+        db.add(Comentario(post_id=post_gerado.id, autor_id=real.id, texto="comentário posterior"))
+        db.commit()
+        refazer_posts.restaurar(db, backup)
+        assert db.get(Post, id_bot) is not None
+        assert db.scalar(select(Comentario.id).where(Comentario.texto == "comentário posterior")) is None
+        arquivos = list(tmp_path.glob("posterior.antes-de-restaurar-*.json"))
+        assert len(arquivos) == 1
+        dados = __import__("json").loads(arquivos[0].read_text())
+        assert any(linha["texto"] == "comentário posterior" for linha in dados["tabelas"]["comentarios"])
+        assert db.scalar(select(Post.id).where(Post.texto == "post para interações")) is not None
+
+
+def test_restaurar_todos_preserva_post_criado_depois(client, logar, tmp_path):
+    _montar(client, logar)
+    backup = tmp_path / "todos-posterior.json"
+    with SessionLocal() as db:
+        refazer_posts.refazer(db, "todos", backup)
+        pessoa = db.scalar(select(User).where(User.username == "pessoa_real"))
+        posterior = Post(autor_id=pessoa.id, texto="post após escopo todos")
+        db.add(posterior)
+        db.commit()
+        id_posterior = posterior.id
+        refazer_posts.restaurar(db, backup)
+        assert db.get(Post, id_posterior) is not None
+
+
+def test_restaurar_sem_lista_de_novos_nao_altera(client, tmp_path):
+    backup = tmp_path / "sem-novos.json"
+    backup.write_text('{"tabelas": {"posts": []}}')
+    with SessionLocal() as db:
+        seed.seed_fake(db)
+        antes = list(db.scalars(select(Post.id).order_by(Post.id)))
+        try:
+            refazer_posts.restaurar(db, backup)
+        except SystemExit as erro:
+            assert ".novos.json" in str(erro)
+        else:
+            raise AssertionError("restauração sem manifesto deveria ser recusada")
+        assert list(db.scalars(select(Post.id).order_by(Post.id))) == antes

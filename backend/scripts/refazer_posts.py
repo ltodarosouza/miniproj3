@@ -130,6 +130,11 @@ def fazer_backup(
     arquivo = {"versao": 1, "criado_em": datetime.now().astimezone().isoformat(), "escopo": escopo,
                "autores": None if escopo == "todos" else [u.id for u in bots],
                "posts_reais": list(posts_reais), "tabelas": tabelas}
+    _publicar_json_exclusivo(caminho, arquivo)
+    return {nome: len(linhas) for nome, linhas in tabelas.items()}
+
+
+def _publicar_json_exclusivo(caminho: Path, dados: dict) -> None:
     caminho.parent.mkdir(parents=True, exist_ok=True)
     descritor, nome_temporario = tempfile.mkstemp(
         dir=caminho.parent, prefix=caminho.name + ".", suffix=".tmp"
@@ -137,17 +142,16 @@ def fazer_backup(
     temporario = Path(nome_temporario)
     try:
         with os.fdopen(descritor, "w", encoding="utf-8") as destino:
-            destino.write(json.dumps(arquivo, ensure_ascii=False, indent=1))
+            destino.write(json.dumps(dados, ensure_ascii=False, indent=1))
             destino.flush()
             os.fsync(destino.fileno())
         try:
             os.link(temporario, caminho)
         except FileExistsError as erro:
-            raise SystemExit(f"o backup {caminho} já existe; escolha outro --backup") from erro
+            raise SystemExit(f"o arquivo {caminho} já existe; escolha outro caminho") from erro
     finally:
         if temporario.exists():
             temporario.unlink()
-    return {nome: len(linhas) for nome, linhas in tabelas.items()}
 
 
 def apagar_posts(db: Session, post_ids: list[int]) -> None:
@@ -171,9 +175,10 @@ def _travar_tabelas(db: Session) -> None:
         return
     try:
         db.execute(text("SET LOCAL lock_timeout = '30s'"))
+        # Notificações leem e escrevem na mesma transação; a trava espera esse commit.
         db.execute(text(
             "LOCK TABLE posts, likes, comentarios, imagens_post, notificacoes_entregues "
-            "IN EXCLUSIVE MODE"
+            "IN ACCESS EXCLUSIVE MODE"
         ))
     except Exception as erro:
         origem = getattr(erro, "orig", None)
@@ -192,8 +197,9 @@ def refazer(
     db: Session, escopo: str, caminho_backup: Path, posts_reais: list[int] = (),
     bots: list[User] | None = None,
 ) -> dict:
-    if caminho_backup.exists():
-        raise SystemExit(f"o backup {caminho_backup} já existe; escolha outro --backup")
+    caminho_novos = Path(str(caminho_backup) + ".novos.json")
+    if caminho_backup.exists() or caminho_novos.exists():
+        raise SystemExit(f"o backup {caminho_backup} ou {caminho_novos} já existe; escolha outro --backup")
     try:
         _travar_tabelas(db)
         bots = encontrar_bots(db) if bots is None else bots
@@ -203,10 +209,20 @@ def refazer(
             raise SystemExit("--posts-reais não pode ser usado com --escopo todos")
         ids = posts_do_escopo(db, escopo, bots, posts_reais)
         apagados = fazer_backup(db, escopo, bots, ids, caminho_backup, posts_reais)
+        maior_id_post = db.scalar(select(func.max(Post.id))) or 0
         apagar_posts(db, ids)
         sorteio, novos = _dados_novos(db, bots)
+        # IDs acima do banco atual evitam colisão com IDs removidos no SQLite.
+        if db.bind.dialect.name == "sqlite":
+            proximo_id = max(maior_id_post, 0) + 1
+            for deslocamento, post in enumerate(novos):
+                post.id = proximo_id + deslocamento
         db.add_all(novos)
         db.flush()
+        _publicar_json_exclusivo(caminho_novos, {
+            "backup": caminho_backup.name,
+            "posts_novos": [post.id for post in novos],
+        })
         if len(bots) >= 2 and len(novos) >= 25 and len(bots) * len(novos) > 120:
             seed.criar_curtidas_e_comentarios(db, bots, novos, sorteio)
         db.commit()
@@ -217,27 +233,33 @@ def refazer(
 
 
 def restaurar(db: Session, caminho: Path) -> dict:
+    caminho_novos = Path(str(caminho) + ".novos.json")
+    if not caminho_novos.exists():
+        raise SystemExit(f"não foi encontrado {caminho_novos}; restauração recusada sem a lista de posts criados (nada foi alterado)")
     try:
         _travar_tabelas(db)
         arquivo = json.loads(caminho.read_text(encoding="utf-8"))
+        ids_novos = json.loads(caminho_novos.read_text(encoding="utf-8"))["posts_novos"]
     except BaseException:
         db.rollback()
         raise
-    autores = arquivo["autores"]
-    if autores is None:
-        ids = list(db.scalars(select(Post.id)))
-    else:
-        ids = list(db.scalars(select(Post.id).where(Post.autor_id.in_(autores))))
-        ids_backup = [linha["id"] for linha in arquivo["tabelas"]["posts"]]
-        colisoes = list(db.scalars(
-            select(Post.id).where(Post.id.in_(ids_backup), Post.autor_id.not_in(autores))
-        )) if ids_backup else []
-        if colisoes:
-            db.rollback()
-            raise SystemExit(f"ids do backup já pertencem a posts que não são de bots: {colisoes}")
+    ids_backup = [linha["id"] for linha in arquivo["tabelas"]["posts"]]
+    ids_existentes = list(db.scalars(select(Post.id).where(Post.id.in_(ids_novos)))) if ids_novos else []
+    colisoes = list(db.scalars(select(Post.id).where(Post.id.in_(ids_backup), Post.id.not_in(ids_novos)))) if ids_backup else []
+    if colisoes:
+        db.rollback()
+        raise SystemExit(f"ids do backup já pertencem a posts que não são posts_novos: {colisoes}")
     contagens = {nome: len(linhas) for nome, linhas in arquivo["tabelas"].items()}
+    caminho_seguranca = caminho.with_name(
+        f"{caminho.stem}.antes-de-restaurar-{datetime.now().strftime('%Y%m%d-%H%M%S')}{caminho.suffix}"
+    )
     try:
-        apagar_posts(db, ids)
+        if ids_existentes:
+            tabelas = {nome: _linhas(db, modelo, ids_existentes) for nome, modelo in MODELOS.items()}
+            seguranca = {"versao": 1, "criado_em": datetime.now().astimezone().isoformat(),
+                         "escopo": "todos", "autores": None, "posts_reais": [], "tabelas": tabelas}
+            _publicar_json_exclusivo(caminho_seguranca, seguranca)
+        apagar_posts(db, ids_existentes)
         for nome in ("posts", "likes", "comentarios", "imagens_post", "notificacoes_entregues"):
             modelo = MODELOS[nome]
             colunas = {c.name: c for c in modelo.__table__.columns}
@@ -264,7 +286,8 @@ def restaurar(db: Session, caminho: Path) -> dict:
     except Exception:
         db.rollback()
         raise
-    return {"restaurados": contagens, "backup": str(caminho)}
+    return {"restaurados": contagens, "backup": str(caminho),
+            "backup_seguranca": str(caminho_seguranca) if ids_existentes else None}
 
 
 def plano(
@@ -338,8 +361,12 @@ def main(argv=None) -> None:
         if args.restaurar:
             arquivo = json.loads(args.restaurar.read_text(encoding="utf-8"))
             resumo = {nome: len(linhas) for nome, linhas in arquivo["tabelas"].items()}
+            caminho_novos = Path(str(args.restaurar) + ".novos.json")
+            ids_novos = json.loads(caminho_novos.read_text(encoding="utf-8"))["posts_novos"] if caminho_novos.exists() else []
+            existentes = db.scalar(select(func.count(Post.id)).where(Post.id.in_(ids_novos))) if ids_novos else 0
             if not args.aplicar:
                 print(f"Linhas que voltariam: {resumo}")
+                print(f"Posts novos a descartar: {existentes}; .novos.json existe: {'sim' if caminho_novos.exists() else 'não'}")
             else:
                 print(restaurar(db, args.restaurar))
         else:
