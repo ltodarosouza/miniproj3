@@ -10,6 +10,7 @@ type Particula = {
   vy: number;
   rotacao: number;
   velocidadeRotacao: number;
+  raio: number;
   cor: string;
 };
 
@@ -41,15 +42,19 @@ export function celebrar(): void {
   contexto.scale(proporcao, proporcao);
 
   const estilos = getComputedStyle(document.documentElement);
-  const cores = ["--marca", "--troca", "--estrela", "--marca-suave"]
-    .map((variavel) => estilos.getPropertyValue(variavel).trim())
-    .filter(Boolean);
-  if (cores.length === 0) cores.push("currentColor");
+  const lerCor = (variavel: string) => estilos.getPropertyValue(variavel).trim();
+  let mel = lerCor("--marca");
+  let grafite = lerCor("--grafite");
+  if (!mel && !grafite) mel = grafite = "currentColor";
+  else {
+    mel ||= grafite;
+    grafite ||= mel;
+  }
 
-  const particulas: Particula[] = Array.from({ length: 70 }, (_, indice) => {
+  const particulas: Particula[] = Array.from({ length: 40 }, (_, indice) => {
     const lado = indice % 2 === 0 ? 0.1 : 0.9;
     const angulo = (55 + Math.random() * 25) * (Math.PI / 180);
-    const velocidade = 9 + Math.random() * 6;
+    const velocidade = 10 + Math.random() * 4;
     const direcao = lado === 0.1 ? 1 : -1;
     return {
       x: largura * lado,
@@ -58,7 +63,8 @@ export function celebrar(): void {
       vy: -Math.sin(angulo) * velocidade,
       rotacao: Math.random() * Math.PI * 2,
       velocidadeRotacao: (Math.random() - 0.5) * 0.28,
-      cor: cores[Math.floor(Math.random() * cores.length)],
+      raio: 3 + Math.random() * 2.5,
+      cor: Math.random() < 0.65 ? mel : grafite,
     };
   });
 
@@ -66,24 +72,33 @@ export function celebrar(): void {
   let quadro = 0;
   function desenhar(agora: number) {
     const decorrido = agora - inicio;
-    if (decorrido >= 1800) {
+    if (decorrido >= 1100) {
       cancelAnimationFrame(quadro);
       canvas.remove();
       return;
     }
 
     contexto!.clearRect(0, 0, largura, altura);
-    contexto!.globalAlpha = decorrido > 1400 ? 1 - (decorrido - 1400) / 400 : 1;
+    contexto!.globalAlpha = decorrido > 800 ? 1 - (decorrido - 800) / 300 : 1;
     for (const particula of particulas) {
       contexto!.save();
       contexto!.translate(particula.x, particula.y);
       contexto!.rotate(particula.rotacao);
       contexto!.fillStyle = particula.cor;
-      contexto!.fillRect(-3, -5, 6, 10);
+      contexto!.beginPath();
+      for (let vertice = 0; vertice < 6; vertice += 1) {
+        const angulo = (vertice * Math.PI) / 3;
+        const x = Math.cos(angulo) * particula.raio;
+        const y = Math.sin(angulo) * particula.raio;
+        if (vertice === 0) contexto!.moveTo(x, y);
+        else contexto!.lineTo(x, y);
+      }
+      contexto!.closePath();
+      contexto!.fill();
       contexto!.restore();
       particula.x += particula.vx;
       particula.y += particula.vy;
-      particula.vy += 0.3;
+      particula.vy += 0.35;
       particula.vx *= 0.985;
       particula.vy *= 0.985;
       particula.rotacao += particula.velocidadeRotacao;
