@@ -27,7 +27,7 @@ export function NavegacaoLateral({
       aria-label="Principal"
       className="fixed inset-y-0 left-0 z-40 hidden w-[5.25rem] flex-col border-r border-linha bg-superficie px-3 py-4 lg:flex xl:w-[15.75rem] xl:px-4"
     >
-      <div className="mb-5 flex flex-col items-center gap-3 xl:flex-row xl:justify-between">
+      <div className="mb-5 flex flex-col items-center gap-2 xl:items-start">
         <Link
           href="/feed"
           aria-label={nomeRede}
@@ -42,7 +42,7 @@ export function NavegacaoLateral({
           </span>
         </Link>
         {streak ? (
-          <Streak dias={streak.dias} postouHoje={streak.postouHoje} alinharDica="inicio" />
+          <Streak dias={streak.dias} postouHoje={streak.postouHoje} alinharDica="inicio" compacto className="xl:-ml-2" />
         ) : null}
       </div>
 

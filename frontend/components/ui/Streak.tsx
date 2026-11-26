@@ -17,11 +17,13 @@ export function Streak({
   dias,
   postouHoje,
   alinharDica = "centro",
+  compacto = false,
   className,
 }: {
   dias: number;
   postouHoje: boolean;
   alinharDica?: "centro" | "inicio" | "fim";
+  compacto?: boolean;
   className?: string;
 }) {
   const duracao = `${dias} ${dias === 1 ? "dia" : "dias"}`;
@@ -41,11 +43,11 @@ export function Streak({
     <Link
       href={postouHoje ? "/perfil/eu" : HREF_PUBLICAR}
       aria-label={dica}
-      className={`group relative inline-flex h-9 items-center gap-1.5 rounded-controle px-2 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 ${postouHoje ? "text-texto" : "text-texto-2"} ${className ?? ""}`}
+      className={`group relative inline-flex items-center gap-1.5 rounded-controle px-2 ${compacto ? "flex-col py-1.5 xl:h-9 xl:flex-row xl:py-0" : "h-9"} transition-colors duration-[var(--rapido)] hover:bg-superficie-2 ${postouHoje ? "text-texto" : "text-texto-2"} ${className ?? ""}`}
     >
       <span aria-hidden="true" className="flex items-center gap-[2px]">
         {segmentosDaSemana(dias, postouHoje).map((cheio, i) => (
-          <span key={i} className={`h-2.5 w-[5px] rounded-[1px] ${cheio ? "bg-marca" : "bg-linha"}`} />
+          <span key={i} className={`h-2.5 w-[5px] rounded-[1px] ${cheio ? "bg-marca" : "bg-texto-3/40"}`} />
         ))}
       </span>
       <span className="font-mono text-xs font-medium numeros">{dias}d</span>
