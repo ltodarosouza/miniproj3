@@ -9,6 +9,7 @@ from app.db import SessionLocal
 from app.models.curtida import Curtida
 from app.models.follow import Follow
 from app.models.leitura_notificacoes import LeituraNotificacoes
+from app.models.post import Post
 from app.models.troca import Troca
 from app.models.user import User
 
@@ -426,6 +427,85 @@ def test_cursor_desempata_eventos_no_mesmo_instante(client, pessoa):
     assert len(vistos) == 3
     assert len({identidade(item) for item in vistos}) == 3
     assert pagina["proximo_cursor"] is None
+
+
+def test_cursor_percorre_lista_grande_ate_o_fim(client, pessoa):
+    ana, bia = pessoa("ana"), pessoa("bia")
+    instante = horario_utc(10)
+    with SessionLocal() as db:
+        autor = db.scalar(select(User).where(User.username == "ana"))
+        curtidor = db.scalar(select(User).where(User.username == "bia"))
+        posts = [
+            Post(autor_id=autor.id, texto=f"Post {i}", created_at=instante + timedelta(seconds=i))
+            for i in range(601)
+        ]
+        db.add_all(posts)
+        db.flush()
+        db.add_all(
+            Curtida(
+                usuario_id=curtidor.id,
+                post_id=post.id,
+                created_at=instante + timedelta(seconds=i),
+            )
+            for i, post in enumerate(posts)
+        )
+        db.commit()
+
+    vistos = []
+    cursor = None
+    paginas = 0
+    while True:
+        query = "?limit=100" + (f"&cursor={cursor}" if cursor else "")
+        resposta = client.get(f"/notificacoes{query}", headers=ana)
+        assert resposta.status_code == 200
+        pagina = resposta.json()
+        paginas += 1
+        vistos.extend(item["post_id"] for item in pagina["items"])
+        cursor = pagina["proximo_cursor"]
+        if cursor is None:
+            break
+        assert len(cursor) < 512
+
+    assert len(vistos) == len(set(vistos)) == 601
+    assert set(vistos) == {post.id for post in posts}
+    assert paginas == 7
+
+
+def test_mesmo_cursor_repetido_devolve_a_mesma_pagina(client, pessoa):
+    ana, bia = pessoa("ana"), pessoa("bia")
+    instante = horario_utc(10)
+    with SessionLocal() as db:
+        autor = db.scalar(select(User).where(User.username == "ana"))
+        curtidor = db.scalar(select(User).where(User.username == "bia"))
+        posts = [
+            Post(autor_id=autor.id, texto=f"Post {i}", created_at=instante)
+            for i in range(5)
+        ]
+        db.add_all(posts)
+        db.flush()
+        db.add_all(
+            Curtida(usuario_id=curtidor.id, post_id=post.id, created_at=instante + timedelta(seconds=i))
+            for i, post in enumerate(posts)
+        )
+        db.commit()
+
+    primeira = client.get("/notificacoes?limit=2", headers=ana).json()
+    cursor = primeira["proximo_cursor"]
+    assert cursor
+    segunda_url = f"/notificacoes?limit=2&cursor={cursor}"
+    segunda_a = client.get(segunda_url, headers=ana)
+    segunda_b = client.get(segunda_url, headers=ana)
+    assert segunda_a.status_code == segunda_b.status_code == 200
+    assert segunda_a.json()["items"] == segunda_b.json()["items"]
+    assert segunda_a.json()["proximo_cursor"] == segunda_b.json()["proximo_cursor"]
+
+    terceira = client.get(
+        f"/notificacoes?limit=2&cursor={segunda_a.json()['proximo_cursor']}",
+        headers=ana,
+    )
+    assert terceira.status_code == 200
+    assert len(terceira.json()["items"]) == 1
+    assert terceira.json()["proximo_cursor"] is None
 
 
 def test_cursor_invalido_e_combinado_com_antes_de_dao_422(client, pessoa):
