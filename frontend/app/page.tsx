@@ -37,21 +37,27 @@ const PASSOS = [
 ] as const;
 
 function TickerDePares() {
+  const [pausado, setPausado] = useState(false);
   const itens = PARES.map(([a, b]) => `${a} ↔ ${b}`);
 
   return (
-    <div className="ticker-pares relative overflow-hidden border-y border-linha py-3" aria-label="Exemplos de pares de troca">
+    <div
+      role="region"
+      aria-label="Exemplos de pares de troca"
+      className={`ticker-pares relative flex items-center overflow-hidden border-y border-linha ${pausado ? "ticker-pares-pausado" : ""}`}
+    >
       <style>{`
         @keyframes ticker-pares-deslizar { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         .ticker-pares-faixa { animation: ticker-pares-deslizar 60s linear infinite; }
-        .ticker-pares:hover .ticker-pares-faixa { animation-play-state: paused; }
-        @media (prefers-reduced-motion: reduce) { .ticker-pares-faixa { animation: none; } }
+        .ticker-pares:hover .ticker-pares-faixa, .ticker-pares-pausado .ticker-pares-faixa { animation-play-state: paused; }
+        @media (prefers-reduced-motion: reduce) { .ticker-pares-faixa { animation: none; } .ticker-pares-botao { display: none; } }
       `}</style>
       <ul className="sr-only">
         {itens.map((item) => (
           <li key={item}>{item}</li>
         ))}
       </ul>
+      <div className="min-w-0 flex-1 overflow-hidden py-3">
       <div aria-hidden="true" className="ticker-pares-faixa flex w-max">
         {[0, 1].map((copia) => (
           <div key={copia} className="flex shrink-0">
@@ -63,6 +69,15 @@ function TickerDePares() {
           </div>
         ))}
       </div>
+      </div>
+      <button
+        type="button"
+        onClick={() => setPausado((atual) => !atual)}
+        aria-pressed={pausado}
+        className="ticker-pares-botao shrink-0 border-l border-linha bg-fundo px-3 py-3 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-2 hover:text-texto"
+      >
+        {pausado ? "Continuar" : "Pausar"}
+      </button>
     </div>
   );
 }

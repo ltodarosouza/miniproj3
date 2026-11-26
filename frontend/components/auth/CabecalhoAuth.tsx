@@ -7,7 +7,7 @@ import { NOME_REDE } from "@/lib/marca";
 // formulário à direita. No celular fica só o formulário, com o logo no topo.
 export function TelaAuth({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto grid w-full max-w-5xl overflow-hidden rounded-cartao border border-linha bg-superficie lg:min-h-[36rem] lg:grid-cols-[1fr_1.1fr]">
+    <div className="mx-auto grid w-full max-w-5xl overflow-hidden lg:min-h-[36rem] lg:rounded-cartao lg:border lg:border-linha lg:bg-superficie lg:grid-cols-[1fr_1.1fr]">
       <aside className="hidden flex-col justify-between bg-grafite p-10 text-grafite-texto lg:flex">
         <Logo variante="simbolo" tamanho="lg" className="size-16" />
         <div>
@@ -18,7 +18,7 @@ export function TelaAuth({ children }: { children: ReactNode }) {
         </div>
         <p className="font-mono text-xs opacity-60">Git ↔ Python · React ↔ SQL · Cálculo 1 ↔ Inglês técnico</p>
       </aside>
-      <div className="flex items-center justify-center px-5 py-8 sm:px-10 sm:py-12">
+      <div className="flex items-center justify-center py-4 sm:px-10 sm:py-12">
         <div className="w-full max-w-sm">{children}</div>
       </div>
     </div>
