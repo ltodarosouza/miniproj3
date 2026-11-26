@@ -112,9 +112,10 @@ def test_lista_ordena_futuras_e_passadas_e_filtra_por_pessoa(client, pessoa):
     for data in datas:
         troca = criar(client, ana, proposta(ids, "bia", data)).json()
         trocas.append(troca)
-        with SessionLocal() as db:
-            db.get(Troca, troca["id"]).status = "confirmada"
-            db.commit()
+        if data != datas[-1]:
+            with SessionLocal() as db:
+                db.get(Troca, troca["id"]).status = "confirmada"
+                db.commit()
     with SessionLocal() as db:
         for troca, horas in zip(trocas[:2], (4, 2)):
             registro = db.get(Troca, troca["id"])
@@ -126,6 +127,7 @@ def test_lista_ordena_futuras_e_passadas_e_filtra_por_pessoa(client, pessoa):
     assert [item["id"] for item in resposta.json()["items"]] == [trocas[2]["id"], trocas[3]["id"], trocas[1]["id"], trocas[0]["id"]]
     filtrada = client.get("/trocas?com=bia", headers=ana)
     assert len(filtrada.json()["items"]) == 4
+    assert resposta.json()["items"][1]["status"] == "proposta"
     assert client.get("/trocas?com=ausente", headers=ana).status_code == 404
     assert client.get("/trocas?com=caio", headers=ana).json()["items"] == []
 
