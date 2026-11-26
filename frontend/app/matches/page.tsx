@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { Cartao } from "@/components/ui/Cartao";
+import { Icone } from "@/components/ui/Icone";
 import { TagHabilidade } from "@/components/ui/TagHabilidade";
 import { ErroApi, type Match } from "@/lib/api";
 import { listarMatchesComAndamento, type MatchesComAndamento } from "@/lib/trocas";
@@ -13,25 +14,6 @@ import { limparSessao, meuId } from "@/lib/sessao";
 
 const LINK_TEXTO =
   "font-medium text-marca-forte underline underline-offset-2";
-
-function NoDeMatch({ tamanho = 20 }: { tamanho?: number }) {
-  return (
-    <svg
-      width={tamanho}
-      height={tamanho}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M6.5 7 10.83 9.5 10.83 14.5 6.5 17 2.17 14.5 2.17 9.5Z" />
-      <path d="M17.5 7 21.83 9.5 21.83 14.5 17.5 17 13.17 14.5 13.17 9.5Z" />
-      <path d="M10.83 12h2.34" />
-    </svg>
-  );
-}
 
 function TabelaPares({
   rotulo,
@@ -72,11 +54,11 @@ function TabelaPares({
             {itens.map((m) => (
               <tr key={m.usuario.id} role="row" className={`relative grid grid-cols-6 gap-x-3 gap-y-2 pl-4 pr-1 py-3 before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-marca ${colunas} sm:items-center sm:gap-4`}>
                 <td role="cell" className="col-span-4 flex min-w-0 items-center gap-3 sm:col-span-1">
-                  <span className="shrink-0 text-marca"><NoDeMatch /></span>
+                  <span className="shrink-0 text-marca"><Icone nome="par" tamanho={20} /></span>
                   <Link href={`/perfil/${encodeURIComponent(m.usuario.username)}`} className="flex min-w-0 items-center gap-3">
                     <Avatar nome={m.usuario.name} url={m.usuario.avatar_url} tamanho="sm" />
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-texto">{m.usuario.name}</span>
+                      <span className="block whitespace-normal text-sm font-medium text-texto [overflow-wrap:anywhere]">{m.usuario.name}</span>
                       <span className="block truncate font-mono text-xs text-texto-3">@{m.usuario.username}</span>
                     </span>
                   </Link>
@@ -172,7 +154,7 @@ export default function Pagina() {
   return (
     <div className="mx-auto w-full max-w-2xl space-y-8">
       <header>
-        <h1 className="text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">
+        <h1 className="font-display text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">
           Pares
         </h1>
         <p className="mt-1 text-sm text-texto-2">
@@ -216,7 +198,7 @@ export default function Pagina() {
       {logado && dados && dados.troca.length === 0 && dados.pode_te_ensinar.length === 0 && dados.em_andamento.length === 0 && (
         <Cartao className="flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold tracking-tight text-texto">Comece pelo seu perfil</h2>
+            <h2 className="font-display text-lg font-semibold tracking-tight text-texto">Comece pelo seu perfil</h2>
             <p className="max-w-[52ch] text-sm leading-relaxed text-texto-2">
               Diga o que você sabe e o que quer aprender. É com isso que a gente encontra quem pode te
               ensinar e com quem dá para trocar.

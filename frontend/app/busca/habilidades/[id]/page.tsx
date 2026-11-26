@@ -73,7 +73,7 @@ export default function PaginaHabilidade() {
             <p className="font-mono text-xs uppercase tracking-[0.08em] text-texto-3">
               {detalhe.habilidade.categoria === "tech" ? "Tecnologia" : "Disciplina"} · #{detalhe.habilidade.id}
             </p>
-            <h1 className="mt-1 break-words text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">{detalhe.habilidade.nome}</h1>
+            <h1 className="mt-1 break-words font-display text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">{detalhe.habilidade.nome}</h1>
             <dl className="mt-4 grid grid-cols-2 divide-x divide-linha border-y border-linha">
               <div className="px-3 py-3 first:pl-0">
                 <dt className="font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3">Sabem</dt>

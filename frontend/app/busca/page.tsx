@@ -112,7 +112,7 @@ function Resultados({ resultado, aoApagar }: { resultado: ResultadoBusca; aoApag
             href={`/busca/habilidades/${h.id}`}
             className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3 px-2 py-3 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
           >
-            <span className="truncate text-sm font-medium text-texto">{h.nome}</span>
+            <span className="min-w-0 whitespace-normal text-sm font-medium text-texto [overflow-wrap:anywhere]">{h.nome}</span>
             <span className="font-mono numeros text-xs text-texto-3">
               {h.sabem} {h.sabem === 1 ? "sabe" : "sabem"} · {h.querem} {h.querem === 1 ? "quer" : "querem"}
             </span>
@@ -338,7 +338,7 @@ export default function PaginaBusca() {
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6">
       <header>
-        <h1 className="text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">Buscar</h1>
+        <h1 className="font-display text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">Buscar</h1>
         <p className="mt-1 text-sm text-texto-2">Encontre pessoas, posts e habilidades.</p>
       </header>
       <Suspense fallback={null}>
