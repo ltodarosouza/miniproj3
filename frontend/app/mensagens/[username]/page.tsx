@@ -178,8 +178,10 @@ export default function PaginaConversa() {
 
   const marcarLidas = useCallback(() => {
     if (sessaoEncerradaRef.current || document.hidden || !cargaInicialConcluida.current) return;
-    void marcarConversaLida(username).then((resposta) => aplicarLidasAte(resposta.lidas_ate_id)).catch(() => {});
-  }, [aplicarLidasAte, username]);
+    void marcarConversaLida(username).then((resposta) => aplicarLidasAte(resposta.lidas_ate_id)).catch((erro: unknown) => {
+      if (ehSessaoEncerrada(erro)) encerrarSessao();
+    });
+  }, [aplicarLidasAte, encerrarSessao, username]);
 
   const buscarNovas = useCallback(async () => {
     if (sessaoEncerradaRef.current || document.hidden || idUsuario === null || pollingEmVoo.current) return;
