@@ -62,6 +62,10 @@ CATALOGO = [
 ]
 
 
+def listar(db: Session) -> list[Habilidade]:
+    return list(db.scalars(select(Habilidade).order_by(Habilidade.categoria, Habilidade.nome)))
+
+
 def garantir_catalogo(db: Session) -> None:
     existentes = set(db.scalars(select(Habilidade.nome)))
     db.add_all(
@@ -119,7 +123,3 @@ def mapear_texto(db: Session, texto: str) -> Habilidade | None:
     nome_original = normalizado_para_original[proximos[0]]
     logger.info("Fallback difflib mapeou %r -> %r", texto, nome_original)
     return db.scalar(select(Habilidade).where(Habilidade.nome == nome_original))
-
-
-def buscar_por_id(db: Session, habilidade_id: int) -> Habilidade | None:
-    return db.scalar(select(Habilidade).where(Habilidade.id == habilidade_id))

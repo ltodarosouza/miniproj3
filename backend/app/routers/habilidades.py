@@ -1,11 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.core.limite import limitador_mapear
 from app.deps import get_current_user
-from app.models.habilidade import Habilidade
 from app.models.user import User
 from app.schemas.habilidade import (
     HabilidadeMapearIn,
@@ -19,8 +17,7 @@ router = APIRouter(prefix="/habilidades", tags=["habilidades"])
 
 @router.get("", response_model=dict[str, list[HabilidadeResumo]])
 def listar_habilidades(db: Session = Depends(get_db)):
-    habilidades = db.scalars(select(Habilidade).order_by(Habilidade.categoria, Habilidade.nome))
-    return {"items": list(habilidades)}
+    return {"items": service.listar(db)}
 
 
 @router.get("/autocomplete", response_model=dict[str, list[HabilidadeResumo]])
