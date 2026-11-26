@@ -11,6 +11,7 @@
   --texto-3: #8A857A;
   --marca: #F2A900;
   --marca-forte: #A86A00;
+  --logo-match: var(--marca-forte);
   --marca-suave: #FBF0D2;
   --marca-texto: #1B1A17;
   --troca: var(--marca);
@@ -49,6 +50,7 @@
     --texto-3: #858073;
     --marca: #F2A900;
     --marca-forte: #F5B82E;
+    --logo-match: var(--marca);
     --marca-suave: #2E2614;
     --marca-texto: #1B1A17;
     --troca: var(--marca);
@@ -80,6 +82,7 @@
   --texto-3: #858073;
   --marca: #F2A900;
   --marca-forte: #F5B82E;
+  --logo-match: var(--marca);
   --marca-suave: #2E2614;
   --marca-texto: #1B1A17;
   --troca: var(--marca);

@@ -51,7 +51,7 @@ export function Logo({
       <Simbolo tamanho={tamanho} acessivel={false} />
       <span className={`font-display font-bold tracking-[-0.02em] leading-none ${TEXTOS[tamanho]}`}>
         <span className="text-texto">Col</span>
-        <span className="text-marca-forte">match</span>
+        <span style={{ color: "var(--logo-match)" }}>match</span>
       </span>
     </span>
   );

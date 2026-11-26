@@ -27,7 +27,7 @@
 
   **Logo:** três células: duas preenchidas e ligadas representam o match; a
   vazia representa a próxima conexão. O nome é "Col" em grafite e "match" em
-  mel: `#A86A00` no claro e `#F2A900`/`#F5B82E` no escuro. O ícone do app usa
+  mel: `#A86A00` no claro e `#F2A900` no escuro. O ícone do app usa
   fundo mel e símbolo grafite; o favicon usa fundo grafite e só as células.
 
   **Tokens:** os nomes antigos são mantidos para que todas as telas mudem sem
