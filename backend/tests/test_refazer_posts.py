@@ -217,7 +217,7 @@ def test_restaurar_preserva_posts_e_interacoes_posteriores(client, logar, tmp_pa
     backup = tmp_path / "posterior.json"
     with SessionLocal() as db:
         refazer_posts.refazer(db, "bots", backup)
-        ids_novos = __import__("json").loads(Path(str(backup) + ".novos.json").read_text())["posts_novos"]
+        ids_novos = [item["id"] for item in __import__("json").loads(Path(str(backup) + ".novos.json").read_text())["posts_novos"]]
         post_gerado = db.get(Post, ids_novos[0])
         bot = next(u for u in refazer_posts.encontrar_bots(db) if u.username != "ada")
         post_bot = Post(autor_id=bot.id, texto="post posterior do bot")
@@ -264,3 +264,22 @@ def test_restaurar_sem_lista_de_novos_nao_altera(client, tmp_path):
         else:
             raise AssertionError("restauração sem manifesto deveria ser recusada")
         assert list(db.scalars(select(Post.id).order_by(Post.id))) == antes
+
+
+def test_restaurar_nao_apaga_post_posterior_que_reaproveitou_id(client, logar, tmp_path):
+    _montar(client, logar)
+    backup = tmp_path / "reuso.json"
+    with SessionLocal() as db:
+        refazer_posts.refazer(db, "bots", backup)
+        novos = __import__("json").loads(Path(str(backup) + ".novos.json").read_text())["posts_novos"]
+        ultimo = max(item["id"] if isinstance(item, dict) else item for item in novos)
+        refazer_posts.apagar_posts(db, [ultimo])
+        db.commit()
+        real = db.scalar(select(User).where(User.username == "pessoa_real"))
+        posterior = Post(id=ultimo, autor_id=real.id, texto="post posterior com id reaproveitado")
+        db.add(posterior)
+        db.commit()
+        refazer_posts.restaurar(db, backup)
+        recuperado = db.get(Post, ultimo)
+        assert recuperado is not None
+        assert recuperado.texto == "post posterior com id reaproveitado"

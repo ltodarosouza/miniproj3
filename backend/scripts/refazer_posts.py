@@ -221,7 +221,7 @@ def refazer(
         db.flush()
         _publicar_json_exclusivo(caminho_novos, {
             "backup": caminho_backup.name,
-            "posts_novos": [post.id for post in novos],
+            "posts_novos": [_identidade(post) for post in novos],
         })
         if len(bots) >= 2 and len(novos) >= 25 and len(bots) * len(novos) > 120:
             seed.criar_curtidas_e_comentarios(db, bots, novos, sorteio)
@@ -232,6 +232,22 @@ def refazer(
     return {"apagados": apagados, "posts_novos": len(novos), "com_foto": sum(p.imagem_url is not None for p in novos), "backup": str(caminho_backup)}
 
 
+def _identidade(post: Post) -> dict:
+    """O que identifica um post criado pelo aplicar: o id sozinho pode ser reaproveitado (SQLite)."""
+    return {"id": post.id, "autor_id": post.autor_id, "created_at": post.created_at.isoformat(), "texto": post.texto}
+
+
+def _ids_novos_que_ainda_existem(db: Session, novos: list[dict]) -> list[int]:
+    if not novos:
+        return []
+    por_id = {item["id"]: item for item in novos}
+    return [
+        post.id
+        for post in db.scalars(select(Post).where(Post.id.in_(por_id)))
+        if _identidade(post) == por_id[post.id]
+    ]
+
+
 def restaurar(db: Session, caminho: Path) -> dict:
     caminho_novos = Path(str(caminho) + ".novos.json")
     if not caminho_novos.exists():
@@ -239,13 +255,13 @@ def restaurar(db: Session, caminho: Path) -> dict:
     try:
         _travar_tabelas(db)
         arquivo = json.loads(caminho.read_text(encoding="utf-8"))
-        ids_novos = json.loads(caminho_novos.read_text(encoding="utf-8"))["posts_novos"]
+        novos = json.loads(caminho_novos.read_text(encoding="utf-8"))["posts_novos"]
     except BaseException:
         db.rollback()
         raise
     ids_backup = [linha["id"] for linha in arquivo["tabelas"]["posts"]]
-    ids_existentes = list(db.scalars(select(Post.id).where(Post.id.in_(ids_novos)))) if ids_novos else []
-    colisoes = list(db.scalars(select(Post.id).where(Post.id.in_(ids_backup), Post.id.not_in(ids_novos)))) if ids_backup else []
+    ids_existentes = _ids_novos_que_ainda_existem(db, novos)
+    colisoes = list(db.scalars(select(Post.id).where(Post.id.in_(ids_backup), Post.id.not_in(ids_existentes)))) if ids_backup else []
     if colisoes:
         db.rollback()
         raise SystemExit(f"ids do backup já pertencem a posts que não são posts_novos: {colisoes}")
@@ -362,8 +378,8 @@ def main(argv=None) -> None:
             arquivo = json.loads(args.restaurar.read_text(encoding="utf-8"))
             resumo = {nome: len(linhas) for nome, linhas in arquivo["tabelas"].items()}
             caminho_novos = Path(str(args.restaurar) + ".novos.json")
-            ids_novos = json.loads(caminho_novos.read_text(encoding="utf-8"))["posts_novos"] if caminho_novos.exists() else []
-            existentes = db.scalar(select(func.count(Post.id)).where(Post.id.in_(ids_novos))) if ids_novos else 0
+            novos = json.loads(caminho_novos.read_text(encoding="utf-8"))["posts_novos"] if caminho_novos.exists() else []
+            existentes = len(_ids_novos_que_ainda_existem(db, novos))
             if not args.aplicar:
                 print(f"Linhas que voltariam: {resumo}")
                 print(f"Posts novos a descartar: {existentes}; .novos.json existe: {'sim' if caminho_novos.exists() else 'não'}")
