@@ -20,11 +20,11 @@ export type ConversaComStatus = {
 export type NaoLidasMensagens = { total: number; por_conversa: Record<string, number> };
 
 export function listarConversasComStatus(): Promise<{ items: ConversaComStatus[] }> {
-  return apiGet("/dms", SEM_REDIRECIONAR);
+  return apiGet("/dms");
 }
 
 export function buscarNaoLidas(): Promise<NaoLidasMensagens> {
-  return apiGet("/dms/nao-lidas", SEM_REDIRECIONAR);
+  return apiGet("/dms/nao-lidas");
 }
 
 export function marcarConversaLida(username: string): Promise<{ lidas_ate_id: number | null }> {
