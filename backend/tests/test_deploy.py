@@ -1,9 +1,10 @@
+import pytest
 from conftest import zerar_banco
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 
 from app.core.matches import indice_matches
-from app.db import Base, SessionLocal, engine
+from app.db import SessionLocal
 from app.main import app, origens_permitidas
 from app.models.post import Post
 from app.models.user import User
@@ -59,3 +60,28 @@ def test_sem_seed_on_boot_o_banco_fica_vazio(monkeypatch):
     zerar_banco()
     with TestClient(app):
         assert contar(User) == 0
+
+
+def test_debug_no_render_recusa_o_boot(monkeypatch):
+    monkeypatch.setenv("DEBUG", "true")
+    monkeypatch.setenv("RENDER", "true")
+    with pytest.raises(RuntimeError, match="DEBUG=true proibido"):
+        with TestClient(app):
+            pass
+
+
+def test_debug_com_postgres_recusa_o_boot(monkeypatch):
+    monkeypatch.setenv("DEBUG", "true")
+    monkeypatch.delenv("RENDER", raising=False)
+    monkeypatch.setattr("app.main.EH_SQLITE", False)
+    with pytest.raises(RuntimeError, match="DEBUG=true proibido"):
+        with TestClient(app):
+            pass
+
+
+def test_debug_no_dev_local_sobe_normalmente(monkeypatch):
+    monkeypatch.setenv("DEBUG", "true")
+    monkeypatch.delenv("RENDER", raising=False)
+    with TestClient(app) as cliente:
+        assert cliente.get("/saude").status_code == 200
+        
