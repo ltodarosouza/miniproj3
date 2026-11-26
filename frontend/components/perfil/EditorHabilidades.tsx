@@ -23,7 +23,7 @@ type ItemEditor = {
 
 const NIVEIS = [1, 2, 3, 4, 5];
 const TOTAL_SUGESTOES = 6;
-const ROTULO = "text-[0.8125rem] text-texto-3 font-semibold";
+const ROTULO = "text-[0.8125rem] text-texto-2 font-semibold";
 const FOCO =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca";
 const NOME_TIPO: Record<TipoHabilidade, string> = { sei: "Sei", quero_aprender: "Quero aprender" };

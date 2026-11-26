@@ -119,8 +119,8 @@ export default function PaginaPost() {
           <div className="border-t border-linha"><CartaoPost key={post.id} post={post} aoApagar={() => roteador.replace("/feed")} /></div>
           <section id="comentarios" aria-labelledby="titulo-comentarios">
             <div className="space-y-5 border-t border-linha pt-4">
-              <h2 id="titulo-comentarios" className="text-[0.8125rem] text-texto-3 font-semibold">
-                Comentários <span className="numeros text-texto-2">{totalComentarios}</span>
+              <h2 id="titulo-comentarios" className="text-[0.8125rem] text-texto-2 font-semibold">
+                Comentários <span className="font-mono font-medium numeros text-texto-2">{totalComentarios}</span>
               </h2>
               <ListaComentarios comentarios={comentarios} />
               <div className="border-t border-linha pt-5">

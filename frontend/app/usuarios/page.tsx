@@ -117,7 +117,7 @@ export default function EncontrarPessoasPage() {
 
       {logado && (
         <div className="flex items-baseline justify-between gap-3">
-          <p className="text-[0.8125rem] text-texto-3 font-semibold">
+          <p className="text-[0.8125rem] text-texto-2 font-semibold">
             <span className="font-mono font-medium numeros">01</span> · Pessoas · <span className="font-mono numeros">{usuarios.length}</span> carregadas
           </p>
           <Link href="/matches" className="shrink-0 text-sm font-medium text-marca-forte hover:underline">

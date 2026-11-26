@@ -291,7 +291,7 @@ export default function PaginaConversa() {
         <Link href="/mensagens" aria-label="Voltar para as conversas" className="-ml-2 flex size-10 items-center justify-center rounded-[4px] text-texto-2 transition-colors duration-[var(--rapido)] ease-saida hover:bg-superficie-2 hover:text-texto md:hidden"><Icone nome="voltar" tamanho={19} /></Link>
         {com && <Avatar nome={com.name} url={com.avatar_url} />}
         <div className="min-w-0 flex-1">
-          <h1 className="truncate font-display text-[0.9375rem] font-semibold tracking-tight text-texto">{titulo}</h1>
+          <h1 className="truncate text-[0.9375rem] font-semibold text-texto">{titulo}</h1>
           {com && <p className="truncate font-mono text-xs text-texto-3">@{username}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-2">

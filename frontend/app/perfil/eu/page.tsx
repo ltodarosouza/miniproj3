@@ -41,7 +41,7 @@ export default function MeuPerfilPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl py-12">
-      <p role="status" className="text-[0.8125rem] text-texto-3 font-semibold">
+      <p role="status" className="text-[0.8125rem] text-texto-2 font-semibold">
         Abrindo sua ficha…
       </p>
     </div>

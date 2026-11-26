@@ -82,4 +82,6 @@
   Franklin, Fira Sans e Literata direto no app e escolheu a versão híbrida:
   serifa onde está o diário (títulos e texto dos posts) e sem serifa na
   interface, que fica leve em tamanhos pequenos e no celular. Separadores de
-  data e o número da ordem continuam em mono, porque são dados.
+  data e o número da ordem continuam em mono, porque são dados. Mensagens do
+  chat ficam em Fira Sans: são conversa, não diário. Os rótulos usam
+  `texto-2`, porque 13 px em `texto-3` fica abaixo do contraste mínimo.

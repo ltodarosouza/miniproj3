@@ -117,7 +117,7 @@ export default function Inicio() {
       <TickerDePares />
 
       <section aria-labelledby="como-funciona" className="py-12 sm:py-16">
-        <h2 id="como-funciona" className="text-[0.8125rem] font-semibold text-texto-3">
+        <h2 id="como-funciona" className="text-[0.8125rem] font-semibold text-texto-2">
           Como funciona
         </h2>
         <ol className="mt-6 border-t border-linha">

@@ -153,7 +153,7 @@ export default function EditarPerfilPage() {
       </header>
 
       <section aria-labelledby="titulo-sobre" className="space-y-5 border-t border-linha pt-4">
-        <h2 id="titulo-sobre" className="text-[0.8125rem] text-texto-3 font-semibold">
+        <h2 id="titulo-sobre" className="text-[0.8125rem] text-texto-2 font-semibold">
           <span className="font-mono font-medium text-texto-2 numeros">01</span> · Sobre você
         </h2>
         <form onSubmit={enviar} className="space-y-5">
@@ -195,7 +195,7 @@ export default function EditarPerfilPage() {
 
       <section id="habilidades" aria-labelledby="titulo-habilidades" className="scroll-mt-20 space-y-5 border-t border-linha pt-4">
         <div>
-          <h2 id="titulo-habilidades" className="text-[0.8125rem] text-texto-3 font-semibold">
+          <h2 id="titulo-habilidades" className="text-[0.8125rem] text-texto-2 font-semibold">
             <span className="font-mono font-medium text-texto-2 numeros">02</span> · Habilidades
           </h2>
           <p className="mt-1 text-sm text-texto-2">É daqui que saem seus matches.</p>

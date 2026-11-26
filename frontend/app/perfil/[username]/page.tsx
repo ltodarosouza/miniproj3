@@ -21,7 +21,7 @@ const POSTS_POR_PAGINA = 10;
 type InfoTroca = { euEnsino: string; elaEnsina: string } | null;
 
 const DIAS_DA_SEMANA = 7;
-const ROTULO = "text-[0.8125rem] text-texto-3 font-semibold";
+const ROTULO = "text-[0.8125rem] text-texto-2 font-semibold";
 // Contorno claro para os botões secundários sobre a faixa grafite.
 const CONTORNO_CLARO = "border-grafite-texto/50! text-grafite-texto! hover:border-grafite-texto!";
 
