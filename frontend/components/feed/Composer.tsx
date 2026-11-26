@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 
 import { FormNovoPost } from "@/components/posts/FormNovoPost";
-import { Cartao } from "@/components/ui/Cartao";
 import { Icone } from "@/components/ui/Icone";
 import type { Post } from "@/lib/posts";
 
@@ -30,16 +29,18 @@ export function Composer({
 
   if (!aberto) {
     return (
-      <Cartao className="p-2">
-        <button
-          type="button"
-          onClick={() => setAberto(true)}
-          className="flex w-full items-center gap-3 rounded-controle px-3 py-3 text-left text-[0.9375rem] text-texto-3 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
-        >
-          <Icone nome="mais" tamanho={18} />
-          O que você estudou hoje?
-        </button>
-      </Cartao>
+      // Uma linha só: parece um campo e abre o formulário completo ao clicar.
+      <button
+        type="button"
+        onClick={() => setAberto(true)}
+        className="group flex h-11 w-full items-center gap-3 rounded-controle border border-linha bg-superficie pl-3 pr-1 text-left text-[0.9375rem] text-texto-3 transition-colors duration-[var(--rapido)] hover:border-linha-forte motion-reduce:transition-none"
+      >
+        <Icone nome="mais" tamanho={16} />
+        <span className="min-w-0 flex-1 truncate">O que você estudou hoje?</span>
+        <span className="inline-flex h-9 shrink-0 items-center rounded-controle bg-marca px-3 text-sm font-semibold text-marca-texto group-hover:bg-marca/90">
+          Registrar estudo
+        </span>
+      </button>
     );
   }
 

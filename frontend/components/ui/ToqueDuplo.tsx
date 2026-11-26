@@ -129,9 +129,9 @@ export function ToqueDuplo({
           key={disparo}
           ref={coracaoRef}
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 flex items-center justify-center text-perigo drop-shadow-lg opacity-0"
+          className="pointer-events-none absolute inset-0 flex items-center justify-center text-marca opacity-0"
         >
-          <Icone nome="coracao" tamanho={88} preenchido />
+          <Icone nome="coracao" tamanho={64} preenchido />
         </span>
       )}
     </div>

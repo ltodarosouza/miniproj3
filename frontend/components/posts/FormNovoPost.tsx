@@ -10,7 +10,6 @@ import {
 
 import { AreaTexto, Campo, Selecao } from "@/components/ui/Campo";
 import { Botao } from "@/components/ui/Botao";
-import { Cartao } from "@/components/ui/Cartao";
 import { Icone } from "@/components/ui/Icone";
 import { ErroApi } from "@/lib/api";
 import { prepararImagem } from "@/lib/imagens";
@@ -225,7 +224,7 @@ export function FormNovoPost({
   const minutosValidos = minutos && !erroMinutos ? Number(minutos) : null;
 
   return (
-    <Cartao className="p-5">
+    <div className="rounded-cartao border border-linha bg-superficie p-4">
       <form
         onSubmit={publicar}
         onFocus={() => setAberto(true)}
@@ -310,7 +309,7 @@ export function FormNovoPost({
                 onClick={removerFotoEscolhida}
                 disabled={enviando || reenviandoFoto}
                 aria-label="Remover foto"
-                className="absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-full bg-superficie text-texto shadow-cartao ring-1 ring-linha transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
+                className="absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-controle bg-superficie text-texto ring-1 ring-linha transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
               >
                 <Icone nome="fechar" tamanho={16} />
               </button>
@@ -342,7 +341,7 @@ export function FormNovoPost({
               carregando={enviando}
               disabled={!texto.trim() || preparandoFoto || Boolean(postFotoPendente)}
             >
-              Publicar
+              Registrar estudo
             </Botao>
           </div>
           {erroFoto && (
@@ -372,6 +371,6 @@ export function FormNovoPost({
           )}
         </div>
       </form>
-    </Cartao>
+    </div>
   );
 }

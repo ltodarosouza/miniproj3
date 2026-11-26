@@ -8,7 +8,6 @@ import { CaixaComentario } from "@/components/posts/CaixaComentario";
 import { CartaoPost } from "@/components/posts/CartaoPost";
 import { ListaComentarios } from "@/components/posts/ListaComentarios";
 import { Botao } from "@/components/ui/Botao";
-import { Cartao } from "@/components/ui/Cartao";
 import { Icone } from "@/components/ui/Icone";
 import { ErroApi } from "@/lib/api";
 import { buscarPost, comentar, listarComentarios, type Comentario, type Post } from "@/lib/posts";
@@ -83,7 +82,7 @@ export default function PaginaPost() {
       className="inline-flex items-center gap-1.5 text-sm text-texto-2 transition-colors duration-[var(--rapido)] hover:text-texto motion-reduce:transition-none"
     >
       <Icone nome="voltar" tamanho={16} />
-      Voltar ao feed
+      Voltar à Mesa
     </Link>
   );
 
@@ -99,8 +98,8 @@ export default function PaginaPost() {
         </p>
       ) : carregando ? (
         <div className="space-y-4" aria-label="Carregando o post">
-          <div className="h-40 animate-pulse rounded-cartao bg-superficie-2 motion-reduce:animate-none" />
-          <div className="h-24 animate-pulse rounded-cartao bg-superficie-2 motion-reduce:animate-none" />
+          <div className="h-40 animate-pulse rounded-controle bg-superficie-2 motion-reduce:animate-none" />
+          <div className="h-24 animate-pulse rounded-controle bg-superficie-2 motion-reduce:animate-none" />
         </div>
       ) : erro instanceof ErroApi && erro.status === 404 ? (
         <p className="text-sm leading-relaxed text-texto-2">
@@ -117,17 +116,17 @@ export default function PaginaPost() {
         </div>
       ) : post ? (
         <>
-          <CartaoPost key={post.id} post={post} aoApagar={() => roteador.replace("/feed")} />
+          <div className="border-t border-linha"><CartaoPost key={post.id} post={post} aoApagar={() => roteador.replace("/feed")} /></div>
           <section id="comentarios" aria-labelledby="titulo-comentarios">
-            <Cartao className="space-y-5 p-5">
-              <h2 id="titulo-comentarios" className="text-lg font-semibold tracking-tight text-texto">
-                Comentários <span className="numeros font-normal text-texto-3">{totalComentarios}</span>
+            <div className="space-y-5 border-t border-linha pt-4">
+              <h2 id="titulo-comentarios" className="font-mono text-xs uppercase tracking-[0.08em] text-texto-3">
+                Comentários <span className="numeros text-texto-2">{totalComentarios}</span>
               </h2>
               <ListaComentarios comentarios={comentarios} />
               <div className="border-t border-linha pt-5">
                 <CaixaComentario aoComentar={comentarioNovo} />
               </div>
-            </Cartao>
+            </div>
           </section>
         </>
       ) : null}

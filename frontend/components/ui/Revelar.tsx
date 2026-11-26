@@ -21,7 +21,7 @@ export function Revelar({
     <div
       ref={ref}
       data-visivel={visivel ? "sim" : "nao"}
-      className={`revelar ${className}`}
+      className={`revelar data-[visivel=nao]:[transform:translateY(6px)]! data-[visivel=nao]:[filter:none]! motion-reduce:data-[visivel=nao]:[transform:none]! ${className}`}
       style={{ "--atraso": `${atraso}ms` } as React.CSSProperties}
     >
       {children}
