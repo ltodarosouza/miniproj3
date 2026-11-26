@@ -7,22 +7,21 @@ import type {
   ReactNode,
 } from "react";
 
-import { useMagnetico } from "@/lib/movimento";
-
 type Variante = "primario" | "secundario" | "fantasma" | "troca";
 type Tamanho = "sm" | "md";
 
 const VARIANTES: Record<Variante, string> = {
-  primario: "bg-marca text-marca-texto shadow-cartao hover:bg-marca-forte",
+  primario:
+    "bg-marca text-marca-texto hover:bg-[color-mix(in_srgb,var(--marca)_88%,var(--texto))]",
   secundario:
-    "bg-superficie text-texto border border-linha-forte hover:border-marca hover:text-marca-forte",
-  fantasma: "text-texto-2 hover:text-texto hover:bg-superficie-2",
+    "bg-transparent text-texto border border-linha-forte hover:border-texto",
+  fantasma: "text-texto-2 hover:text-texto hover:underline",
   troca:
-    "bg-troca text-[oklch(0.22_0.04_50)] shadow-cartao hover:brightness-105",
+    "bg-marca text-marca-texto hover:bg-[color-mix(in_srgb,var(--marca)_88%,var(--texto))]",
 };
 
 const TAMANHOS: Record<Tamanho, string> = {
-  sm: "h-8 px-3 text-sm gap-1.5 relative after:absolute after:-inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-[''] md:after:hidden",
+  sm: "h-9 px-3 text-sm gap-1.5 relative after:absolute after:-inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-[''] md:after:hidden",
   md: "h-10 px-4 text-[0.9375rem] gap-2",
 };
 
@@ -31,7 +30,7 @@ function classesBotao(
   tamanho: Tamanho,
   className: string,
 ): string {
-  return `inline-flex select-none items-center justify-center rounded-controle font-medium transition-[background-color,border-color,color,box-shadow,filter,scale] duration-[var(--rapido)] ease-saida active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 ${VARIANTES[variante]} ${TAMANHOS[tamanho]} ${className}`;
+  return `inline-flex select-none items-center justify-center rounded-controle font-medium transition-[background-color,border-color,color] duration-[var(--rapido)] ease-saida active:translate-y-px disabled:pointer-events-none disabled:opacity-50 ${VARIANTES[variante]} ${TAMANHOS[tamanho]} ${className}`;
 }
 
 export function Botao({
@@ -47,14 +46,11 @@ export function Botao({
   variante?: Variante;
   tamanho?: Tamanho;
   carregando?: boolean;
-  magnetico?: boolean;
+  magnetico?: boolean; // sem efeito desde a decisão 20
   children: ReactNode;
 }) {
-  const ref = useMagnetico<HTMLButtonElement>(magnetico ? 0.22 : 0);
-
   return (
     <button
-      ref={magnetico ? ref : undefined}
       disabled={disabled || carregando}
       aria-busy={carregando || undefined}
       className={classesBotao(variante, tamanho, className)}
@@ -80,15 +76,12 @@ export function BotaoLink({
   href: string;
   variante?: Variante;
   tamanho?: Tamanho;
-  magnetico?: boolean;
+  magnetico?: boolean; // sem efeito desde a decisão 20
   children: ReactNode;
 }) {
-  const ref = useMagnetico<HTMLAnchorElement>(magnetico ? 0.22 : 0);
-
   return (
     <Link
       href={href}
-      ref={magnetico ? ref : undefined}
       className={classesBotao(variante, tamanho, className)}
       {...resto}
     >
