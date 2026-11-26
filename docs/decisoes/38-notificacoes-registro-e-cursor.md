@@ -1,4 +1,4 @@
-# 34. Notificações como registro de atividade, com cursor temporal no front
+# 38. Notificações como registro de atividade, com cursor opaco no front
 
 - **Contexto:** issue #85, na direção "Bolsa de saberes" (#78). A página
   `/notificacoes` era uma pilha de cartões com fundo colorido nas não lidas,
@@ -9,11 +9,11 @@
   exibido para cima da fronteira temporal.
 - **Escolha:** a primeira página guarda o `proximo_cursor` devolvido pela
   #75. As páginas seguintes repassam o valor opaco em `cursor` até receberem
-  `null`. O servidor mantém o recorte da primeira página, limita as
-  curtidas antes de agrupá-las e desempata os eventos na mesma ordem em
-  todas as páginas. Atividades novas aparecem no registro ao recarregar a
-  primeira página e continuam sendo anunciadas pelo toast. Descurtidas
-  durante a rolagem ainda podem mudar a composição de um grupo.
+  `null`; o front não lê nem monta o cursor. O recorte, o desempate e a
+  posição guardada dos grupos de curtida são do servidor (decisão 30).
+  Se a página falha (inclusive o 409 da decisão 30), o front mantém o
+  mesmo cursor para tentar de novo. Atividades novas aparecem no registro
+  ao recarregar a primeira página e continuam sendo anunciadas pelo toast.
   O visual virou registro: rótulo numerado em mono por grupo (`01 · Hoje`),
   linhas separadas por régua, horário em mono numa coluna à esquerda (hora e,
   fora de hoje, o dia), avatar, texto e ação à direita. A não lida tem uma
