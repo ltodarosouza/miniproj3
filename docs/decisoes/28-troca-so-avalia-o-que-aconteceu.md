@@ -9,14 +9,17 @@
 - **Escolha:** uma proposta só pode ser confirmada antes do horário. E só
   pode haver uma proposta pendente por par, em qualquer direção. Recusar segue
   permitido depois do horário.
-- **O que cortamos e por quê:** checagem de pendência no banco com índice único
-  parcial. A validação fica na aplicação: o volume é pequeno e SQLite e
-  Postgres exigiriam sintaxes diferentes. Uma corrida de dois `POST`s
-  simultâneos do mesmo par é um risco baixo aceito.
+- **O que cortamos e por quê:** índice único parcial no banco para a pendência.
+  SQLite e Postgres exigiriam sintaxes e migrações diferentes, e as bases
+  existentes podem já ter pendências repetidas. No lugar, `criar` trava a
+  linha do usuário de menor id do par (um `UPDATE` sem efeito) antes de checar
+  e inserir: dois `POST`s simultâneos do mesmo par, em qualquer direção, viram
+  um 201 e um 409.
 - **Como ficou:**
   - `POST /trocas/{id}/confirmar` com `data_hora` já passada responde **422**:
-    `"o horário desta proposta já passou, proponha outra"`. Recusar continua
-    permitido depois do horário. Uma troca já respondida continua dando **409**:
+    `"o horário desta proposta já passou, proponha outra"`. O mesmo instante
+    valida o horário e grava `respondida_em`. Recusar continua permitido depois
+    do horário. Uma troca já respondida continua dando **409**:
     `"esta proposta já foi respondida"`.
   - `POST /trocas` com outra troca de status `proposta` entre as mesmas duas
     pessoas responde **409**. Se a pendente foi proposta por quem está tentando
@@ -29,3 +32,5 @@
   Esta decisão reescreve a decisão 8: a avaliação só vale para troca confirmada
   antes do horário. Também reescreve a decisão 17: só há uma proposta pendente por
   par.
+  O corte vale para novas confirmações: trocas confirmadas antes desta mudança
+  continuam elegíveis à avaliação pelo status e pelo horário do encontro.
