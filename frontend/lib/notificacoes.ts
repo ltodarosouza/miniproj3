@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiGet, apiPost, type Page, type User } from "@/lib/api";
+import { formatarHora } from "@/lib/datas";
 import { meuId } from "@/lib/sessao";
+
+const DIA_SEMANA_CURTO = new Intl.DateTimeFormat("pt-BR", { weekday: "short" });
+const DIA_E_MES_CURTO = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
 
 export type TipoNotificacao = "curtida" | "comentario" | "seguidor" | "troca_proposta" | "troca_confirmada" | "troca_recusada" | "avaliacao";
 
@@ -18,6 +22,24 @@ export type GrupoData = "Hoje" | "Esta semana" | "Antes";
 
 export function listarNotificacoes(offset = 0, limit = 50): Promise<Page<Notificacao>> {
   return apiGet(`/notificacoes?offset=${offset}&limit=${limit}`);
+}
+
+export async function listarNotificacoesAntesDe(
+  antesDe: string,
+  carregadas: number,
+  limit = 50,
+): Promise<Page<Notificacao>> {
+  const resposta = await apiGet<Page<Notificacao>>(
+    `/notificacoes?antes_de=${encodeURIComponent(antesDe)}&limit=${limit}`,
+  );
+  if (resposta.items.some((item) => new Date(item.em) >= new Date(antesDe))) {
+    return listarNotificacoes(carregadas, limit);
+  }
+  return resposta;
+}
+
+export function chaveDaNotificacao(n: Notificacao): string {
+  return `${n.tipo}-${n.em}-${n.ator.id}-${n.post_id ?? ""}-${n.troca_id ?? ""}`;
 }
 
 export type NaoLidas = { total: number; ultima_em: string | null };
@@ -53,6 +75,20 @@ export function grupoDaData(iso: string): GrupoData {
   if (dias === 0) return "Hoje";
   if (dias > 0 && dias < 7) return "Esta semana";
   return "Antes";
+}
+
+export type HorarioNotificacao = { hora: string; dia: string | null };
+
+export function horarioDaNotificacao(iso: string): HorarioNotificacao {
+  const grupo = grupoDaData(iso);
+  const data = new Date(iso);
+  let dia: string | null = null;
+  if (grupo === "Esta semana") {
+    dia = DIA_SEMANA_CURTO.format(data).replace(".", "").toLowerCase();
+  } else if (grupo === "Antes") {
+    dia = DIA_E_MES_CURTO.format(data).replace(".", "").replace(" de ", " ").toLowerCase();
+  }
+  return { hora: formatarHora(iso), dia };
 }
 
 export function useNotificacoes(): { naoLidas: number; ultimaNova: Notificacao | null; dispensar: () => void } {
