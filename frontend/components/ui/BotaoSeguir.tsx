@@ -16,11 +16,14 @@ export function BotaoSeguir({
   username,
   seguindoInicial,
   tamanho = "md",
+  sobreGrafite = false,
   aoMudar,
 }: {
   username: string;
   seguindoInicial?: boolean | null;
   tamanho?: "sm" | "md";
+  // Na faixa grafite do perfil o contorno usa a cor clara da faixa.
+  sobreGrafite?: boolean;
   aoMudar?: (estado: EstadoFollow) => void;
 }) {
   const router = useRouter();
@@ -58,9 +61,14 @@ export function BotaoSeguir({
 
   if (logado === null) return null;
 
+  // Sempre contorno: seguir é ação secundária ao lado de "Propor troca", que fica em mel.
+  const contorno = sobreGrafite
+    ? "border-grafite-texto/50! text-grafite-texto! hover:border-grafite-texto!"
+    : "";
+
   if (!logado) {
     return (
-      <Botao tamanho={tamanho} onClick={() => router.push("/login")}>
+      <Botao variante="secundario" tamanho={tamanho} className={contorno} onClick={() => router.push("/login")}>
         Seguir
       </Botao>
     );
@@ -69,7 +77,7 @@ export function BotaoSeguir({
   if (seguindo === null && erro) {
     return (
       <span className="inline-flex flex-col items-end gap-1">
-        <Botao variante="secundario" tamanho={tamanho} onClick={() => setTentativa((t) => t + 1)}>
+        <Botao variante="secundario" tamanho={tamanho} className={contorno} onClick={() => setTentativa((t) => t + 1)}>
           Tentar de novo
         </Botao>
         <span role="alert" className="text-xs text-perigo">
@@ -98,8 +106,9 @@ export function BotaoSeguir({
   return (
     <span className="inline-flex flex-col items-end gap-1">
       <Botao
-        variante={seguindo ? "secundario" : "primario"}
+        variante="secundario"
         tamanho={tamanho}
+        className={contorno}
         carregando={carregando || seguindo === null}
         onClick={alternar}
         aria-pressed={seguindo ?? undefined}
