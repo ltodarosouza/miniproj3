@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 
 import { EmAlta } from "@/components/feed/EmAlta";
 import { ListaPodeTeEnsinar } from "@/components/feed/PodeTeEnsinar";
@@ -129,14 +129,19 @@ function Busca() {
   const [termo, setTermo] = useState(parametros.get("q") ?? "");
   const tipoDaUrl = parametros.get("tipo");
   const [tipo, setTipo] = useState<TipoBusca>(ehTipo(tipoDaUrl) ? tipoDaUrl : "pessoas");
-  const [resultado, setResultado] = useState<ResultadoBusca | null>(null);
-  const [carregando, setCarregando] = useState(false);
-  const [carregandoMais, setCarregandoMais] = useState(false);
-  const [erro, setErro] = useState(false);
+  const [resultadoSalvo, setResultadoSalvo] = useState<{ consulta: object; resultado: ResultadoBusca } | null>(null);
+  const [consultaComErro, setConsultaComErro] = useState<object | null>(null);
+  const [maisSalvo, setMaisSalvo] = useState<object | null>(null);
   const [logado, setLogado] = useState(true);
   const campo = useRef<HTMLInputElement>(null);
   const abas = useRef<(HTMLButtonElement | null)[]>([]);
-  const pedido = useRef(0);
+  const consultaAtiva = useRef<object | null>(null);
+  const consultasEmPaginacao = useRef(new Set<object>());
+  const consulta = useMemo(() => ({ termo: termo.trim(), tipo }), [termo.trim(), tipo]);
+  const resultado = resultadoSalvo?.consulta === consulta ? resultadoSalvo.resultado : null;
+  const erro = consultaComErro === consulta;
+  const carregando = Boolean(consulta.termo && logado && !resultado && !erro);
+  const carregandoMais = maisSalvo === consulta;
 
   useEffect(() => {
     setLogado(Boolean(meuId()));
@@ -168,56 +173,62 @@ function Busca() {
   }, [parametros]);
 
   useEffect(() => {
-    const limpo = termo.trim();
-    const consulta = new URLSearchParams();
-    if (limpo) consulta.set("q", limpo);
-    if (tipo !== "pessoas") consulta.set("tipo", tipo);
-    const destino = consulta.size ? `/busca?${consulta}` : "/busca";
+    const limpo = consulta.termo;
+    const parametrosUrl = new URLSearchParams();
+    if (limpo) parametrosUrl.set("q", limpo);
+    if (consulta.tipo !== "pessoas") parametrosUrl.set("tipo", consulta.tipo);
+    const destino = parametrosUrl.size ? `/busca?${parametrosUrl}` : "/busca";
     const atualizarUrl = () => {
       if (`${location.pathname}${location.search}` !== destino) roteador.replace(destino, { scroll: false });
     };
 
     if (!limpo || !logado) {
       atualizarUrl();
-      setResultado(null);
-      setCarregando(false);
       return;
     }
-    const meu = ++pedido.current;
-    setCarregando(true);
+    consultaAtiva.current = consulta;
     const espera = setTimeout(() => {
       atualizarUrl();
-      buscar(limpo, tipo, 0, POR_PAGINA)
+      buscar(limpo, consulta.tipo, 0, POR_PAGINA)
         .then((r) => {
-          if (meu !== pedido.current) return;
-          setResultado(r);
-          setErro(false);
+          if (consultaAtiva.current !== consulta) return;
+          setResultadoSalvo({ consulta, resultado: r });
         })
-        .catch(() => meu === pedido.current && setErro(true))
-        .finally(() => meu === pedido.current && setCarregando(false));
+        .catch(() => {
+          if (consultaAtiva.current === consulta) setConsultaComErro(consulta);
+        });
     }, ESPERA_MS);
-    return () => clearTimeout(espera);
-  }, [termo, tipo, logado, roteador]);
+    return () => {
+      consultaAtiva.current = null;
+      clearTimeout(espera);
+    };
+  }, [consulta, logado, roteador]);
 
   async function carregarMais() {
-    if (!resultado) return;
-    const meu = pedido.current;
-    setCarregandoMais(true);
+    const atual = resultadoSalvo;
+    if (!resultado || !atual || atual.consulta !== consulta || consultasEmPaginacao.current.has(consulta)) return;
+    const contexto = consulta;
+    consultasEmPaginacao.current.add(contexto);
+    setMaisSalvo(contexto);
+    setConsultaComErro(null);
     try {
-      const mais = await buscar(termo.trim(), resultado.tipo, resultado[resultado.tipo].length, POR_PAGINA);
-      if (meu !== pedido.current) return;
-      setResultado((atual) =>
-        atual && {
-          ...mais,
-          pessoas: [...atual.pessoas, ...mais.pessoas],
-          posts: [...atual.posts, ...mais.posts],
-          habilidades: [...atual.habilidades, ...mais.habilidades],
-        },
+      const mais = await buscar(contexto.termo, contexto.tipo, resultado[resultado.tipo].length, POR_PAGINA);
+      setResultadoSalvo((salvo) =>
+        salvo?.consulta === contexto ? {
+          consulta: contexto,
+          resultado: {
+            ...mais,
+            pessoas: [...salvo.resultado.pessoas, ...mais.pessoas],
+            posts: [...salvo.resultado.posts, ...mais.posts],
+            habilidades: [...salvo.resultado.habilidades, ...mais.habilidades],
+          },
+        } : salvo,
       );
     } catch {
-      setErro(true);
+      if (consultaAtiva.current === contexto) setConsultaComErro(contexto);
     } finally {
-      setCarregandoMais(false);
+      consultasEmPaginacao.current.delete(contexto);
+      setMaisSalvo((salvo) => salvo === contexto ? null : salvo);
     }
   }
 
@@ -300,14 +311,13 @@ function Busca() {
               <div className={carregando ? "opacity-60 transition-opacity" : undefined}>
                 <Resultados
                   resultado={resultado}
-                  aoApagar={(id) =>
-                    setResultado((atual) =>
-                      atual && { ...atual, posts: atual.posts.filter((p) => p.id !== id), total: Math.max(0, atual.total - 1) },
-                    )
-                  }
+                  aoApagar={(id) => setResultadoSalvo((salvo) => salvo?.consulta === consulta
+                    ? { consulta, resultado: { ...salvo.resultado, posts: salvo.resultado.posts.filter((p) => p.id !== id), total: Math.max(0, salvo.resultado.total - 1) } }
+                    : salvo)}
                 />
               </div>
             ) : null}
+            {erro && resultado && <p className="text-sm text-texto-2">Não deu para carregar mais. Tente de novo.</p>}
             {resultado && mostrados < resultado.total && !carregando && (
               <div className="flex justify-start">
                 <Botao variante="secundario" carregando={carregandoMais} onClick={carregarMais}>
