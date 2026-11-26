@@ -41,7 +41,7 @@ export function ListaComentarios({ comentarios }: { comentarios: Comentario[] })
                     </p>
                   </div>
                 </header>
-                <p className="mt-3 whitespace-pre-line break-words text-[0.9375rem] leading-relaxed text-texto">
+                <p className="mt-3 whitespace-pre-line break-words font-conteudo text-base leading-relaxed text-texto">
                   {comentario.texto}
                 </p>
               </article>

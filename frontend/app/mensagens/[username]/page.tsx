@@ -317,7 +317,7 @@ export default function PaginaConversa() {
         <Link href={`/perfil/${encodeURIComponent(username)}`} aria-label={`Ver perfil de ${titulo}`} className="group flex min-w-0 items-center gap-3 -mx-1 rounded-controle p-1">
           {com && <Avatar nome={com.name} url={com.avatar_url} />}
           <div className="min-w-0">
-            <h1 className="truncate font-display text-[0.9375rem] font-semibold tracking-tight text-texto group-hover:underline">{titulo}</h1>
+            <h1 className="truncate text-[0.9375rem] font-semibold text-texto group-hover:underline">{titulo}</h1>
             {com && <span className="block truncate font-mono text-xs text-texto-3">@{username}</span>}
           </div>
         </Link>

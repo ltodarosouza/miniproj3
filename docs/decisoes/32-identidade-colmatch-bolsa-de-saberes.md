@@ -14,9 +14,11 @@
   1. Mel é sinal de ação ou conexão e ocupa no máximo 5% da tela.
   2. Réguas de 1 px, raio de 4 px nos controles e 6 px nos painéis. Sem sombra,
      exceto em popover, menu e toast.
-  3. Space Grotesk nos títulos, IBM Plex Sans no corpo e IBM Plex Mono nos
-     dados, sempre com números tabulares.
-  4. Seções usam rótulo numerado em mono, como `01 · Pares de troca`.
+  3. Literata (com eixo óptico) nos títulos e no texto de posts, comentários e
+     bio (`font-display` e `font-conteudo`); Fira Sans na interface
+     (`font-sans`); IBM Plex Mono só nos dados, sempre com números tabulares.
+  4. Seções usam rótulo numerado, como `01 · Pares de troca`: o número em mono
+     e o nome em Fira Sans 13 px semibold, sem caixa alta nem espaçamento.
   5. Hexágono só no logo, na máscara do avatar e no nó de match.
   6. Densidade profissional: listas com divisórias, colunas alinhadas e menos
      espaço sem função.
@@ -75,3 +77,11 @@
   apagados; `animarMola`, `MOLA_SUAVE`, `Mola` e `useMagnetico` são removidos.
   A prop `magnetico` fica sem efeito desde a decisão 20. A prop `online` de
   Avatar sai porque não tem chamador nem presença no backend.
+- **Revisão da tipografia:** Space Grotesk, Plex Sans no corpo e rótulos em mono
+  maiúscula ainda davam cara de template gerado por IA. O grupo comparou Libre
+  Franklin, Fira Sans e Literata direto no app e escolheu a versão híbrida:
+  serifa onde está o diário (títulos e texto dos posts) e sem serifa na
+  interface, que fica leve em tamanhos pequenos e no celular. Separadores de
+  data e o número da ordem continuam em mono, porque são dados. Mensagens do
+  chat ficam em Fira Sans: são conversa, não diário. Os rótulos usam
+  `texto-2`, porque 13 px em `texto-3` fica abaixo do contraste mínimo.

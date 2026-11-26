@@ -20,7 +20,7 @@ function Rotulo({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-texto-2">
+      <label htmlFor={id} className="text-[0.8125rem] font-semibold text-texto-2">
         {rotulo}
       </label>
       {children}

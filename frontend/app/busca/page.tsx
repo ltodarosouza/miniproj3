@@ -43,7 +43,7 @@ function Recomendados() {
   return (
     <div className="space-y-8 md:grid md:grid-cols-2 md:gap-8 md:space-y-0">
       <section>
-        <h2 className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.08em] text-texto-3">01 · Pode te ensinar</h2>
+        <h2 className="mb-3 text-[0.8125rem] font-semibold text-texto-2"><span className="font-mono font-medium numeros">01</span> · Pode te ensinar</h2>
         <div className="border-t border-linha pt-3">
           {pessoas === null ? (
             <p className="text-sm text-texto-3">Carregando…</p>
@@ -57,7 +57,7 @@ function Recomendados() {
         </div>
       </section>
       <section>
-        <h2 className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.08em] text-texto-3">02 · Mais estudadas</h2>
+        <h2 className="mb-3 text-[0.8125rem] font-semibold text-texto-2"><span className="font-mono font-medium numeros">02</span> · Mais estudadas</h2>
         <div className="border-t border-linha pt-3">
           {emAlta === null ? <p className="text-sm text-texto-3">Carregando…</p> : <EmAlta habilidades={emAlta} />}
         </div>
