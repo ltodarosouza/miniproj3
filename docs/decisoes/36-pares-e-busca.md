@@ -9,6 +9,7 @@
   resultados separados por réguas.
 - **Dados.** A cotação da habilidade usa as contagens das listas de quem sabe e
   de quem quer aprender. A API de detalhe não informa horas da semana por
-  habilidade. A listagem de pessoas informa a bio e não inclui habilidades.
-  O contador da tela acompanha as pessoas exibidas e a paginação usa o total
-  da API.
+  habilidade. Com aval do dono, a #83 passou a incluir as habilidades públicas
+  nos itens de `GET /usuarios`. O serviço carrega as habilidades em lote para
+  os usuários da página, e a interface as exibe em etiquetas mono. O contador
+  acompanha as pessoas exibidas e a paginação usa o total da API.

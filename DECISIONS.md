@@ -747,3 +747,9 @@ contra a versão que percorre todos os usuários.
   em 16, 32 e 48; salve o de 32 como `frontend/public/icone-32.png` e junte os
   três com Pillow em `frontend/app/favicon.ico`
   (`img48.save(..., format="ICO", sizes=[(16,16),(32,32),(48,48)])`).
+
+## Decisões da repaginada Colmatch
+
+- [36. Livro de pares e busca em paleta](docs/decisoes/36-pares-e-busca.md).
+  Com aval do dono, o escopo da #83 passou a incluir as habilidades públicas
+  nos itens de `GET /usuarios`, carregadas em lote para a página solicitada.
