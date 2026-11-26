@@ -39,6 +39,7 @@ export function AvaliarTroca({ troca, aoAvaliar }: { troca: Troca; aoAvaliar: (t
     } catch (falha) {
       const mensagem = falha instanceof Error ? falha.message : "Não foi possível enviar sua avaliação.";
       if (mensagem.toLowerCase().includes("já avaliou")) {
+        avisarAvaliacaoEnviada();
         aoAvaliar(troca.id);
       } else {
         setErro(mensagem);

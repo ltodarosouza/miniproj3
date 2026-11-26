@@ -22,6 +22,22 @@ export function ListaConversas({ ativa, naoLidas }: { ativa?: string; naoLidas: 
   const [usuarioId, setUsuarioId] = useState<number | null | undefined>(undefined);
   const [primeiraCarga, setPrimeiraCarga] = useState(true);
   const buscando = useRef(false);
+  const pedidoPendentes = useRef(0);
+
+  const buscarPendentes = useCallback(async () => {
+    if (!meuId()) return;
+    const pedido = ++pedidoPendentes.current;
+    try {
+      const resposta = await trocasPendentesAvaliacao();
+      if (pedido !== pedidoPendentes.current) return;
+      const id = meuId();
+      setTrocasParaAvaliar(new Set(resposta.items.map((troca) => (
+        troca.proposta_por.id === id ? troca.com.username : troca.proposta_por.username
+      ))));
+    } catch {
+      // Mantém as pendências anteriores quando a consulta falha.
+    }
+  }, []);
 
   const buscar = useCallback(async (inicial = false) => {
     if (buscando.current) return;
@@ -34,18 +50,8 @@ export function ListaConversas({ ativa, naoLidas }: { ativa?: string; naoLidas: 
     setUsuarioId(meuId());
     try {
       buscando.current = true;
-      const [respostaConversas, respostaTrocas] = await Promise.allSettled([
-        listarConversasComStatus(),
-        trocasPendentesAvaliacao(),
-      ]);
-      if (respostaConversas.status === "rejected") throw respostaConversas.reason;
-      setConversas(respostaConversas.value.items);
-      if (respostaTrocas.status === "fulfilled") {
-        const id = meuId();
-        setTrocasParaAvaliar(new Set(respostaTrocas.value.items.map((troca) => (
-          troca.proposta_por.id === id ? troca.com.username : troca.proposta_por.username
-        ))));
-      }
+      const respostaConversas = await listarConversasComStatus();
+      setConversas(respostaConversas.items);
       setErro(false);
       if (inicial) setPrimeiraCarga(false);
     } catch {
@@ -58,24 +64,31 @@ export function ListaConversas({ ativa, naoLidas }: { ativa?: string; naoLidas: 
 
   useEffect(() => {
     void buscar(true);
+    void buscarPendentes();
     const intervalo = window.setInterval(() => {
-      if (!document.hidden) void buscar();
+      if (!document.hidden) {
+        void buscar();
+        void buscarPendentes();
+      }
     }, 5000);
     const aoVoltar = () => {
-      if (!document.hidden) void buscar();
+      if (!document.hidden) {
+        void buscar();
+        void buscarPendentes();
+      }
     };
     document.addEventListener("visibilitychange", aoVoltar);
     return () => {
       window.clearInterval(intervalo);
       document.removeEventListener("visibilitychange", aoVoltar);
     };
-  }, [buscar]);
+  }, [buscar, buscarPendentes]);
 
   useEffect(() => {
-    const aoAvaliar = () => { void buscar(); };
+    const aoAvaliar = () => { void buscarPendentes(); };
     window.addEventListener(EVENTO_AVALIACAO_ENVIADA, aoAvaliar);
     return () => window.removeEventListener(EVENTO_AVALIACAO_ENVIADA, aoAvaliar);
-  }, [buscar]);
+  }, [buscarPendentes]);
 
   return (
     <section className="flex h-full min-h-0 flex-col" aria-label="Lista de conversas">
