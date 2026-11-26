@@ -31,6 +31,7 @@ class NotificacaoPage(BaseModel):
     total: int
     offset: int
     limit: int
+    proximo_cursor: str | None = None
 
 
 class NaoLidasOut(BaseModel):
