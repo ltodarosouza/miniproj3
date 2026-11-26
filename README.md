@@ -61,7 +61,19 @@ O site fica em `http://localhost:3000`.
 
 ### Conta de demonstração
 
-`make seed` cria 32 usuários com posts, conexões e trocas. As contas `ada` e `linus` formam o primeiro par de troca recíproca garantido pelo seed. A senha de todas as contas de demonstração é `senha-forte-123` (constante `SENHA_SEED` em [`backend/scripts/seed.py`](backend/scripts/seed.py)). O seed não insere dados se o banco já tiver usuários.
+`make seed` cria 32 usuários e 56 posts (metade com foto, alternando no feed), além de conexões e trocas. As contas `ada` e `linus` formam o primeiro par de troca recíproca garantido pelo seed. A senha de todas as contas de demonstração é `senha-forte-123` (constante `SENHA_SEED` em [`backend/scripts/seed.py`](backend/scripts/seed.py)). O seed não insere dados se o banco já tiver usuários.
+
+### Refazer os posts no deploy
+
+No deploy, o script mostra o plano sem gravar. Rode primeiro sem `--aplicar` e guarde o arquivo de backup antes de aplicar. No diretório `backend`:
+
+```bash
+DATABASE_URL='<url do Neon>' uv run python scripts/refazer_posts.py
+DATABASE_URL='<url do Neon>' uv run python scripts/refazer_posts.py --aplicar
+DATABASE_URL='<url do Neon>' uv run python scripts/refazer_posts.py --restaurar backup-posts-AAAAMMDD-HHMMSS.json --aplicar
+```
+
+Da raiz, também é possível aplicar com `make refazer-posts args="--aplicar"`. `--listar-reais` mostra os posts de usuários reais e `--posts-reais 12,15` apaga também os posts reais escolhidos (entram no backup). Detalhes na [decisão 41](docs/decisoes/41-feed-com-mais-imagem.md).
 
 ## Verificação
 
