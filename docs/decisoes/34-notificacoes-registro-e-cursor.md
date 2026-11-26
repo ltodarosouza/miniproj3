@@ -10,14 +10,16 @@
 - **Opções:** esperar a #75 para mexer na paginação; mandar só `antes_de` e
   aceitar que, sem a #75, a página 2 viesse igual à 1; ou mandar `antes_de`
   e cair para `offset` quando o backend não o entende.
-- **Escolha:** `listarNotificacoesAntesDe(antesDe, carregadas)` em
-  `lib/notificacoes.ts` pede `?antes_de=<em do último item exibido>`. Se a
-  resposta traz algum item com `em >= antes_de`, o backend ignorou o
-  parâmetro (o FastAPI ignora query desconhecida), e a função refaz o pedido
-  por posição. Com a #75 no ar, é um pedido só e sem repetição; antes dela, o
-  comportamento é o de sempre. A página junta as páginas pela chave
-  `tipo-em-ator-post-troca` e esconde o botão quando a página vem incompleta
-  ou só com repetidos.
+- **Escolha:** `listarNotificacoesAntesDe` pede `antes_de` com o horário do
+  último item exibido acrescido de um microssegundo. O filtro estrito do
+  servidor inclui assim os itens empatados, e o front remove os já exibidos
+  pela chave `tipo-em-ator-post-troca`. A função busca um item além do limite
+  da página para saber se ainda há algo a carregar.
+  Se o backend antigo ignorar o cursor, ou os empates já exibidos ocuparem
+  a resposta e impedirem essa checagem, a função percorre páginas por posição
+  desde o início, mantendo apenas itens inéditos no limite temporal. A
+  varredura ainda pode sofrer deslocamentos se a lista mudar entre suas
+  requisições, pois a API não oferece um snapshot.
   O visual virou registro: rótulo numerado em mono por grupo (`01 · Hoje`),
   linhas separadas por régua, horário em mono numa coluna à esquerda (hora e,
   fora de hoje, o dia), avatar, texto e ação à direita. A não lida tem uma
@@ -30,6 +32,4 @@
   `var(--grafite-texto, var(--fundo))`. Quando a #78 entrar, as cores viram
   mel e grafite sem mudar estes arquivos.
 - **O que cortamos e por quê:** "Ver post" some no celular, porque lá a linha
-  inteira já é o link e o texto precisava do espaço. Itens com o mesmo `em`
-  exato na borda da página dependem do desempate da #75; o front não tenta
-  resolver isso sozinho.
+  inteira já é o link e o texto precisava do espaço.
