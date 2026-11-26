@@ -61,11 +61,11 @@ O site fica em `http://localhost:3000`.
 
 ### Conta de demonstração
 
-`make seed` cria 32 usuários e 56 posts (metade com foto, alternando no feed), além de conexões e trocas. As contas `ada` e `linus` formam o primeiro par de troca recíproca garantido pelo seed. A senha de todas as contas de demonstração é `senha-forte-123` (constante `SENHA_SEED` em [`backend/scripts/seed.py`](backend/scripts/seed.py)). O seed não insere dados se o banco já tiver usuários.
+`make seed` cria 32 usuários e 56 posts (metade com foto: na ordem cronológica de todos os posts do seed, um sem foto e um com foto se alternam; o feed de cada pessoa filtra por quem ela segue e por quem pode ensinar, então ali a proporção fica perto de metade, sem alternância garantida), além de conexões e trocas. As contas `ada` e `linus` formam o primeiro par de troca recíproca garantido pelo seed. A senha de todas as contas de demonstração é `senha-forte-123` (constante `SENHA_SEED` em [`backend/scripts/seed.py`](backend/scripts/seed.py)). O seed não insere dados se o banco já tiver usuários.
 
 ### Refazer os posts no deploy
 
-No deploy, o script mostra o plano sem gravar. Rode primeiro sem `--aplicar` e guarde o arquivo de backup antes de aplicar. No diretório `backend`:
+Sem `--aplicar`, o script só mostra o plano e não cria arquivo. Com `--aplicar`, ele grava o backup JSON (`backup-posts-AAAAMMDD-HHMMSS.json` na pasta atual, ou o caminho de `--backup`) antes de apagar qualquer coisa e se recusa a sobrescrever um backup que já existe; depois de aplicar, copie esse arquivo para um lugar seguro, porque ele é o único jeito de usar `--restaurar`. No diretório `backend`:
 
 ```bash
 DATABASE_URL='<url do Neon>' uv run python scripts/refazer_posts.py

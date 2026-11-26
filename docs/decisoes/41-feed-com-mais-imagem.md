@@ -7,10 +7,15 @@ Pedido direto do dono, sem issue.
 - **Opções.** Aumentar a fração sorteada de fotos, o que não garante o ritmo no
   feed; colocar foto em todo post, o que vira vitrine e esconde o diário de
   rotina; alternar exatamente um post sem foto e um com foto.
-- **Escolha.** Alternância exata 1:1 em ordem cronológica: 56 posts, 28 com
+- **Escolha.** Alternância exata 1:1 na ordem cronológica de todos os posts
+  do seed (o feed de cada pessoa filtra por quem ela segue e por quem pode
+  ensinar, então ali a proporção fica perto de metade, sem alternância
+  garantida): 56 posts, 28 com
   foto e 28 sem. O seed mantém oito pessoas constantes postando por quatro
   dias seguidos, incluindo hoje, e as outras 24 postando uma vez nos últimos
-  sete dias. Os textos têm até 90 caracteres: legendas próprias acompanham
+  sete dias. Os dias seguem o fuso da sequência (São Paulo); a menos de
+  duas horas da meia-noite, a sequência termina ontem, o que o cálculo do
+  streak aceita. Todos os horários são distintos e anteriores ao momento do seed. Os textos têm até 90 caracteres: legendas próprias acompanham
   fotos, e posts sem foto usam frases de rotina. As fotos do Unsplash seguem o
   tema da habilidade, com rodízio por tema e sem repetir a mesma foto em posts
   seguidos. As 38 URLs foram validadas em 2026-11-26 (HTTP 200 e folha de
@@ -37,6 +42,10 @@ Pedido direto do dono, sem issue.
   do texto) e `--posts-reais 107,109` apaga também esses posts reais escolhidos
   por id, que entram no backup e voltam com `--restaurar`; os autores reais não
   ganham posts novos.
+  No PostgreSQL, o script trava as tabelas de posts, curtidas, comentários,
+  imagens e notificações entregues durante a operação (escritas do app esperam;
+  leituras seguem), e a restauração nunca recua as sequências de id. O backup
+  nunca sobrescreve um arquivo existente.
   Antes de aplicar, recomenda-se criar também um branch do banco no painel do
   Neon.
 
