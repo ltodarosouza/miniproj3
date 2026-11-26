@@ -64,8 +64,7 @@ def criar_usuario(
     bio: str = "",
     avatar_url: str = "",
 ) -> User:
-    ja_existe = db.scalar(select(User.id).where(User.username == username))
-    if ja_existe is not None:
+    if por_username(db, username) is not None:
         raise HTTPException(status_code=409, detail="username já existe")
 
     user = User(
@@ -97,8 +96,12 @@ def criar(db: Session, dados: UserCreate) -> User:
     )
 
 
+def por_username(db: Session, username: str) -> User | None:
+    return db.scalar(select(User).where(User.username == username.lower()))
+
+
 def por_username_ou_404(db: Session, username: str) -> User:
-    usuario = db.scalar(select(User).where(User.username == username.lower()))
+    usuario = por_username(db, username)
     if usuario is None:
         raise HTTPException(status_code=404, detail="pessoa não encontrada")
     return usuario

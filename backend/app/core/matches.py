@@ -47,9 +47,6 @@ class IndiceMatches:
             querem_o_que_sei |= self.querem.get(habilidade_id, set())
         return self.pode_me_ensinar(eu) & querem_o_que_sei
 
-    def quem_pode_ensinar(self, usuario_id: int) -> set[int]:
-        return self.pode_me_ensinar(usuario_id)
-
 
 def _descartar(indice: dict[int, set[int]], chave: int, valor: int) -> None:
     conjunto = indice.get(chave)

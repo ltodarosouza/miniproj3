@@ -44,7 +44,7 @@ def test_feed_inclui_quem_pode_ensinar_com_motivo(client, pessoa, monkeypatch):
     dani = pessoa("dani")
     caio_id = int(caio["X-User-Id"])
     monkeypatch.setattr(
-        indice_matches, "quem_pode_ensinar", lambda usuario_id: {caio_id}
+        indice_matches, "pode_me_ensinar", lambda usuario_id: {caio_id}
     )
     client.post("/posts", json={"texto": "da bia"}, headers=bia)
     client.post("/posts", json={"texto": "do caio"}, headers=caio)
@@ -65,7 +65,7 @@ def test_quem_eu_sigo_e_pode_me_ensinar_aparece_uma_vez_como_seguindo(
     bia = pessoa("bia")
     bia_id = int(bia["X-User-Id"])
     monkeypatch.setattr(
-        indice_matches, "quem_pode_ensinar", lambda usuario_id: {bia_id}
+        indice_matches, "pode_me_ensinar", lambda usuario_id: {bia_id}
     )
     client.post("/posts", json={"texto": "da bia"}, headers=bia)
     seguir(client, ana, "bia")
@@ -81,7 +81,7 @@ def test_feed_mostra_meus_proprios_posts(client, pessoa, monkeypatch):
     bia = pessoa("bia")
     ana_id = int(ana["X-User-Id"])
     monkeypatch.setattr(
-        indice_matches, "quem_pode_ensinar", lambda usuario_id: {ana_id}
+        indice_matches, "pode_me_ensinar", lambda usuario_id: {ana_id}
     )
     client.post("/posts", json={"texto": "meu post"}, headers=ana)
     client.post("/posts", json={"texto": "da bia"}, headers=bia)

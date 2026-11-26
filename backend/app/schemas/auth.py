@@ -12,12 +12,7 @@ def _minusculo_sem_espacos(valor: object) -> object:
 
 
 class RegistroIn(BaseModel):
-    username: str = Field(
-        min_length=3,
-        max_length=30,
-        pattern=r"^[a-z0-9_]+$",
-        description="3 a 30 letras sem acento, números ou _",
-    )
+    username: str = Field(description="3 a 30 letras sem acento, números ou _")
     name: str = Field(min_length=1, max_length=80)
     password: str = Field(min_length=8, max_length=32)
 
