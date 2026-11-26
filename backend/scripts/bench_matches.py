@@ -46,6 +46,18 @@ def varredura(eu: int, sabem: dict[int, set[int]], querem: dict[int, set[int]]) 
     return pode, troca
 
 
+def varredura_troca(eu: int, sabem: dict[int, set[int]], querem: dict[int, set[int]]) -> set[int]:
+    minhas_habilidades = sabem.get(eu, set())
+    meus_interesses = querem.get(eu, set())
+    return {
+        usuario_id
+        for usuario_id in sabem
+        if usuario_id != eu
+        and not meus_interesses.isdisjoint(sabem[usuario_id])
+        and not minhas_habilidades.isdisjoint(querem[usuario_id])
+    }
+
+
 def mediana_consulta(funcao, ids: list[int]) -> float:
     tempos = []
     for usuario_id in ids:
@@ -57,7 +69,7 @@ def mediana_consulta(funcao, ids: list[int]) -> float:
 
 def main() -> None:
     print("Mede a construção do índice invertido e o tempo de consulta de matches de troca.")
-    print("A varredura percorre todos os usuários; consultas reportadas como mediana por pessoa.")
+    print("A varredura percorre todos os usuários e devolve só as trocas, como o índice; consultas em mediana por pessoa.")
     print(f"{'usuários':>10}  {'construção do índice (ms)':>26}  {'consulta índice (µs, mediana)':>30}  {'consulta varredura (µs, mediana)':>34}  {'vezes mais rápido':>18}  {'tamanho médio do resultado de troca':>36}")
     for total_usuarios in TAMANHOS:
         registros, sabem, querem = gerar_dados(total_usuarios)
@@ -72,13 +84,13 @@ def main() -> None:
             pode, troca = varredura(eu, sabem, querem)
             if indice.pode_me_ensinar(eu) != pode:
                 raise SystemExit(f"divergência em pode_me_ensinar para usuário {eu} com N={total_usuarios}")
-            if indice.match_de_troca(eu) != troca:
+            if indice.match_de_troca(eu) != troca or varredura_troca(eu, sabem, querem) != troca:
                 raise SystemExit(f"divergência em match_de_troca para usuário {eu} com N={total_usuarios}")
 
         total_consultas = 20 if total_usuarios == 50_000 else min(200, total_usuarios)
         ids_consulta = sorteio.sample(range(1, total_usuarios + 1), total_consultas)
         consulta_indice = mediana_consulta(indice.match_de_troca, ids_consulta)
-        consulta_varredura = mediana_consulta(lambda eu: varredura(eu, sabem, querem)[1], ids_consulta)
+        consulta_varredura = mediana_consulta(lambda eu: varredura_troca(eu, sabem, querem), ids_consulta)
         media_trocas = statistics.mean(len(indice.match_de_troca(eu)) for eu in ids_consulta)
         vezes = consulta_varredura / consulta_indice if consulta_indice else float("inf")
         print(f"{total_usuarios:10,d}  {construcao_ms:26.2f}  {consulta_indice:30.2f}  {consulta_varredura:34.2f}  {vezes:18.1f}  {media_trocas:36.2f}")
