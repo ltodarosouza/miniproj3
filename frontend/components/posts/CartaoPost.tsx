@@ -20,11 +20,15 @@ import {
 } from "@/lib/posts";
 import { meuId } from "@/lib/sessao";
 
-// Coluna da hora: hora para posts de hoje, "dd/mm" para os outros dias (cabe em 4 caracteres de largura).
+// Coluna da hora: hora para posts de hoje, "dd/mm" para os outros dias deste ano e "mês/aa" para anos anteriores.
 function horaDoDiario(iso: string): string {
   const data = new Date(iso);
   const hoje = new Date();
   if (data.toDateString() === hoje.toDateString()) return formatarHora(iso);
+  if (data.getFullYear() !== hoje.getFullYear()) {
+    const mes = data.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "");
+    return `${mes}/${String(data.getFullYear()).slice(-2)}`;
+  }
   return `${String(data.getDate()).padStart(2, "0")}/${String(data.getMonth() + 1).padStart(2, "0")}`;
 }
 
@@ -132,7 +136,7 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApaga
         </time>
         <div className="col-start-2 min-w-0">
           {marcacao && (
-            <p className="mb-2 h-4 font-mono text-[0.6875rem] uppercase leading-4 tracking-[0.08em] text-marca-forte">
+            <p className="mb-2 h-4 font-mono text-[0.6875rem] uppercase leading-4 tracking-[0.08em] text-texto-2">
               {marcacao}
             </p>
           )}

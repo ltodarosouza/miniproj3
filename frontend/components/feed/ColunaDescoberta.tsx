@@ -15,9 +15,9 @@ const DIAS_DA_SEMANA = 7;
 // Bloco numerado da coluna: régua em cima e "01 · Título" em mono, sem cartão nem sombra.
 function Bloco({ numero, titulo, acao, children }: { numero: string; titulo: string; acao?: ReactNode; children: ReactNode }) {
   return (
-    <section aria-label={titulo} className="border-t border-linha pt-3">
+    <section aria-labelledby={`bloco-${numero}`} className="border-t border-linha pt-3">
       <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h2 className="font-mono text-xs uppercase tracking-[0.08em] text-texto-3">
+        <h2 id={`bloco-${numero}`} className="font-mono text-xs uppercase tracking-[0.08em] text-texto-3">
           <span className="text-marca-forte numeros">{numero}</span> · {titulo}
         </h2>
         {acao}

@@ -37,7 +37,7 @@ export function Composer({
       >
         <Icone nome="mais" tamanho={16} />
         <span className="min-w-0 flex-1 truncate">O que você estudou hoje?</span>
-        <span className="inline-flex h-9 shrink-0 items-center rounded-controle bg-marca px-3 text-sm font-semibold text-marca-texto group-hover:bg-marca/90">
+        <span aria-hidden="true" className="inline-flex h-9 shrink-0 items-center rounded-controle bg-marca px-3 text-sm font-semibold text-marca-texto group-hover:bg-marca/90">
           Registrar estudo
         </span>
       </button>
