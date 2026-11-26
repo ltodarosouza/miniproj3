@@ -1,15 +1,18 @@
+import threading
+
 from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.catalogo import normalizar
 from app.core.contadores import contador_iniciais
 from app.core.matches import indice_matches
 from app.models.habilidade import Habilidade
 from app.models.post import Post
 from app.models.user import User
 from app.models.user_habilidade import UserHabilidade
-from app.schemas.post import PostOut, PostPage
+from app.schemas.post import PostPage
 from app.schemas.user import (
     HabilidadeItem,
     HabilidadePerfilOut,
@@ -25,17 +28,22 @@ from app.services import avaliacoes, follows, posts, streak
 def listar(
     db: Session, offset: int, limit: int, busca: str | None = None
 ) -> tuple[list[UserItemOut], int]:
-    consulta = select(User)
-    termo = (busca or "").strip().lower()
+    termo = (busca or "").strip()
     if termo:
-        consulta = consulta.where(
-            func.lower(User.username).contains(termo, autoescape=True)
-            | func.lower(User.name).contains(termo, autoescape=True)
+        alvo = normalizar(termo)
+        filtrados = [
+            usuario
+            for usuario in db.scalars(select(User).order_by(User.username))
+            if alvo in normalizar(usuario.username) or alvo in normalizar(usuario.name)
+        ]
+        total = len(filtrados)
+        users = filtrados[offset : offset + limit]
+    else:
+        consulta = select(User)
+        total = db.scalar(select(func.count()).select_from(consulta.subquery())) or 0
+        users = list(
+            db.scalars(consulta.order_by(User.username).offset(offset).limit(limit))
         )
-    total = db.scalar(select(func.count()).select_from(consulta.subquery())) or 0
-    users = list(
-        db.scalars(consulta.order_by(User.username).offset(offset).limit(limit))
-    )
     habilidades_por_usuario = _habilidades_por_usuario(db, [usuario.id for usuario in users])
     items = [
         UserItemOut(
@@ -89,8 +97,8 @@ def criar(db: Session, dados: UserCreate) -> User:
     )
 
 
-def _buscar_por_username(db: Session, username: str) -> User:
-    usuario = db.scalar(select(User).where(User.username == username))
+def por_username_ou_404(db: Session, username: str) -> User:
+    usuario = db.scalar(select(User).where(User.username == username.lower()))
     if usuario is None:
         raise HTTPException(status_code=404, detail="pessoa não encontrada")
     return usuario
@@ -126,7 +134,7 @@ def _habilidades_do_usuario(db: Session, usuario_id: int) -> list[HabilidadePerf
 
 
 def perfil(db: Session, username: str) -> PerfilOut:
-    usuario = _buscar_por_username(db, username)
+    usuario = por_username_ou_404(db, username)
     contadores = follows.contadores(db, usuario.id)
     media, total = avaliacoes.media_e_total(db, usuario.id)
     return PerfilOut(
@@ -157,7 +165,7 @@ def atualizar_perfil(db: Session, usuario: User, dados: PerfilUpdate) -> PerfilO
 def posts_do_usuario(
     db: Session, eu: User, username: str, offset: int, limit: int
 ) -> PostPage:
-    alvo = _buscar_por_username(db, username)
+    alvo = por_username_ou_404(db, username)
     total = (
         db.scalar(select(func.count()).select_from(Post).where(Post.autor_id == alvo.id))
         or 0
@@ -178,13 +186,16 @@ def posts_do_usuario(
 
 
 MAX_HABILIDADES = 40
+_TRANCA_HABILIDADES = threading.Lock()
 
 
 def salvar_habilidades(
     db: Session, usuario: User, itens: list[HabilidadeItem]
 ) -> list[HabilidadePerfilOut]:
     if len(itens) > MAX_HABILIDADES:
-        raise HTTPException(status_code=422, detail="no máximo 40 habilidades")
+        raise HTTPException(
+            status_code=422, detail=f"no máximo {MAX_HABILIDADES} habilidades"
+        )
     vistos: set[tuple[int, str]] = set()
     for item in itens:
         chave = (item.habilidade_id, item.tipo)
@@ -199,25 +210,26 @@ def salvar_habilidades(
     if existentes != ids:
         raise HTTPException(status_code=422, detail="habilidade fora do catálogo")
 
-    antigas = list(
-        db.scalars(select(UserHabilidade).where(UserHabilidade.usuario_id == usuario.id))
-    )
-    for relacao in antigas:
-        db.delete(relacao)
-    db.flush()
-    db.add_all(
-        UserHabilidade(
-            usuario_id=usuario.id,
-            habilidade_id=item.habilidade_id,
-            tipo=item.tipo,
-            nivel=item.nivel,
+    with _TRANCA_HABILIDADES:
+        antigas = list(
+            db.scalars(select(UserHabilidade).where(UserHabilidade.usuario_id == usuario.id))
         )
-        for item in itens
-    )
-    db.commit()
+        for relacao in antigas:
+            db.delete(relacao)
+        db.flush()
+        db.add_all(
+            UserHabilidade(
+                usuario_id=usuario.id,
+                habilidade_id=item.habilidade_id,
+                tipo=item.tipo,
+                nivel=item.nivel,
+            )
+            for item in itens
+        )
+        db.commit()
 
-    for relacao in antigas:
-        indice_matches.remover(usuario.id, relacao.habilidade_id, relacao.tipo)
-    for item in itens:
-        indice_matches.adicionar(usuario.id, item.habilidade_id, item.tipo)
+        for relacao in antigas:
+            indice_matches.remover(usuario.id, relacao.habilidade_id, relacao.tipo)
+        for item in itens:
+            indice_matches.adicionar(usuario.id, item.habilidade_id, item.tipo)
     return _habilidades_do_usuario(db, usuario.id)

@@ -1,8 +1,7 @@
-import unicodedata
-
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
+from app.core.catalogo import normalizar
 from app.core.matches import indice_matches
 from app.models.habilidade import Habilidade
 from app.models.mensagem import Mensagem
@@ -62,15 +61,10 @@ def _nivel_do_meu_lado(
     }
 
 
-def _chave_alfabetica(nome: str) -> str:
-    decomposto = unicodedata.normalize("NFKD", nome)
-    return "".join(c for c in decomposto if not unicodedata.combining(c)).casefold()
-
-
 def _ordenar(itens: list[MatchOut]) -> list[MatchOut]:
     return sorted(
         itens,
-        key=lambda m: (-(len(m.me_ensina) + len(m.eu_ensino)), _chave_alfabetica(m.usuario.name), m.usuario.id),
+        key=lambda m: (-(len(m.me_ensina) + len(m.eu_ensino)), normalizar(m.usuario.name), m.usuario.id),
     )
 
 
