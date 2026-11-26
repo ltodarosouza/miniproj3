@@ -6,7 +6,9 @@
 - **Escolha.** A tela passa a se chamar Mesa: é onde o estudante vê o que foi
   estudado. O topo traz o título, a data de hoje em mono e uma linha com a
   cotação da semana. A lista vira o Diário: cada post é uma linha de registro
-  com a hora numa coluna à esquerda (ou o dia, em "dd/mm", para posts de outros dias), separada da próxima por uma régua. Tempo
+  com uma coluna à esquerda que mostra a hora (posts de hoje), o dia em
+  "dd/mm" (este ano) ou "mês/aa" (anos anteriores), separada da próxima por
+  uma régua. Tempo
   estudado e habilidade ficam numa linha de dados em mono, logo abaixo do
   texto. "Pode te ensinar" e "Estuda o mesmo que você" saem do canto do cartão
   e viram um rótulo mono acima da linha.
