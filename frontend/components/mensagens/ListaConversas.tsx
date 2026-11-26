@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { listarConversasComStatus, type ConversaComStatus, type NaoLidasMensagens } from "@/lib/mensagens";
-import { trocasPendentesAvaliacao } from "@/lib/api";
-import { EVENTO_AVALIACAO_ENVIADA } from "@/lib/avaliacoes";
+import { EVENTO_AVALIACAO_ENVIADA, useConsultaPendentes } from "@/lib/avaliacoes";
 import { formatarPreviaTroca, formatarQuando } from "@/lib/datas";
 import { meuId } from "@/lib/sessao";
 import { Avatar } from "@/components/ui/Avatar";
@@ -22,22 +21,12 @@ export function ListaConversas({ ativa, naoLidas }: { ativa?: string; naoLidas: 
   const [usuarioId, setUsuarioId] = useState<number | null | undefined>(undefined);
   const [primeiraCarga, setPrimeiraCarga] = useState(true);
   const buscando = useRef(false);
-  const pedidoPendentes = useRef(0);
-
-  const buscarPendentes = useCallback(async () => {
-    if (!meuId()) return;
-    const pedido = ++pedidoPendentes.current;
-    try {
-      const resposta = await trocasPendentesAvaliacao();
-      if (pedido !== pedidoPendentes.current) return;
-      const id = meuId();
-      setTrocasParaAvaliar(new Set(resposta.items.map((troca) => (
-        troca.proposta_por.id === id ? troca.com.username : troca.proposta_por.username
-      ))));
-    } catch {
-      // Mantém as pendências anteriores quando a consulta falha.
-    }
-  }, []);
+  const consultarPendentes = useConsultaPendentes((trocas) => {
+    const id = meuId();
+    setTrocasParaAvaliar(new Set(trocas.map((troca) => (
+      troca.proposta_por.id === id ? troca.com.username : troca.proposta_por.username
+    ))));
+  });
 
   const buscar = useCallback(async (inicial = false) => {
     if (buscando.current) return;
@@ -64,17 +53,17 @@ export function ListaConversas({ ativa, naoLidas }: { ativa?: string; naoLidas: 
 
   useEffect(() => {
     void buscar(true);
-    void buscarPendentes();
+    consultarPendentes();
     const intervalo = window.setInterval(() => {
       if (!document.hidden) {
         void buscar();
-        void buscarPendentes();
+        consultarPendentes();
       }
     }, 5000);
     const aoVoltar = () => {
       if (!document.hidden) {
         void buscar();
-        void buscarPendentes();
+        consultarPendentes();
       }
     };
     document.addEventListener("visibilitychange", aoVoltar);
@@ -82,13 +71,13 @@ export function ListaConversas({ ativa, naoLidas }: { ativa?: string; naoLidas: 
       window.clearInterval(intervalo);
       document.removeEventListener("visibilitychange", aoVoltar);
     };
-  }, [buscar, buscarPendentes]);
+  }, [buscar, consultarPendentes]);
 
   useEffect(() => {
-    const aoAvaliar = () => { void buscarPendentes(); };
+    const aoAvaliar = () => { consultarPendentes(true); };
     window.addEventListener(EVENTO_AVALIACAO_ENVIADA, aoAvaliar);
     return () => window.removeEventListener(EVENTO_AVALIACAO_ENVIADA, aoAvaliar);
-  }, [buscarPendentes]);
+  }, [consultarPendentes]);
 
   return (
     <section className="flex h-full min-h-0 flex-col" aria-label="Lista de conversas">

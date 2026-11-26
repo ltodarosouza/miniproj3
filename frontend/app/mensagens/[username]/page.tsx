@@ -10,7 +10,8 @@ import { Icone } from "@/components/ui/Icone";
 import { BalaoMensagem } from "@/components/mensagens/BalaoMensagem";
 import { CaixaMensagem } from "@/components/mensagens/CaixaMensagem";
 import { aplicarEntreguesAte, chaveMensagem, confirmarEnvio, maiorIdRecebido, reconciliarMensagens, type MensagemLocal } from "@/components/mensagens/mensagemLocal";
-import { ErroApi, listarMensagens, listarTrocas, trocasPendentesAvaliacao, type Troca } from "@/lib/api";
+import { ErroApi, listarMensagens, listarTrocas, type Troca } from "@/lib/api";
+import { useConsultaPendentes } from "@/lib/avaliacoes";
 import { chaveDoDia, formatarDia } from "@/lib/datas";
 import { meuId } from "@/lib/sessao";
 import { CartaoTroca } from "@/components/trocas/CartaoTroca";
@@ -66,9 +67,12 @@ export default function PaginaConversa() {
   const mensagensRef = useRef(mensagens);
   const cargaInicialConcluida = useRef(false);
   const trocasRef = useRef(trocas);
-  const pedidoPendentesRef = useRef(0);
   mensagensRef.current = mensagens;
   trocasRef.current = trocas;
+
+  const consultarPendentes = useConsultaPendentes((trocasPendentes) => {
+    setPendentes(pendentesDaConversa(trocasPendentes, conversaAtivaRef.current, avaliadasRef.current));
+  });
 
   const linhaDoTempo = useMemo<ItemLinhaDoTempo[]>(() => [
     ...mensagens.map((mensagem): ItemLinhaDoTempo => ({ tipo: "mensagem", mensagem })),
@@ -92,15 +96,6 @@ export default function PaginaConversa() {
     () => Promise.all([listarMensagens(username), listarConversasComStatus(), listarTrocas(username)]),
     [username],
   );
-
-  const atualizarPendentes = useCallback(() => {
-    const usernameSolicitado = username;
-    const pedido = ++pedidoPendentesRef.current;
-    void trocasPendentesAvaliacao().then((resposta) => {
-      if (pedido !== pedidoPendentesRef.current || conversaAtivaRef.current !== usernameSolicitado) return;
-      setPendentes(pendentesDaConversa(resposta.items, usernameSolicitado, avaliadasRef.current));
-    }).catch(() => {});
-  }, [username]);
 
   const aplicarCarga = useCallback(
     ([resposta, conversas, trocasCarregadas]: Awaited<ReturnType<typeof carregarConversa>>) => {
@@ -165,7 +160,7 @@ export default function PaginaConversa() {
     cursorRef.current = 0;
     primeiroCarregamento.current = true;
     ciclosPolling.current = 0;
-    atualizarPendentes();
+    consultarPendentes(true);
     carregarConversa()
       .then((dados) => {
         if (ativo) aplicarCarga(dados);
@@ -192,7 +187,7 @@ export default function PaginaConversa() {
         });
       });
     return () => { ativo = false; };
-  }, [idUsuario, username, rolarAteFim, carregarConversa, aplicarCarga, encerrarSessao, atualizarPendentes]);
+  }, [idUsuario, username, rolarAteFim, carregarConversa, aplicarCarga, encerrarSessao, consultarPendentes]);
 
   const aplicarLidasAte = useCallback((id: number | null | undefined) => {
     if (id == null) return;
@@ -216,7 +211,7 @@ export default function PaginaConversa() {
     pollingEmVoo.current = true;
     ciclosPolling.current += 1;
     const buscarTrocasAgora = ciclosPolling.current % 2 === 0;
-    if (buscarTrocasAgora) atualizarPendentes();
+    if (buscarTrocasAgora) consultarPendentes();
     try {
       const [respostaBase, respostaTrocas] = await Promise.all([listarMensagens(username, cursorRef.current), buscarTrocasAgora ? listarTrocas(username) : Promise.resolve(null)]);
       if (conversaAtivaRef.current !== username) return;
@@ -248,7 +243,7 @@ export default function PaginaConversa() {
     } finally {
       pollingEmVoo.current = false;
     }
-  }, [aplicarLidasAte, atualizarPendentes, encerrarSessao, estaPertoDoFim, idUsuario, marcarLidas, rolarOuMarcarNovas, username]);
+  }, [aplicarLidasAte, consultarPendentes, encerrarSessao, estaPertoDoFim, idUsuario, marcarLidas, rolarOuMarcarNovas, username]);
 
   useEffect(() => {
     if (!carregando && cargaInicialConcluida.current) marcarLidas();
