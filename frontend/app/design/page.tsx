@@ -128,7 +128,7 @@ export default function DesignPage() {
       <Secao
         numero="03"
         titulo="Tipografia"
-        descricao="Space Grotesk para títulos, IBM Plex Sans no corpo e IBM Plex Mono em dados."
+        descricao="Literata nos títulos e no texto dos posts, Fira Sans na interface e IBM Plex Mono em dados."
       >
         <div className="space-y-4">
           <p className="font-display text-4xl font-bold tracking-[-0.02em]">Bolsa de saberes</p>
@@ -252,8 +252,8 @@ export default function DesignPage() {
 
       <Secao numero="09" titulo="Rótulo numerado" descricao="Toda seção de tela abre com um rótulo assim.">
         <div className="space-y-2 text-[0.8125rem] text-texto-2 font-semibold">
-          <p>01 · Pares de troca</p>
-          <p>02 · Pode te ensinar</p>
+          <p><span className="font-mono font-medium numeros">01</span> · Pares de troca</p>
+          <p><span className="font-mono font-medium numeros">02</span> · Pode te ensinar</p>
         </div>
       </Secao>
 

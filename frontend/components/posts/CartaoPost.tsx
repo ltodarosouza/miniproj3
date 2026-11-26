@@ -137,7 +137,7 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApaga
         </time>
         <div className="col-start-2 min-w-0">
           {marcacao && (
-            <p className="mb-2 h-4 text-[0.8125rem] leading-4 text-texto-2 font-semibold">
+            <p className="mb-2 min-h-5 text-[0.8125rem] leading-5 text-texto-2 font-semibold">
               {marcacao}
             </p>
           )}

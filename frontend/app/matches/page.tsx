@@ -91,7 +91,7 @@ function EmAndamento({ itens }: { itens: Match[] }) {
   return (
     <details className="group">
       <summary className="flex cursor-pointer list-none items-center gap-3 py-1 [&::-webkit-details-marker]:hidden">
-        <span className="text-[0.8125rem] font-semibold text-texto-3">03 · Em andamento</span>
+        <span className="text-[0.8125rem] font-semibold text-texto-3"><span className="font-mono font-medium numeros">03</span> · Em andamento</span>
         <span className="font-mono numeros text-xs text-texto-3">{quantidade}</span>
         <span className="text-sm text-texto-2 transition-transform duration-[var(--rapido)] group-open:rotate-180 motion-reduce:transition-none" aria-hidden>
           ▾

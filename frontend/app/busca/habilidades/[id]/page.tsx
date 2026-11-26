@@ -95,7 +95,7 @@ export default function PaginaHabilidade() {
             <Pessoas numero="02" titulo="Quem quer aprender" pessoas={detalhe.querem} vazio="Ninguém marcou que quer aprender ainda." />
           </div>
           <section>
-            <h2 className="text-[0.8125rem] font-semibold text-texto-3">03 · Posts</h2>
+            <h2 className="text-[0.8125rem] font-semibold text-texto-3"><span className="font-mono font-medium numeros">03</span> · Posts</h2>
             {detalhe.posts.length === 0 ? (
               <p className="mt-3 text-sm text-texto-3">Ninguém publicou sobre {detalhe.habilidade.nome} ainda.</p>
             ) : (
