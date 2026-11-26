@@ -8,8 +8,7 @@ import { ErroApi } from "@/lib/api";
 import {
   grupoDaData,
   chaveDaNotificacao,
-  listarNotificacoes,
-  listarNotificacoesAntesDe,
+  listarPaginaNotificacoes,
   marcarLidas,
   type GrupoData,
   type Notificacao,
@@ -20,21 +19,22 @@ const ORDEM_GRUPOS: GrupoData[] = ["Hoje", "Esta semana", "Antes"];
 
 export default function Pagina() {
   const [dados, setDados] = useState<Notificacao[] | null>(null);
-  const [temMais, setTemMais] = useState(false);
+  const [cursor, setCursor] = useState<string | null>(null);
   const [carregandoMais, setCarregandoMais] = useState(false);
   const [erroMais, setErroMais] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [logado, setLogado] = useState<boolean | null>(null);
   const montada = useRef(false);
+  const carregandoMaisRef = useRef(false);
 
   const carregar = useCallback(async () => {
     const id = meuId();
     setErro(null);
     try {
-      const resposta = await listarNotificacoes(0, 50);
+      const resposta = await listarPaginaNotificacoes(50);
       if (!montada.current || meuId() !== id) return;
       setDados(resposta.items);
-      setTemMais(resposta.items.length === 50 && resposta.total > resposta.items.length);
+      setCursor(resposta.proximo_cursor);
       await marcarLidas().catch(() => {});
     } catch (err) {
       if (!montada.current || meuId() !== id) return;
@@ -52,26 +52,23 @@ export default function Pagina() {
   }, []);
 
   const carregarMais = useCallback(async () => {
-    if (!dados?.length || carregandoMais) return;
+    if (!dados?.length || cursor === null || carregandoMaisRef.current) return;
     const id = meuId();
+    carregandoMaisRef.current = true;
     setCarregandoMais(true);
     setErroMais(false);
     try {
-      const ultimo = dados[dados.length - 1];
-      const resposta = await listarNotificacoesAntesDe(
-        ultimo.em,
-        50,
-        dados.map(chaveDaNotificacao),
-      );
+      const resposta = await listarPaginaNotificacoes(50, cursor);
       if (!montada.current || meuId() !== id) return;
-      setDados([...dados, ...resposta.items.slice(0, 50)]);
-      setTemMais(!resposta.fim);
+      setDados((anteriores) => anteriores ? [...anteriores, ...resposta.items] : resposta.items);
+      setCursor(resposta.proximo_cursor);
     } catch {
       if (montada.current && meuId() === id) setErroMais(true);
     } finally {
+      carregandoMaisRef.current = false;
       if (montada.current && meuId() === id) setCarregandoMais(false);
     }
-  }, [dados, carregandoMais]);
+  }, [dados, cursor]);
 
   useEffect(() => {
     montada.current = true;
@@ -173,7 +170,7 @@ export default function Pagina() {
         </div>
       )}
 
-      {logado && dados && temMais && (
+      {logado && dados && cursor !== null && (
         <div className="flex flex-col items-start gap-2">
           {erroMais && (
             <p role="alert" className="text-sm text-perigo">
