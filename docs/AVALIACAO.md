@@ -37,8 +37,8 @@ como conferir o fluxo; não pressupõe que ele tenha sido gravado ou testado pre
 3. No feed, clique em **O que você estudou hoje?** ou **Registrar estudo** para abrir o
    formulário. Preencha **O que você estudou hoje?**, selecione uma **Habilidade** e informe
    **Tempo estudado (min)**; publique com **Registrar estudo**.
-4. Abra uma janela anônima, vá a `/cadastro` e crie a conta B. Depois de cadastrar e, se
-   necessário, configurar habilidades, abra `/login` e entre como B.
+4. Abra uma janela anônima, vá a `/cadastro` e crie a conta B. O cadastro já entra como B;
+   siga nessa sessão (configurar habilidades é opcional).
 5. Na sessão B, acesse `/perfil/<username-de-A>` ou encontre A pelo feed/busca. No perfil de A,
    use **Seguir**. O estado deve mudar para **Seguindo**.
 6. Ainda como B, abra `/feed`. Localize o post de rotina de A e confira autor, texto e
@@ -88,9 +88,11 @@ avaliação](../frontend/components/avaliacoes/AvisoAvaliacao.tsx) e as decisõe
 
 O seed cria conversas para os oito primeiros pares fixos; os cinco primeiros já têm troca
 confirmada no passado com avaliação dos dois lados, e outro par fica com uma proposta pendente
-([`_criar_conversas_e_trocas`](../backend/scripts/seed.py)). Para mostrar a avaliação ao vivo,
-proponha e confirme uma troca nova entre duas contas: o aviso **Enviar avaliação** aparece
-depois do horário combinado.
+([`_criar_conversas_e_trocas`](../backend/scripts/seed.py)). Para mostrar a avaliação ao
+vivo sem esperar durante a gravação, prepare antes: proponha uma troca nova entre duas contas
+para o horário mais próximo disponível e confirme antes que ele chegue (depois do horário a
+confirmação é recusada, decisão 28). Quando o horário passar, o aviso **Enviar avaliação**
+aparece para as duas pessoas.
 
 ## Roteiro do vídeo (~4 min)
 
