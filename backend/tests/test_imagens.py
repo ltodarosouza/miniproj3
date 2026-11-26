@@ -1,6 +1,8 @@
+import asyncio
 from io import BytesIO
 
 import pytest
+from fastapi import HTTPException, UploadFile
 from PIL import Image
 from app.services import imagens
 
@@ -257,3 +259,29 @@ def test_so_serve_arquivos_gerados_pelo_servidor(client, pasta_de_teste):
 
     assert client.get("/posts/imagens/segredo.txt").status_code == 404
     assert client.get(f"/posts/imagens/{'a' * 32}.png").status_code == 404
+
+
+def ler(conteudo):
+    return asyncio.run(imagens.ler_e_validar(UploadFile(BytesIO(conteudo), filename="x")))
+
+
+def test_ler_e_validar_devolve_conteudo_e_extensao():
+    assert ler(PNG) == (PNG, ".png")
+    assert ler(JPEG) == (JPEG, ".jpg")
+    assert ler(WEBP) == (WEBP, ".webp")
+
+
+def test_ler_e_validar_recusa_arquivo_grande_e_formato_invalido():
+    with pytest.raises(HTTPException) as grande:
+        ler(b"0" * (DOIS_MB + 1))
+    with pytest.raises(HTTPException) as invalido:
+        ler(b"isto nao e imagem")
+
+    assert grande.value.status_code == 413
+    assert invalido.value.status_code == 422
+
+
+def test_avatar_usa_a_mesma_validacao_do_post():
+    from app.services import avatares
+
+    assert avatares.ler_e_validar is imagens.ler_e_validar

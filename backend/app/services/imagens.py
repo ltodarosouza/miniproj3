@@ -46,14 +46,20 @@ def detectar_formato(conteudo: bytes) -> str | None:
     return extensao
 
 
-async def salvar(db: Session, eu: User, post_id: int, arquivo: UploadFile) -> str:
-    post = post_do_autor(db, eu, post_id)
+async def ler_e_validar(arquivo: UploadFile) -> tuple[bytes, str]:
+    """Único lugar que decide o que é um upload de imagem válido (post e avatar)."""
     conteudo = await arquivo.read(MAX_BYTES + 1)
     if len(conteudo) > MAX_BYTES:
         raise HTTPException(status_code=413, detail="arquivo maior que 2 MB")
     extensao = detectar_formato(conteudo)
     if extensao is None:
         raise HTTPException(status_code=422, detail="envie uma imagem jpg, png ou webp")
+    return conteudo, extensao
+
+
+async def salvar(db: Session, eu: User, post_id: int, arquivo: UploadFile) -> str:
+    post = post_do_autor(db, eu, post_id)
+    conteudo, extensao = await ler_e_validar(arquivo)
     nome = f"{uuid.uuid4().hex}{extensao}"
     db.execute(delete(ImagemPost).where(ImagemPost.post_id == post.id))
     db.add(ImagemPost(nome=nome, post_id=post.id, tipo=TIPOS[extensao], conteudo=conteudo))
@@ -70,7 +76,7 @@ def remover(db: Session, eu: User, post_id: int) -> None:
 
 
 def servir(db: Session, nome: str) -> Response:
-    if not NOME_VALIDO.match(nome):
+    if not NOME_VALIDO.fullmatch(nome):
         raise HTTPException(status_code=404, detail="imagem não encontrada")
     imagem = db.get(ImagemPost, nome)
     if imagem is not None:

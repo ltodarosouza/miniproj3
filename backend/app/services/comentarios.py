@@ -1,7 +1,10 @@
-﻿from sqlalchemy import func, select
+﻿from fastapi import HTTPException
+from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.comentario import Comentario
+from app.models.post import Post
 from app.models.user import User
 from app.schemas.comentario import ComentarioCreate, ComentarioOut, ComentarioPage
 from app.services.posts import buscar
@@ -29,7 +32,13 @@ def criar(db: Session, eu: User, post_id: int, dados: ComentarioCreate) -> Comen
     buscar(db, post_id)
     comentario = Comentario(post_id=post_id, autor_id=eu.id, texto=dados.texto)
     db.add(comentario)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        if db.get(Post, post_id) is None:
+            raise HTTPException(status_code=404, detail="post não existe mais")
+        raise
     db.refresh(comentario)
     return _montar_saidas(db, [comentario])[0]
 

@@ -1,8 +1,10 @@
-﻿from sqlalchemy import delete
+﻿from fastapi import HTTPException
+from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.curtida import Curtida
+from app.models.post import Post
 from app.models.user import User
 from app.services.posts import buscar
 
@@ -14,6 +16,8 @@ def curtir(db: Session, eu: User, post_id: int) -> None:
         db.commit()
     except IntegrityError:
         db.rollback()
+        if db.get(Post, post_id) is None:
+            raise HTTPException(status_code=404, detail="post não existe mais")
 
 
 def descurtir(db: Session, eu: User, post_id: int) -> None:
