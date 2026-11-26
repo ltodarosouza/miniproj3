@@ -8,7 +8,7 @@ import { limparSessao, temToken } from "@/lib/sessao";
 
 import type { NomeIcone } from "./Icone";
 
-export type ItemNavegacao = { href: string; rotulo: string; icone: NomeIcone };
+type ItemNavegacao = { href: string; rotulo: string; icone: NomeIcone };
 
 export const HREF_PUBLICAR = "/feed?publicar=1";
 

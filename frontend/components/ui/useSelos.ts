@@ -9,7 +9,7 @@ export type NaoLidas = { mensagens: number | null; notificacoes: number | null }
 
 type TotalNaoLidas = { total: number };
 
-export function useNaoLidas(): NaoLidas {
+export function useSelos(): NaoLidas {
   const caminho = usePathname();
   const [naoLidas, setNaoLidas] = useState<NaoLidas>({ mensagens: null, notificacoes: null });
   const mensagensIndisponiveis = useRef(false);

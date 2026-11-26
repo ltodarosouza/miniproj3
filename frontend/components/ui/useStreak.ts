@@ -19,7 +19,7 @@ function diaEmSaoPaulo(data: Date): string {
   return DIA_SAO_PAULO.format(data);
 }
 
-export type InfoStreak = { dias: number; postouHoje: boolean } | null;
+type InfoStreak = { dias: number; postouHoje: boolean } | null;
 
 export function useStreak(): InfoStreak {
   const caminho = usePathname();
