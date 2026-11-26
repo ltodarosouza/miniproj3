@@ -233,8 +233,9 @@ def refazer(
 
 
 def _identidade(post: Post) -> dict:
-    """O que identifica um post criado pelo aplicar: o id sozinho pode ser reaproveitado (SQLite)."""
-    return {"id": post.id, "autor_id": post.autor_id, "created_at": post.created_at.isoformat(), "texto": post.texto}
+    """O que identifica um post criado pelo aplicar: o id sozinho pode ser reaproveitado (SQLite),
+    e o texto muda se o autor editar; id, autor e created_at a edição preserva."""
+    return {"id": post.id, "autor_id": post.autor_id, "created_at": post.created_at.isoformat()}
 
 
 def _ids_novos_que_ainda_existem(db: Session, novos: list[dict]) -> list[int]:

@@ -283,3 +283,22 @@ def test_restaurar_nao_apaga_post_posterior_que_reaproveitou_id(client, logar, t
         recuperado = db.get(Post, ultimo)
         assert recuperado is not None
         assert recuperado.texto == "post posterior com id reaproveitado"
+
+
+def test_restaurar_descarta_post_gerado_mesmo_editado(client, logar, tmp_path):
+    from app.schemas.post import PostUpdate
+    from app.services import posts as servico_posts
+
+    _montar(client, logar)
+    backup = tmp_path / "editado.json"
+    with SessionLocal() as db:
+        antes = sorted(db.scalars(select(Post.id)))
+        refazer_posts.refazer(db, "bots", backup)
+        novos = __import__("json").loads(Path(str(backup) + ".novos.json").read_text())["posts_novos"]
+        gerado = db.get(Post, novos[0]["id"])
+        autor = db.get(User, gerado.autor_id)
+        servico_posts.editar(db, autor, gerado.id, PostUpdate(texto="texto editado depois"))
+        db.commit()
+        refazer_posts.restaurar(db, backup)
+        assert db.get(Post, gerado.id) is None
+        assert sorted(db.scalars(select(Post.id))) == antes
