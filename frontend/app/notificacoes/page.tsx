@@ -34,7 +34,7 @@ export default function Pagina() {
       const resposta = await listarNotificacoes(0, 50);
       if (!montada.current || meuId() !== id) return;
       setDados(resposta.items);
-      setTemMais(resposta.items.length === 50);
+      setTemMais(resposta.items.length === 50 && resposta.total > resposta.items.length);
       await marcarLidas().catch(() => {});
     } catch (err) {
       if (!montada.current || meuId() !== id) return;
@@ -52,26 +52,24 @@ export default function Pagina() {
   }, []);
 
   const carregarMais = useCallback(async () => {
-    if (!dados || carregandoMais) return;
+    if (!dados?.length || carregandoMais) return;
+    const id = meuId();
     setCarregandoMais(true);
     setErroMais(false);
     try {
       const ultimo = dados[dados.length - 1];
-      if (!ultimo) return;
-      const resposta = await listarNotificacoesAntesDe(ultimo.em, dados.length, 50);
-      const chaves = new Set(dados.map(chaveDaNotificacao));
-      const novos = resposta.items.filter((item) => {
-        const chave = chaveDaNotificacao(item);
-        if (chaves.has(chave)) return false;
-        chaves.add(chave);
-        return true;
-      });
-      setDados([...dados, ...novos]);
-      setTemMais(resposta.items.length === 50 && novos.length > 0);
+      const resposta = await listarNotificacoesAntesDe(
+        ultimo.em,
+        50,
+        dados.map(chaveDaNotificacao),
+      );
+      if (!montada.current || meuId() !== id) return;
+      setDados([...dados, ...resposta.items.slice(0, 50)]);
+      setTemMais(!resposta.fim);
     } catch {
-      setErroMais(true);
+      if (montada.current && meuId() === id) setErroMais(true);
     } finally {
-      setCarregandoMais(false);
+      if (montada.current && meuId() === id) setCarregandoMais(false);
     }
   }, [dados, carregandoMais]);
 

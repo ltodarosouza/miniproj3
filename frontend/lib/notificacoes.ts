@@ -24,18 +24,79 @@ export function listarNotificacoes(offset = 0, limit = 50): Promise<Page<Notific
   return apiGet(`/notificacoes?offset=${offset}&limit=${limit}`);
 }
 
-export async function listarNotificacoesAntesDe(
-  antesDe: string,
-  carregadas: number,
-  limit = 50,
-): Promise<Page<Notificacao>> {
-  const resposta = await apiGet<Page<Notificacao>>(
-    `/notificacoes?antes_de=${encodeURIComponent(antesDe)}&limit=${limit}`,
+type PaginaAnterior = { items: Notificacao[]; fim: boolean };
+
+const MICROS_POR_SEGUNDO = BigInt(1000000);
+const LIMITE_API = 100;
+
+function microssegundos(iso: string): bigint {
+  const partes = iso.match(/^(.*T\d{2}:\d{2}:\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})?$/);
+  if (!partes) return BigInt(Date.parse(iso)) * BigInt(1000);
+  const base = partes[1] + (partes[3] ?? "Z");
+  const fracao = (partes[2] ?? "").padEnd(6, "0").slice(0, 6);
+  return BigInt(Date.parse(base)) * BigInt(1000) + BigInt(fracao);
+}
+
+function isoDeMicrossegundos(us: bigint): string {
+  const fracao = ((us % MICROS_POR_SEGUNDO) + MICROS_POR_SEGUNDO) % MICROS_POR_SEGUNDO;
+  const segundos = (us - fracao) / MICROS_POR_SEGUNDO;
+  return new Date(Number(segundos) * 1000).toISOString().replace(
+    /\.\d{3}Z$/,
+    `.${fracao.toString().padStart(6, "0")}Z`,
   );
-  if (resposta.items.some((item) => new Date(item.em) >= new Date(antesDe))) {
-    return listarNotificacoes(carregadas, limit);
+}
+
+async function recuarPorPosicao(
+  limite: bigint,
+  limit: number,
+  vistas: Set<string>,
+): Promise<PaginaAnterior> {
+  const encontrados: Notificacao[] = [];
+  let offset = 0;
+  // Sem snapshot na API, alterações entre páginas ainda podem deslocar offsets.
+  while (true) {
+    const pagina = await listarNotificacoes(offset, LIMITE_API);
+    for (const item of pagina.items) {
+      if (microssegundos(item.em) > limite) continue;
+      const chave = chaveDaNotificacao(item);
+      if (vistas.has(chave)) continue;
+      vistas.add(chave);
+      encontrados.push(item);
+      if (encontrados.length > limit) return { items: encontrados, fim: false };
+    }
+    offset += pagina.items.length;
+    if (pagina.items.length < LIMITE_API || offset >= pagina.total) {
+      return { items: encontrados, fim: true };
+    }
   }
-  return resposta;
+}
+
+export async function listarNotificacoesAntesDe(
+  ultimoEm: string,
+  limit = 50,
+  chavesVistas: Iterable<string> = [],
+): Promise<PaginaAnterior> {
+  const limite = microssegundos(ultimoEm);
+  const cursor = isoDeMicrossegundos(limite + BigInt(1));
+  const vistas = new Set(chavesVistas);
+  // Reserva espaço para o item do cursor e para um item além da página exibida.
+  const limiteBusca = Math.min(limit + 2, LIMITE_API);
+  const resposta = await apiGet<Page<Notificacao>>(
+    `/notificacoes?antes_de=${encodeURIComponent(cursor)}&limit=${limiteBusca}`,
+  );
+  if (resposta.items.some((item) => microssegundos(item.em) > limite)) {
+    return recuarPorPosicao(limite, limit, vistas);
+  }
+  const chaves = new Set(vistas);
+  const ineditas = resposta.items.filter((item) => {
+    const chave = chaveDaNotificacao(item);
+    if (chaves.has(chave)) return false;
+    chaves.add(chave);
+    return true;
+  });
+  if (ineditas.length > limit) return { items: ineditas.slice(0, limit + 1), fim: false };
+  if (resposta.items.length < limiteBusca) return { items: ineditas, fim: true };
+  return recuarPorPosicao(limite, limit, vistas);
 }
 
 export function chaveDaNotificacao(n: Notificacao): string {
