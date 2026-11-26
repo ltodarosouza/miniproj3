@@ -71,7 +71,7 @@ export function BotaoSeguir({
 
   if (!logado) {
     return (
-      <Botao variante="secundario" tamanho={tamanho} className={classeContorno} onClick={() => router.push("/login")}>
+      <Botao variante={sempreContorno ? "secundario" : "primario"} tamanho={tamanho} className={classeContorno} onClick={() => router.push("/login")}>
         Seguir
       </Botao>
     );

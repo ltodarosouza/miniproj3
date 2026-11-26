@@ -42,15 +42,16 @@ export function SegmentosNivel({ nivel }: { nivel: number }) {
 // Nível em 5 segmentos clicáveis: cada segmento escolhe aquele nível.
 function SeletorNivel({ nome, nivel, aoEscolher }: { nome: string; nivel: number; aoEscolher: (n: number) => void }) {
   return (
-    <div role="group" aria-label={`Nível em ${nome}`} className="flex shrink-0 gap-0.5">
+    <div role="radiogroup" aria-label={`Nível em ${nome}`} className="flex shrink-0 gap-0.5">
       {NIVEIS.map((n) => (
         <button
           key={n}
           type="button"
-          aria-pressed={nivel === n}
+          role="radio"
+          aria-checked={nivel === n}
           aria-label={`Nível ${n}`}
           onClick={() => aoEscolher(n)}
-          className={`relative h-3 w-4 rounded-[1px] transition-colors duration-[var(--rapido)] motion-reduce:transition-none after:absolute after:-inset-x-0.5 after:-inset-y-3 after:content-[''] ${FOCO} ${
+          className={`relative h-3 w-4 rounded-[1px] transition-colors duration-[var(--rapido)] motion-reduce:transition-none after:absolute after:-inset-x-px after:-inset-y-3 after:content-[''] ${FOCO} ${
             n <= nivel ? "bg-marca" : "bg-texto-3/30 hover:bg-texto-3/60"
           }`}
         />
