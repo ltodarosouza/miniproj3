@@ -208,7 +208,7 @@ export default function DesignPage() {
       <Secao titulo="Avatares" descricao="Sem foto, mostra as iniciais numa cor estável derivada do nome.">
         <div className="flex items-center gap-3">
           <Avatar nome="Ana Souza" tamanho="lg" />
-          <Avatar nome="Bia Lima" online />
+          <Avatar nome="Bia Lima" />
           <Avatar nome="Caio Melo" />
           <Avatar nome="Duda Reis" tamanho="sm" />
         </div>
