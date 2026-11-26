@@ -150,8 +150,9 @@ A decisão 1 é a escolha que vai para o vídeo/pitch, conforme [docs/AVALIACAO.
 - **Escolha:** a troca guarda o que quem propôs ensina e o que aprende, e
   basta uma das duas. Ela nasce `proposta`, só quem recebeu confirma ou recusa,
   e a avaliação abre para os dois quando o horário de uma troca confirmada
-  passa. Cada pessoa avalia uma vez por troca. O pedido aparece num cartão
-  flutuante em qualquer tela, que pode ser adiado.
+  passa. Cada pessoa avalia uma vez por troca. O pedido aparecia num cartão
+  flutuante em qualquer tela; desde a decisão 39, aparece no cartão da troca,
+  dentro da conversa, com aviso no selo de Mensagens.
 - **O que cortamos e por quê:** avaliação livre de perfil. Viraria ranking de
   popularidade, e a nota precisa vir de uma troca real (princípio "prova, não
   promessa").
@@ -710,6 +711,8 @@ Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada de
   nos itens de `GET /usuarios`, carregadas em lote para a página solicitada.
 - [37. A proposta de troca vira uma ordem numerada, e confirmar celebra](docs/decisoes/37-trocas-como-ordem.md).
 - [38. Notificações como registro de atividade, com cursor opaco no front](docs/decisoes/38-notificacoes-registro-e-cursor.md).
+- [39. Mais estudadas por horas, coluna com respiro e avaliação dentro da conversa](docs/decisoes/39-ranking-por-horas-respiro-e-avaliacao-na-conversa.md).
+  Pedido direto do dono; substitui o cartão flutuante de avaliação da decisão 8.
 
 ## Features
 
