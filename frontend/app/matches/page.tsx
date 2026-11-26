@@ -49,6 +49,7 @@ function TabelaPares({
   const colunas = troca
     ? "sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_6.5rem]"
     : "sm:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)_6.5rem]";
+  const habilidades = "order-2 flex min-w-0 flex-wrap content-start items-center gap-1.5 sm:order-none [&>span]:min-w-0 [&>span]:max-w-full [&>span]:whitespace-normal [&>span]:[overflow-wrap:anywhere] [&>span:not([aria-hidden])]:h-auto [&>span:not([aria-hidden])]:min-h-7";
   return (
     <section className="space-y-3">
       <header>
@@ -58,17 +59,19 @@ function TabelaPares({
       {itens.length === 0 ? (
         <p className="text-sm text-texto-2">{vazio}</p>
       ) : (
-        <>
-          <div className={`hidden ${colunas} items-center gap-4 pl-4 pr-1 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3 sm:grid`}>
-            <span>Pessoa</span>
-            <span>Te ensina</span>
-            {troca && <span>Você ensina</span>}
-            <span aria-hidden="true" />
-          </div>
-          <ul className="divide-y divide-linha border-y border-linha">
+        <table role="table" aria-label={rotulo} className="block w-full">
+          <thead role="rowgroup" className="block">
+            <tr role="row" className={`sr-only ${colunas} items-center gap-4 pl-4 pr-1 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3 sm:not-sr-only sm:grid`}>
+              <th role="columnheader" scope="col" className="text-left font-normal">Pessoa</th>
+              <th role="columnheader" scope="col" className="text-left font-normal">Te ensina</th>
+              {troca && <th role="columnheader" scope="col" className="text-left font-normal">Você ensina</th>}
+              <th role="columnheader" scope="col"><span className="sr-only">Ação</span></th>
+            </tr>
+          </thead>
+          <tbody role="rowgroup" className="block divide-y divide-linha border-y border-linha">
             {itens.map((m) => (
-              <li key={m.usuario.id} className={`relative grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 pl-4 pr-1 py-3 before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-marca ${colunas} sm:items-center sm:gap-4`}>
-                <div className="flex min-w-0 items-center gap-3">
+              <tr key={m.usuario.id} role="row" className={`relative grid grid-cols-6 gap-x-3 gap-y-2 pl-4 pr-1 py-3 before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-marca ${colunas} sm:items-center sm:gap-4`}>
+                <td role="cell" className="col-span-4 flex min-w-0 items-center gap-3 sm:col-span-1">
                   <span className="shrink-0 text-marca"><NoDeMatch /></span>
                   <Link href={`/perfil/${encodeURIComponent(m.usuario.username)}`} className="flex min-w-0 items-center gap-3">
                     <Avatar nome={m.usuario.name} url={m.usuario.avatar_url} tamanho="sm" />
@@ -77,22 +80,24 @@ function TabelaPares({
                       <span className="block truncate font-mono text-xs text-texto-3">@{m.usuario.username}</span>
                     </span>
                   </Link>
-                </div>
-                <div className="order-2 col-span-2 flex min-w-0 flex-wrap items-center gap-1.5 sm:order-none sm:col-span-1">
-                  <span className="font-mono text-[0.6875rem] uppercase text-texto-3 sm:hidden">Te ensina</span>
+                </td>
+                <td role="cell" className={`${habilidades} ${troca ? "col-span-3" : "col-span-6"} sm:col-span-1`}>
+                  <span aria-hidden="true" className="basis-full font-mono text-[0.6875rem] uppercase text-texto-3 sm:hidden">Te ensina</span>
                   {m.me_ensina.map((h) => <TagHabilidade key={h.id} nome={h.nome} tipo="sei" nivel={h.nivel} />)}
-                </div>
-                {troca && <div className="order-2 col-span-2 flex min-w-0 flex-wrap items-center gap-1.5 sm:order-none sm:col-span-1">
-                  <span className="font-mono text-[0.6875rem] uppercase text-texto-3 sm:hidden">Você ensina</span>
+                </td>
+                {troca && <td role="cell" className={`${habilidades} col-span-3 sm:col-span-1`}>
+                  <span aria-hidden="true" className="basis-full font-mono text-[0.6875rem] uppercase text-texto-3 sm:hidden">Você ensina</span>
                   {m.eu_ensino.map((h) => <TagHabilidade key={h.id} nome={h.nome} tipo="sei" nivel={h.nivel} />)}
-                </div>}
-                <BotaoLink href={`/mensagens/${encodeURIComponent(m.usuario.username)}`} aria-label={`Conversar com ${m.usuario.name}`} tamanho="sm" variante={troca ? "troca" : "secundario"} className="order-1 sm:order-last sm:justify-self-end">
-                  Conversar
-                </BotaoLink>
-              </li>
+                </td>}
+                <td role="cell" className="order-1 col-span-2 justify-self-end sm:order-last sm:col-span-1">
+                  <BotaoLink href={`/mensagens/${encodeURIComponent(m.usuario.username)}`} aria-label={`Conversar com ${m.usuario.name}`} tamanho="sm" variante={troca ? "troca" : "secundario"}>
+                    Conversar
+                  </BotaoLink>
+                </td>
+              </tr>
             ))}
-          </ul>
-        </>
+          </tbody>
+        </table>
       )}
     </section>
   );
