@@ -24,6 +24,10 @@ const CAMINHOS = {
   sino: "M6.5 16.5V11a5.5 5.5 0 1 1 11 0v5.5l1.5 2h-14zM10 20.5h4",
   sair: "M14 4.5h4a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-4M10 16l-4-4 4-4M6 12h9",
   opcoes: "M5.5 12h.01M12 12h.01M18.5 12h.01",
+  par: "M6 7L10.33 9.5L10.33 14.5L6 17L1.67 14.5L1.67 9.5ZM18 7L22.33 9.5L22.33 14.5L18 17L13.67 14.5L13.67 9.5ZM10.33 12h3.34",
+  ordem: "M6.5 3.5h11a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1zM9 8.5h6M9 12h6M9 15.5h3.5",
+  alta: "M12 6.5 18.5 17h-13z",
+  baixa: "M12 17.5 5.5 7h13z",
 } as const;
 
 export type NomeIcone = keyof typeof CAMINHOS;
@@ -46,7 +50,7 @@ export function Icone({
       viewBox="0 0 24 24"
       fill={preenchido ? "currentColor" : "none"}
       stroke="currentColor"
-      strokeWidth={nome === "arrastar" || nome === "opcoes" ? 2.6 : 1.7}
+      strokeWidth={nome === "arrastar" || nome === "opcoes" ? 2.6 : 1.5}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
