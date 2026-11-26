@@ -20,6 +20,7 @@ def upgrade() -> None:
     sa.Column('dia', sa.Date(), nullable=False),
     sa.Column('em', sa.DateTime(), nullable=False),
     sa.Column('ator_id', sa.Integer(), nullable=False),
+    sa.Column('criada_em', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['usuario_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('usuario_id', 'sequencia', 'post_id', 'dia')

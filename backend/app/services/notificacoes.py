@@ -304,6 +304,7 @@ def _gravar_entregues(
     recorte: datetime,
     pagina: list[dict],
 ) -> None:
+    agora = agora_utc()
     linhas = [
         {
             "usuario_id": usuario_id,
@@ -313,6 +314,7 @@ def _gravar_entregues(
             "dia": item["em"].date(),
             "em": item["pos"][0],
             "ator_id": item["pos"][2],
+            "criada_em": agora,
         }
         for item in pagina
         if item["tipo"] == "curtida"
@@ -355,11 +357,13 @@ def listar(
         db.execute(
             delete(NotificacaoEntregue).where(
                 NotificacaoEntregue.usuario_id == pessoa.id,
-                NotificacaoEntregue.recorte < agora_utc() - timedelta(days=1),
+                NotificacaoEntregue.criada_em < agora_utc() - timedelta(days=1),
             )
         )
     total = len(itens)
-    entregues = _carregar_entregues(db, pessoa.id, sequencia)
+    entregues = (
+        _carregar_entregues(db, pessoa.id, sequencia) if posicao is not None else {}
+    )
     pagina, tem_mais = _recortar(itens, posicao, antes_de, offset, limit, entregues)
     proximo = None
     if pagina and tem_mais:
@@ -370,20 +374,20 @@ def listar(
             _gravar_entregues(db, pessoa.id, sequencia, recorte_cursor, pagina)
             db.commit()
             entregues = _carregar_entregues(db, pessoa.id, sequencia)
-            divergente = any(
-                (item["pos"][0], item["pos"][2])
-                != entregues.get((item["chave"], item["em"].date()))
-                for item in pagina
-                if item["tipo"] == "curtida"
+            anterior = [(id(item), item["pos"]) for item in pagina]
+            pagina, tem_mais = _recortar(
+                itens, posicao, antes_de, offset, limit, entregues
             )
-            if not divergente:
-                proximo = _codificar_cursor(recorte_cursor, sequencia, pagina[-1])
+            if [(id(item), item["pos"]) for item in pagina] == anterior:
+                if tem_mais:
+                    proximo = _codificar_cursor(recorte_cursor, sequencia, pagina[-1])
+                break
+            if not pagina or not tem_mais:
                 break
             if tentativa == 2:
-                raise HTTPException(status_code=409, detail="notificações mudaram; tente de novo")
-            pagina, tem_mais = _recortar(itens, posicao, antes_de, offset, limit, entregues)
-            if not tem_mais or not pagina:
-                break
+                raise HTTPException(
+                    status_code=409, detail="notificações mudaram; tente de novo"
+                )
         if limpeza_pendente:
             db.commit()
     elif limpeza_pendente:

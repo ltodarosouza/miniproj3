@@ -3,6 +3,7 @@ from datetime import date, datetime
 from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.tempo import agora_utc
 from app.db import Base
 
 
@@ -18,3 +19,4 @@ class NotificacaoEntregue(Base):
     dia: Mapped[date]
     em: Mapped[datetime]
     ator_id: Mapped[int]
+    criada_em: Mapped[datetime] = mapped_column(default=agora_utc)
