@@ -55,10 +55,14 @@ async function request<T>(method: string, path: string, body?: unknown, opcoes: 
   });
 
   // 401 com token salvo = token que não vale mais. Joga o token fora; os pedidos
-  // do chat passam redirecionarNo401: false para mostrar "Sessão encerrada" na própria tela.
+  // da conversa mostram "Sessão encerrada" na própria tela.
   if (res.status === 401 && typeof window !== "undefined" && localStorage.getItem("token")) {
     limparSessao();
-    if (opcoes.redirecionarNo401 !== false && window.location.pathname !== "/login") window.location.href = "/login";
+    const pathname = window.location.pathname;
+    const conversaAberta = /^\/mensagens\/[^/]+\/?$/.test(pathname);
+    if (opcoes.redirecionarNo401 !== false && pathname !== "/login" && !conversaAberta) {
+      window.location.href = "/login";
+    }
   }
 
   if (!res.ok) {
