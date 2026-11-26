@@ -13,7 +13,7 @@ import { detalharHabilidade, type DetalheHabilidade } from "@/lib/busca";
 function Pessoas({ titulo, numero, pessoas, vazio }: { titulo: string; numero: string; pessoas: User[]; vazio: string }) {
   return (
     <section className="min-w-0">
-      <h2 className="font-mono text-xs font-medium uppercase tracking-[0.08em] text-texto-3">
+      <h2 className="text-[0.8125rem] font-semibold text-texto-3">
         {numero} · {titulo} <span className="font-mono numeros text-texto-3">({pessoas.length})</span>
       </h2>
       {pessoas.length === 0 ? (
@@ -70,17 +70,17 @@ export default function PaginaHabilidade() {
       ) : (
         <>
           <header>
-            <p className="font-mono text-xs uppercase tracking-[0.08em] text-texto-3">
+            <p className="text-[0.8125rem] text-texto-3 font-semibold">
               {detalhe.habilidade.categoria === "tech" ? "Tecnologia" : "Disciplina"} · #{detalhe.habilidade.id}
             </p>
             <h1 className="mt-1 break-words font-display text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">{detalhe.habilidade.nome}</h1>
             <dl className="mt-4 grid grid-cols-2 divide-x divide-linha border-y border-linha">
               <div className="px-3 py-3 first:pl-0">
-                <dt className="font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3">Sabem</dt>
+                <dt className="text-[0.8125rem] text-texto-3 font-semibold">Sabem</dt>
                 <dd className="font-mono numeros text-2xl font-semibold text-texto">{detalhe.sabem.length}</dd>
               </div>
               <div className="px-3 py-3 first:pl-0">
-                <dt className="font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3">Querem aprender</dt>
+                <dt className="text-[0.8125rem] text-texto-3 font-semibold">Querem aprender</dt>
                 <dd className="flex items-center gap-2 font-mono numeros text-2xl font-semibold text-texto">
                   {detalhe.querem.length}
                   {detalhe.querem.length > detalhe.sabem.length && (
@@ -95,7 +95,7 @@ export default function PaginaHabilidade() {
             <Pessoas numero="02" titulo="Quem quer aprender" pessoas={detalhe.querem} vazio="Ninguém marcou que quer aprender ainda." />
           </div>
           <section>
-            <h2 className="font-mono text-xs font-medium uppercase tracking-[0.08em] text-texto-3">03 · Posts</h2>
+            <h2 className="text-[0.8125rem] font-semibold text-texto-3">03 · Posts</h2>
             {detalhe.posts.length === 0 ? (
               <p className="mt-3 text-sm text-texto-3">Ninguém publicou sobre {detalhe.habilidade.nome} ainda.</p>
             ) : (

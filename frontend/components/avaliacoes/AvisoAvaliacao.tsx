@@ -130,12 +130,12 @@ export function AvisoAvaliacao() {
             {(troca.habilidade_ensino || troca.habilidade_aprendo) && (
               <div className="mx-4 mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-y border-linha py-2 text-sm">
                 <div className="min-w-0">
-                  <span className="block font-mono text-[11px] uppercase tracking-[0.08em] text-texto-3">Ensinou</span>
+                  <span className="block text-[0.8125rem] text-texto-3 font-semibold">Ensinou</span>
                   <span className="block wrap-anywhere font-mono text-xs text-texto">{troca.proposta_por.id === usuarioId ? troca.habilidade_ensino?.nome ?? "—" : troca.habilidade_aprendo?.nome ?? "—"}</span>
                 </div>
                 <span className="text-texto-3" aria-hidden="true">⇄</span>
                 <div className="min-w-0 text-right">
-                  <span className="block font-mono text-[11px] uppercase tracking-[0.08em] text-texto-3">Aprendeu</span>
+                  <span className="block text-[0.8125rem] text-texto-3 font-semibold">Aprendeu</span>
                   <span className="block wrap-anywhere font-mono text-xs text-texto">{troca.proposta_por.id === usuarioId ? troca.habilidade_aprendo?.nome ?? "—" : troca.habilidade_ensino?.nome ?? "—"}</span>
                 </div>
               </div>

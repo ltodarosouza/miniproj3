@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
+import { Fira_Sans, IBM_Plex_Mono, Literata } from "next/font/google";
 
 import { Navegacao } from "@/components/ui/Navegacao";
 import { AvisoAvaliacao } from "@/components/avaliacoes/AvisoAvaliacao";
@@ -9,8 +9,9 @@ import { SCRIPT_TEMA } from "@/lib/tema";
 
 import "./globals.css";
 
-const grotesk = Space_Grotesk({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--fonte-grotesk" });
-const plexSans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--fonte-plex-sans" });
+// Literata (com eixo óptico) nos títulos e no texto dos posts; Fira Sans na interface; Plex Mono só nos números.
+const literata = Literata({ subsets: ["latin"], axes: ["opsz"], variable: "--fonte-literata" });
+const fira = Fira_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--fonte-fira" });
 const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--fonte-plex-mono" });
 
 export const metadata: Metadata = {
@@ -38,7 +39,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR" className={`${grotesk.variable} ${plexSans.variable} ${plexMono.variable}`} suppressHydrationWarning>
+    <html lang="pt-BR" className={`${literata.variable} ${fira.variable} ${plexMono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
         <script dangerouslySetInnerHTML={{ __html: 'try{document.documentElement.dataset.logado=localStorage.getItem("token")?"sim":"nao"}catch(e){}' }} />

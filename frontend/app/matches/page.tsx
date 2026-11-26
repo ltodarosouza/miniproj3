@@ -35,7 +35,7 @@ function TabelaPares({
   return (
     <section className="space-y-3">
       <header>
-        <h2 className="font-mono text-xs font-medium uppercase tracking-[0.08em] text-texto-3">{rotulo}</h2>
+        <h2 className="text-[0.8125rem] font-semibold text-texto-3">{rotulo}</h2>
         <p className="text-sm text-texto-2">{descricao}</p>
       </header>
       {itens.length === 0 ? (
@@ -43,7 +43,7 @@ function TabelaPares({
       ) : (
         <table role="table" aria-label={rotulo} className="block w-full">
           <thead role="rowgroup" className="sr-only sm:not-sr-only sm:block">
-            <tr role="row" className={`${colunas} items-center gap-4 pl-4 pr-1 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3 sm:grid`}>
+            <tr role="row" className={`${colunas} items-center gap-4 pl-4 pr-1 text-[0.8125rem] text-texto-3 sm:grid font-semibold`}>
               <th role="columnheader" scope="col" className="text-left font-normal">Pessoa</th>
               <th role="columnheader" scope="col" className="text-left font-normal">Te ensina</th>
               {troca && <th role="columnheader" scope="col" className="text-left font-normal">Você ensina</th>}
@@ -64,11 +64,11 @@ function TabelaPares({
                   </Link>
                 </td>
                 <td role="cell" className={`${habilidades} ${troca ? "col-span-3" : "col-span-6"} sm:col-span-1`}>
-                  <span aria-hidden="true" className="basis-full font-mono text-[0.6875rem] uppercase text-texto-3 sm:hidden">Te ensina</span>
+                  <span aria-hidden="true" className="basis-full text-[0.8125rem] text-texto-3 sm:hidden font-semibold">Te ensina</span>
                   {m.me_ensina.map((h) => <TagHabilidade key={h.id} nome={h.nome} tipo="sei" nivel={h.nivel} />)}
                 </td>
                 {troca && <td role="cell" className={`${habilidades} col-span-3 sm:col-span-1`}>
-                  <span aria-hidden="true" className="basis-full font-mono text-[0.6875rem] uppercase text-texto-3 sm:hidden">Você ensina</span>
+                  <span aria-hidden="true" className="basis-full text-[0.8125rem] text-texto-3 sm:hidden font-semibold">Você ensina</span>
                   {m.eu_ensino.map((h) => <TagHabilidade key={h.id} nome={h.nome} tipo="sei" nivel={h.nivel} />)}
                 </td>}
                 <td role="cell" className="order-1 col-span-2 justify-self-end sm:order-last sm:col-span-1">
@@ -91,7 +91,7 @@ function EmAndamento({ itens }: { itens: Match[] }) {
   return (
     <details className="group">
       <summary className="flex cursor-pointer list-none items-center gap-3 py-1 [&::-webkit-details-marker]:hidden">
-        <span className="font-mono text-xs font-medium uppercase tracking-[0.08em] text-texto-3">03 · Em andamento</span>
+        <span className="text-[0.8125rem] font-semibold text-texto-3">03 · Em andamento</span>
         <span className="font-mono numeros text-xs text-texto-3">{quantidade}</span>
         <span className="text-sm text-texto-2 transition-transform duration-[var(--rapido)] group-open:rotate-180 motion-reduce:transition-none" aria-hidden>
           ▾

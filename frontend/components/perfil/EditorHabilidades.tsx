@@ -23,7 +23,7 @@ type ItemEditor = {
 
 const NIVEIS = [1, 2, 3, 4, 5];
 const TOTAL_SUGESTOES = 6;
-const ROTULO = "font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3";
+const ROTULO = "text-[0.8125rem] text-texto-3 font-semibold";
 const FOCO =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca";
 const NOME_TIPO: Record<TipoHabilidade, string> = { sei: "Sei", quero_aprender: "Quero aprender" };
@@ -312,7 +312,7 @@ export function EditorHabilidades({
           <section key={tipo} aria-labelledby={`registro-${tipo}`}>
             <h3 id={`registro-${tipo}`} className={`flex items-baseline justify-between border-b border-linha pb-2 ${ROTULO}`}>
               <span>
-                <span className="text-texto-2 numeros">{numero}</span> · {NOME_TIPO[tipo]}
+                <span className="font-mono font-medium text-texto-2 numeros">{numero}</span> · {NOME_TIPO[tipo]}
               </span>
               <span className="numeros">{lista.length}</span>
             </h3>

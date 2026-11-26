@@ -284,7 +284,7 @@ export function FormAgendarTroca({
         </div>
 
         <section aria-label="Resumo da ordem" className="min-w-0 rounded-controle border border-linha bg-superficie-2 px-3 py-2.5 text-sm [overflow-wrap:anywhere]">
-          <p className="font-mono text-xs uppercase tracking-wide text-texto-3">Resumo da ordem</p>
+          <p className="text-[0.8125rem] text-texto-3 font-semibold">Resumo da ordem</p>
           <p className="flex flex-wrap gap-x-1">
             <span>Você ensina <span aria-hidden="true">→</span></span>
             <span className="min-w-0">{nomeEnsino}</span>

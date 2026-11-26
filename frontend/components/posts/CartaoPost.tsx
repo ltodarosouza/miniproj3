@@ -137,7 +137,7 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApaga
         </time>
         <div className="col-start-2 min-w-0">
           {marcacao && (
-            <p className="mb-2 h-4 font-mono text-[0.6875rem] uppercase leading-4 tracking-[0.08em] text-texto-2">
+            <p className="mb-2 h-4 text-[0.8125rem] leading-4 text-texto-2 font-semibold">
               {marcacao}
             </p>
           )}
@@ -169,7 +169,7 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApaga
             />
           ) : (
             <>
-              <p className="mt-2.5 max-w-[65ch] whitespace-pre-line break-words text-[0.9375rem] leading-relaxed text-texto">
+              <p className="mt-2.5 max-w-[65ch] whitespace-pre-line break-words font-conteudo text-base leading-relaxed text-texto">
                 {post.texto}
               </p>
 

@@ -17,8 +17,8 @@ function Bloco({ numero, titulo, acao, children }: { numero: string; titulo: str
   return (
     <section aria-labelledby={`bloco-${numero}`} className="border-t border-linha pt-3">
       <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h2 id={`bloco-${numero}`} className="font-mono text-xs uppercase tracking-[0.08em] text-texto-3">
-          <span className="text-marca-forte numeros">{numero}</span> · {titulo}
+        <h2 id={`bloco-${numero}`} className="text-[0.8125rem] text-texto-3 font-semibold">
+          <span className="font-mono font-medium text-marca-forte numeros">{numero}</span> · {titulo}
         </h2>
         {acao}
       </div>

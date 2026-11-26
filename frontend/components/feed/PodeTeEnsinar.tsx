@@ -54,7 +54,7 @@ export function CarrosselPodeTeEnsinar({ pessoas }: { pessoas: Match[] }) {
   return (
     <section aria-labelledby="carrossel-ensinar" className="min-w-0 space-y-3 lg:hidden">
       <div className="flex items-baseline justify-between">
-        <h2 id="carrossel-ensinar" className="font-mono text-xs uppercase tracking-[0.08em] text-texto-3">
+        <h2 id="carrossel-ensinar" className="text-[0.8125rem] text-texto-3 font-semibold">
           Pode te ensinar
         </h2>
         <Link href="/matches" className="text-sm text-marca-forte hover:underline">

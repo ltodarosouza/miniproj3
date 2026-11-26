@@ -10,7 +10,7 @@ export default function MensagensPage() {
   return (
     <div className="hidden h-full min-h-0 flex-col justify-center px-10 md:flex">
       <div className="max-w-sm">
-        <p className="font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3">Nenhuma conversa aberta</p>
+        <p className="text-[0.8125rem] text-texto-3 font-semibold">Nenhuma conversa aberta</p>
         <h2 className="mt-2 font-display text-xl font-semibold tracking-tight text-texto">Suas conversas</h2>
         <p className="mt-2 text-sm leading-relaxed text-texto-2">
           Escolha uma conversa ao lado ou encontre alguém nos seus matches para combinar uma troca.

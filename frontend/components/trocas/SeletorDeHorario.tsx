@@ -201,7 +201,7 @@ export function SeletorDeHorario({
       </div>
 
       <div className="space-y-2">
-        <p className="font-mono text-xs uppercase tracking-wide text-texto-2">Horário</p>
+        <p className="text-[0.8125rem] text-texto-2 font-semibold">Horário</p>
         <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
           {HORARIOS.map((horario) => {
             const indisponivel = !data || horarioPassou(data, horario);

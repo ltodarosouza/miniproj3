@@ -21,7 +21,7 @@ export function Cartao({
       {...resto}
     >
       {rotulo && (
-        <header className="mb-3 border-b border-linha pb-2 font-mono text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-texto-2">
+        <header className="mb-3 border-b border-linha pb-2 text-[0.8125rem] font-semibold text-texto-2">
           {rotulo}
         </header>
       )}
