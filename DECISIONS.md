@@ -695,7 +695,7 @@ A decisão 1 é a escolha que vai para o vídeo/pitch, conforme [docs/AVALIACAO.
 
 ## Decisões da repaginada Colmatch
 
-Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada decisão desta rodada está em `docs/decisoes/<número>-<nome>.md`.
+Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada decisão desta rodada está em `docs/decisoes/<número>-<nome>.md`. Não há decisão 35.
 
 - [27. Bypass `X-User-Id` só no dev: produção recusa o boot com DEBUG](docs/decisoes/27-bypass-so-no-dev.md).
 - [28. Troca só avalia o que aconteceu](docs/decisoes/28-troca-so-avalia-o-que-aconteceu.md).
@@ -712,6 +712,9 @@ Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada de
 - [38. Notificações como registro de atividade, com cursor opaco no front](docs/decisoes/38-notificacoes-registro-e-cursor.md).
 
 ## Features
+
+Dono é quem abriu o PR que entregou a feature; quando uma entrega posterior foi
+de outra pessoa, as duas aparecem com o número do PR.
 
 | Feature | Dono | Por quê (1 frase) |
 |---|---|---|
@@ -730,9 +733,9 @@ Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada de
 | Avaliação pós-troca | @ltodarosouza | Passa confiança sobre quem ensina bem. |
 | Deploy | @ltodarosouza | Bônus de +10 e banca testando na URL. |
 | Notificações | @ltodarosouza | Mantêm a pessoa informada sobre atividade e mensagens. |
-| Busca de pessoas e habilidades | @gecbeltrao | Ajuda a encontrar pessoas e habilidades relevantes. |
+| Busca de pessoas e habilidades | @gecbeltrao (busca, #56); @ltodarosouza (repaginada em paleta, #87) | Ajuda a encontrar pessoas e habilidades relevantes. |
 | Mesa/Diário com cotação da semana | @gecbeltrao | Reúne a rotina de estudo e o contexto das habilidades em alta. |
-| Fotos de post e de perfil | @NicoleAlverga | Dá contexto visual às publicações e aos perfis. |
+| Fotos de post e de perfil | @NicoleAlverga (foto do post, #31); @ltodarosouza (foto de perfil por arquivo, #65) | Dá contexto visual às publicações e aos perfis. |
 | Identidade Colmatch | @ltodarosouza | Dá unidade visual e nome à rede. |
 
 **Ficou de fora, e por quê:**
