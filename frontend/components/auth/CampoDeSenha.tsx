@@ -21,7 +21,7 @@ export function CampoDeSenha({ rotulo = "Senha", ...resto }: Props) {
           type="button"
           onClick={() => setVisivel((atual) => !atual)}
           aria-pressed={visivel}
-          className="rounded-controle px-2 py-1 text-sm font-medium text-texto-2 transition-colors hover:text-texto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca"
+          className="rounded-controle px-2 py-1 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-2 transition-colors hover:text-texto"
         >
           {visivel ? "Ocultar" : "Mostrar"}
         </button>

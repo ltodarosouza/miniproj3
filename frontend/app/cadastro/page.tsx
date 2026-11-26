@@ -4,11 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { CabecalhoAuth } from "@/components/auth/CabecalhoAuth";
+import { CabecalhoAuth, TelaAuth } from "@/components/auth/CabecalhoAuth";
 import { CampoDeSenha } from "@/components/auth/CampoDeSenha";
 import { Botao } from "@/components/ui/Botao";
 import { Campo } from "@/components/ui/Campo";
-import { Cartao } from "@/components/ui/Cartao";
 import { ErroApi, registrar } from "@/lib/api";
 import { entrar } from "@/lib/auth";
 import { temToken } from "@/lib/sessao";
@@ -118,11 +117,10 @@ export default function CadastroPage() {
   }
 
   return (
-    <div className="flex min-h-[70vh] items-center justify-center py-4">
-      <Cartao className="w-full max-w-md p-6 sm:p-8">
+    <TelaAuth>
         <CabecalhoAuth
           titulo="Criar conta"
-          descricao="Diga o que você sabe e o que quer aprender. A rede encontra a troca."
+          descricao="Leva um minuto. Depois você conta o que sabe e o que quer aprender."
         />
 
         <form onSubmit={enviar} noValidate className="space-y-4">
@@ -198,7 +196,7 @@ export default function CadastroPage() {
           {erroGeral && (
             <p
               role="alert"
-              className="rounded-controle bg-superficie-2 px-3 py-2 text-sm text-perigo"
+              className="border-l-2 border-perigo pl-3 text-sm text-perigo"
             >
               {erroGeral}
             </p>
@@ -209,13 +207,12 @@ export default function CadastroPage() {
           </Botao>
         </form>
 
-        <p className="mt-6 text-center text-sm text-texto-2">
+        <p className="mt-6 border-t border-linha pt-5 text-sm text-texto-2">
           Já tem conta?{" "}
-          <Link href="/login" className="font-medium text-marca-forte hover:underline">
+          <Link href="/login" className="font-medium text-texto underline decoration-linha-forte underline-offset-4 hover:decoration-texto">
             Entrar
           </Link>
         </p>
-      </Cartao>
-    </div>
+    </TelaAuth>
   );
 }

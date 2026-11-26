@@ -4,11 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { CabecalhoAuth } from "@/components/auth/CabecalhoAuth";
+import { CabecalhoAuth, TelaAuth } from "@/components/auth/CabecalhoAuth";
 import { CampoDeSenha } from "@/components/auth/CampoDeSenha";
 import { Botao } from "@/components/ui/Botao";
 import { Campo } from "@/components/ui/Campo";
-import { Cartao } from "@/components/ui/Cartao";
 import { ErroApi } from "@/lib/api";
 import { entrar } from "@/lib/auth";
 import { temToken } from "@/lib/sessao";
@@ -49,11 +48,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-[70vh] items-center justify-center">
-      <Cartao className="w-full max-w-sm p-6 sm:p-8">
+    <TelaAuth>
         <CabecalhoAuth
           titulo="Entrar"
-          descricao="Troque o que você sabe pelo que você quer aprender."
+          descricao="Use seu nome de usuário e senha."
         />
 
         <form onSubmit={enviar} noValidate className="space-y-4">
@@ -87,7 +85,7 @@ export default function LoginPage() {
           {erro && (
             <p
               role="alert"
-              className="rounded-controle bg-superficie-2 px-3 py-2 text-sm text-perigo"
+              className="border-l-2 border-perigo pl-3 text-sm text-perigo"
             >
               {erro}
             </p>
@@ -98,13 +96,12 @@ export default function LoginPage() {
           </Botao>
         </form>
 
-        <p className="mt-6 text-center text-sm text-texto-2">
+        <p className="mt-6 border-t border-linha pt-5 text-sm text-texto-2">
           Ainda não tem conta?{" "}
-          <Link href="/cadastro" className="font-medium text-marca-forte hover:underline">
+          <Link href="/cadastro" className="font-medium text-texto underline decoration-linha-forte underline-offset-4 hover:decoration-texto">
             Criar conta
           </Link>
         </p>
-      </Cartao>
-    </div>
+    </TelaAuth>
   );
 }
