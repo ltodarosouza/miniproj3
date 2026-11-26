@@ -6,11 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import { EditorHabilidades } from "@/components/perfil/EditorHabilidades";
 import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { Avatar } from "@/components/ui/Avatar";
-import { Cartao } from "@/components/ui/Cartao";
 import { AreaTexto } from "@/components/ui/Campo";
 import { ErroApi, eu } from "@/lib/api";
 import { atualizarPerfil, buscarPerfil, enviarAvatar, removerAvatar, type Perfil } from "@/lib/perfil";
 import { LADO_MAXIMO_AVATAR, prepararImagem } from "@/lib/imagens";
+import { prefereMenosMovimento } from "@/lib/movimento";
 import { temToken } from "@/lib/sessao";
 
 export default function EditarPerfilPage() {
@@ -54,9 +54,7 @@ export default function EditarPerfilPage() {
 
   useEffect(() => {
     if (carregando || window.location.hash !== "#habilidades") return;
-    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      ? "auto"
-      : "smooth";
+    const behavior = prefereMenosMovimento() ? "auto" : "smooth";
     document.getElementById("habilidades")?.scrollIntoView({ behavior, block: "start" });
   }, [carregando]);
 
@@ -126,8 +124,8 @@ export default function EditarPerfilPage() {
   if (carregando) {
     return (
       <div className="mx-auto w-full max-w-2xl space-y-4" aria-label="Carregando seu perfil">
-        <div className="h-48 animate-pulse rounded-cartao bg-superficie-2 motion-reduce:animate-none" />
-        <div className="h-64 animate-pulse rounded-cartao bg-superficie-2 motion-reduce:animate-none" />
+        <div className="h-48 animate-pulse rounded-controle bg-superficie-2 motion-reduce:animate-none" />
+        <div className="h-64 animate-pulse rounded-controle bg-superficie-2 motion-reduce:animate-none" />
       </div>
     );
   }
@@ -146,65 +144,63 @@ export default function EditarPerfilPage() {
   if (!perfil) return null;
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-8">
+    <div className="mx-auto w-full max-w-3xl space-y-10">
       <header>
-        <h1 className="text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">
+        <h1 className="font-display text-[2rem] font-bold leading-tight tracking-[-0.025em] text-texto">
           Editar perfil
         </h1>
         <p className="mt-1 text-sm text-texto-2">Conte quem você é e o que quer trocar.</p>
       </header>
 
-      <section aria-labelledby="titulo-sobre">
-        <Cartao className="space-y-5 p-5">
-          <h2 id="titulo-sobre" className="text-lg font-semibold tracking-tight text-texto">
-            Sobre você
-          </h2>
-          <form onSubmit={enviar} className="space-y-5">
-            <AreaTexto
-              rotulo="Bio"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              maxLength={280}
-              placeholder="Conte um pouco sobre você e o que quer aprender..."
-              dica="Máximo de 280 caracteres"
-            />
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-texto">Foto de perfil</h3>
-              <div className="flex items-center gap-4">
+      <section aria-labelledby="titulo-sobre" className="space-y-5 border-t border-linha pt-4">
+        <h2 id="titulo-sobre" className="font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3">
+          <span className="text-texto-2 numeros">01</span> · Sobre você
+        </h2>
+        <form onSubmit={enviar} className="space-y-5">
+          <AreaTexto
+            rotulo="Bio"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            maxLength={280}
+            placeholder="Conte um pouco sobre você e o que quer aprender..."
+            dica="Máximo de 280 caracteres"
+          />
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-texto">Foto de perfil</h3>
+            <div className="flex items-center gap-4">
+              <span className="shrink-0 *:size-20! *:text-2xl!">
                 <Avatar tamanho="lg" nome={perfil.name} url={avatarUrl} />
-                <div className="flex flex-wrap gap-3">
-                  <input ref={inputFoto} type="file" accept="image/*" className="sr-only" onChange={escolherFoto} />
-                  <Botao type="button" variante="secundario" disabled={alterandoFoto} onClick={() => inputFoto.current?.click()}>
-                    {avatarUrl ? "Trocar foto" : "Escolher foto"}
-                  </Botao>
-                  {avatarUrl && <Botao type="button" variante="fantasma" disabled={alterandoFoto} onClick={apagarFoto}>Remover foto</Botao>}
-                </div>
+              </span>
+              <div className="flex flex-wrap gap-3">
+                <input ref={inputFoto} type="file" accept="image/*" className="sr-only" onChange={escolherFoto} />
+                <Botao type="button" variante="secundario" disabled={alterandoFoto} onClick={() => inputFoto.current?.click()}>
+                  {avatarUrl ? "Trocar foto" : "Escolher foto"}
+                </Botao>
+                {avatarUrl && <Botao type="button" variante="fantasma" disabled={alterandoFoto} onClick={apagarFoto}>Remover foto</Botao>}
               </div>
-              <p className="text-sm text-texto-2">JPG, PNG ou WebP. A gente reduz o tamanho automaticamente.</p>
-              {alterandoFoto && <p role="status" className="text-sm text-texto-2">Enviando foto…</p>}
-              {erro && <p role="alert" className="text-sm text-perigo">{erro}</p>}
             </div>
-            {salvo && <p role="status" className="text-sm text-sucesso">Perfil salvo.</p>}
-            <div className="flex flex-wrap gap-3">
-              <Botao type="submit" variante="secundario" carregando={salvando}>Salvar perfil</Botao>
-              <BotaoLink href={`/perfil/${encodeURIComponent(perfil.username)}`} variante="fantasma">
-                Ver meu perfil
-              </BotaoLink>
-            </div>
-          </form>
-        </Cartao>
+            <p className="text-sm text-texto-2">JPG, PNG ou WebP. A gente reduz o tamanho automaticamente.</p>
+            {alterandoFoto && <p role="status" className="text-sm text-texto-2">Enviando foto…</p>}
+            {erro && <p role="alert" className="text-sm text-perigo">{erro}</p>}
+          </div>
+          {salvo && <p role="status" className="text-sm text-sucesso">Perfil salvo.</p>}
+          <div className="flex flex-wrap gap-3">
+            <Botao type="submit" variante="secundario" carregando={salvando}>Salvar perfil</Botao>
+            <BotaoLink href={`/perfil/${encodeURIComponent(perfil.username)}`} variante="fantasma">
+              Ver meu perfil
+            </BotaoLink>
+          </div>
+        </form>
       </section>
 
-      <section id="habilidades" aria-labelledby="titulo-habilidades" className="scroll-mt-20">
-        <Cartao className="space-y-5 p-5">
-          <div>
-            <h2 id="titulo-habilidades" className="text-lg font-semibold tracking-tight text-texto">
-              Habilidades
-            </h2>
-            <p className="text-sm text-texto-2">É daqui que saem seus matches.</p>
-          </div>
-          <EditorHabilidades iniciais={perfil.habilidades} />
-        </Cartao>
+      <section id="habilidades" aria-labelledby="titulo-habilidades" className="scroll-mt-20 space-y-5 border-t border-linha pt-4">
+        <div>
+          <h2 id="titulo-habilidades" className="font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3">
+            <span className="text-texto-2 numeros">02</span> · Habilidades
+          </h2>
+          <p className="mt-1 text-sm text-texto-2">É daqui que saem seus matches.</p>
+        </div>
+        <EditorHabilidades iniciais={perfil.habilidades} />
       </section>
     </div>
   );

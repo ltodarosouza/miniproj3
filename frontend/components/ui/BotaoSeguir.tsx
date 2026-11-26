@@ -16,11 +16,17 @@ export function BotaoSeguir({
   username,
   seguindoInicial,
   tamanho = "md",
+  contorno = false,
+  sobreGrafite = false,
   aoMudar,
 }: {
   username: string;
   seguindoInicial?: boolean | null;
   tamanho?: "sm" | "md";
+  // Contorno sempre (ficha e listas): seguir fica secundário ao lado de "Propor troca".
+  contorno?: boolean;
+  // Na faixa grafite do perfil o contorno usa a cor clara da faixa.
+  sobreGrafite?: boolean;
   aoMudar?: (estado: EstadoFollow) => void;
 }) {
   const router = useRouter();
@@ -58,9 +64,14 @@ export function BotaoSeguir({
 
   if (logado === null) return null;
 
+  const sempreContorno = contorno || sobreGrafite;
+  const classeContorno = sobreGrafite
+    ? "border-grafite-texto/50! text-grafite-texto! hover:border-grafite-texto!"
+    : "";
+
   if (!logado) {
     return (
-      <Botao tamanho={tamanho} onClick={() => router.push("/login")}>
+      <Botao variante={sempreContorno ? "secundario" : "primario"} tamanho={tamanho} className={classeContorno} onClick={() => router.push("/login")}>
         Seguir
       </Botao>
     );
@@ -69,7 +80,7 @@ export function BotaoSeguir({
   if (seguindo === null && erro) {
     return (
       <span className="inline-flex flex-col items-end gap-1">
-        <Botao variante="secundario" tamanho={tamanho} onClick={() => setTentativa((t) => t + 1)}>
+        <Botao variante="secundario" tamanho={tamanho} className={classeContorno} onClick={() => setTentativa((t) => t + 1)}>
           Tentar de novo
         </Botao>
         <span role="alert" className="text-xs text-perigo">
@@ -98,8 +109,9 @@ export function BotaoSeguir({
   return (
     <span className="inline-flex flex-col items-end gap-1">
       <Botao
-        variante={seguindo ? "secundario" : "primario"}
+        variante={sempreContorno || seguindo ? "secundario" : "primario"}
         tamanho={tamanho}
+        className={classeContorno}
         carregando={carregando || seguindo === null}
         onClick={alternar}
         aria-pressed={seguindo ?? undefined}

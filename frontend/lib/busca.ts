@@ -30,3 +30,8 @@ export function buscar(q: string, tipo: TipoBusca, offset = 0, limit = 20): Prom
 export function detalharHabilidade(id: number): Promise<DetalheHabilidade> {
   return apiGet(`/busca/habilidades/${id}`);
 }
+
+// Compara textos sem diferenciar acento nem maiúscula: "calculo" acha "Cálculo 1".
+export function normalizar(texto: string): string {
+  return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}

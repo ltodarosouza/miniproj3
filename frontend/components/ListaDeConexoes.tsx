@@ -6,7 +6,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Botao } from "@/components/ui/Botao";
 import { BotaoSeguir } from "@/components/ui/BotaoSeguir";
-import { Cartao } from "@/components/ui/Cartao";
 import { ErroApi, listarConexoes, type Conexao } from "@/lib/api";
 import { meuId } from "@/lib/sessao";
 
@@ -75,16 +74,26 @@ export function ListaDeConexoes({ username, tipo }: { username: string; tipo: Ti
 
   return (
     <div className="space-y-6">
-      <header className="space-y-3">
-        <p className="text-sm text-texto-2">@{username}</p>
-        <nav className="flex gap-2 text-sm">
+      <header className="space-y-4">
+        <div>
+          <h1 className="font-display text-[2rem] font-bold leading-tight tracking-[-0.025em] text-texto">
+            {tipo === "seguidores" ? "Seguidores" : "Seguindo"}
+          </h1>
+          <Link
+            href={`/perfil/${encodeURIComponent(username)}`}
+            className="font-mono text-xs text-texto-3 hover:text-texto hover:underline"
+          >
+            @{username}
+          </Link>
+        </div>
+        <nav aria-label="Conexões" className="flex gap-5 border-b border-linha text-sm">
           {(["seguidores", "seguindo"] as const).map((aba) => (
             <Link
               key={aba}
               href={`/usuarios/${encodeURIComponent(username)}/${aba}`}
               aria-current={tipo === aba ? "page" : undefined}
-              className={`rounded-controle px-3 py-1.5 ${
-                tipo === aba ? "bg-marca-suave text-marca-forte" : "text-texto-2 hover:text-texto"
+              className={`-mb-px border-b-2 pb-2 ${
+                tipo === aba ? "border-marca font-medium text-texto" : "border-transparent text-texto-2 hover:text-texto"
               }`}
             >
               {aba === "seguidores" ? "Seguidores" : "Seguindo"}
@@ -94,47 +103,47 @@ export function ListaDeConexoes({ username, tipo }: { username: string; tipo: Ti
       </header>
 
       {erro && (
-        <Cartao className="flex items-center justify-between gap-3 p-3">
+        <div className="flex items-center justify-between gap-3 border-y border-linha py-3">
           <p role="alert" className="text-sm text-texto-2">
             {erro}
           </p>
           <Botao variante="secundario" tamanho="sm" onClick={() => carregar(itens.length ? offset : 0)}>
             Tentar de novo
           </Botao>
-        </Cartao>
+        </div>
       )}
 
       {carregando && itens.length === 0 && !erro && (
-        <ul className="space-y-2" aria-hidden>
+        <ul className="divide-y divide-linha" aria-hidden>
           {[0, 1, 2].map((i) => (
-            <li key={i} className="h-16 animate-pulse rounded-cartao bg-superficie-2" />
+            <li key={i} className="py-3">
+              <div className="h-10 animate-pulse rounded-controle bg-superficie-2 motion-reduce:animate-none" />
+            </li>
           ))}
         </ul>
       )}
 
       {!erro && !carregando && itens.length === 0 && <p className="text-sm text-texto-2">{vazio}</p>}
 
-      <ul className="space-y-2">
+      <ul className="divide-y divide-linha">
         {itens.map((u) => (
-          <li key={u.id}>
-            <Cartao className="flex items-center gap-3 p-3">
+          <li key={u.id} className="flex items-center gap-3 py-3">
               <Link
                 href={`/perfil/${encodeURIComponent(u.username)}`}
                 className="flex min-w-0 flex-1 items-center gap-3 rounded-controle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
               >
                 <Avatar nome={u.name} url={u.avatar_url} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-texto hover:underline">{u.name}</p>
-                  <p className="truncate text-sm text-texto-2">
-                    @{u.username}
-                    {u.bio ? ` · ${u.bio}` : ""}
+                  <p className="flex min-w-0 items-baseline gap-2">
+                    <span className="truncate font-medium text-texto hover:underline">{u.name}</span>
+                    <span className="hidden truncate font-mono text-xs text-texto-3 sm:inline">@{u.username}</span>
                   </p>
+                  {u.bio && <p className="truncate text-sm text-texto-2">{u.bio}</p>}
                 </div>
               </Link>
               {eu !== undefined && eu !== u.id && (
-                <BotaoSeguir username={u.username} seguindoInicial={u.eu_sigo} tamanho="sm" />
+                <BotaoSeguir username={u.username} seguindoInicial={u.eu_sigo} tamanho="sm" contorno />
               )}
-            </Cartao>
           </li>
         ))}
       </ul>

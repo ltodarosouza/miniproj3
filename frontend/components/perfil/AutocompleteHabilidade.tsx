@@ -210,7 +210,7 @@ export function AutocompleteHabilidade({
             ref={listboxRef}
             id={`${id}-sugestoes`}
             role="listbox"
-            className="absolute top-full z-20 mt-1 max-h-60 w-full overflow-auto rounded-controle border border-linha-forte bg-superficie py-1 shadow-cartao"
+            className="absolute top-full z-20 mt-1 max-h-60 w-full overflow-auto rounded-controle border border-linha-forte bg-superficie py-1 shadow-alta"
           >
             {sugestoes.map((habilidade, indice) => (
               <li

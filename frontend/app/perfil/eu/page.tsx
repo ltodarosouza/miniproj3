@@ -31,7 +31,7 @@ export default function MeuPerfilPage() {
 
   if (erro) {
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="mx-auto w-full max-w-3xl">
         <p role="alert" className="text-sm text-texto-2">
           {erro}
         </p>
@@ -40,9 +40,10 @@ export default function MeuPerfilPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl items-center justify-center py-12">
-      <div className="size-8 animate-spin rounded-full border-2 border-marca border-r-transparent" />
-      <span className="sr-only">Carregando seu perfil</span>
+    <div className="mx-auto w-full max-w-3xl py-12">
+      <p role="status" className="font-mono text-xs uppercase tracking-[0.08em] text-texto-3">
+        Abrindo sua ficha…
+      </p>
     </div>
   );
 }
