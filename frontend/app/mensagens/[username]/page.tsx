@@ -211,7 +211,7 @@ export default function PaginaConversa() {
       setIdsRecentes(recebidas.filter((mensagem) => mensagem.de_username === username).map((mensagem) => mensagem.id));
       setMensagens((atuais) => reconciliarMensagens(atuais, recebidas, username));
       setSemConexao(false);
-      rolarOuMarcarNovas(trocasNovas.length ? pertoDoFim : pertoDoFim || recebidas.some((mensagem) => mensagem.de_username !== username));
+      rolarOuMarcarNovas(pertoDoFim || recebidas.some((mensagem) => mensagem.de_username !== username));
     } catch (erro: unknown) {
       if (ehSessaoEncerrada(erro)) encerrarSessao();
       else setSemConexao(true);
