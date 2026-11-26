@@ -1,3 +1,5 @@
+import threading
+
 from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -178,6 +180,7 @@ def posts_do_usuario(
 
 
 MAX_HABILIDADES = 40
+_TRANCA_HABILIDADES = threading.Lock()
 
 
 def salvar_habilidades(
@@ -199,25 +202,26 @@ def salvar_habilidades(
     if existentes != ids:
         raise HTTPException(status_code=422, detail="habilidade fora do catálogo")
 
-    antigas = list(
-        db.scalars(select(UserHabilidade).where(UserHabilidade.usuario_id == usuario.id))
-    )
-    for relacao in antigas:
-        db.delete(relacao)
-    db.flush()
-    db.add_all(
-        UserHabilidade(
-            usuario_id=usuario.id,
-            habilidade_id=item.habilidade_id,
-            tipo=item.tipo,
-            nivel=item.nivel,
+    with _TRANCA_HABILIDADES:
+        antigas = list(
+            db.scalars(select(UserHabilidade).where(UserHabilidade.usuario_id == usuario.id))
         )
-        for item in itens
-    )
-    db.commit()
+        for relacao in antigas:
+            db.delete(relacao)
+        db.flush()
+        db.add_all(
+            UserHabilidade(
+                usuario_id=usuario.id,
+                habilidade_id=item.habilidade_id,
+                tipo=item.tipo,
+                nivel=item.nivel,
+            )
+            for item in itens
+        )
+        db.commit()
 
-    for relacao in antigas:
-        indice_matches.remover(usuario.id, relacao.habilidade_id, relacao.tipo)
-    for item in itens:
-        indice_matches.adicionar(usuario.id, item.habilidade_id, item.tipo)
+        for relacao in antigas:
+            indice_matches.remover(usuario.id, relacao.habilidade_id, relacao.tipo)
+        for item in itens:
+            indice_matches.adicionar(usuario.id, item.habilidade_id, item.tipo)
     return _habilidades_do_usuario(db, usuario.id)

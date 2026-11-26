@@ -1,3 +1,6 @@
+import threading
+import time
+
 from sqlalchemy import select
 
 from app.core.matches import IndiceMatches, indice_matches
@@ -177,3 +180,77 @@ def test_troca_recusada_nao_conta_como_em_andamento(client, pessoa):
     corpo = client.get("/matches", headers=eu).json()
     assert usernames(corpo["pode_te_ensinar"]) == ["bia"]
     assert corpo["em_andamento"] == []
+
+
+def test_salvar_habilidades_em_paralelo_mantem_indice_igual_ao_banco(
+    client, pessoa, monkeypatch
+):
+    from app.models.user import User
+    from app.schemas.user import HabilidadeItem
+    from app.services import users
+
+    headers = pessoa("ana")
+    usuario_id = int(headers["X-User-Id"])
+    nomes = ["Python", "React", "Cálculo 1", "JavaScript"]
+    with SessionLocal() as db:
+        ids = {
+            nome: db.scalar(select(Habilidade.id).where(Habilidade.nome == nome))
+            for nome in nomes
+        }
+
+    inicial = [HabilidadeItem(habilidade_id=ids["React"], tipo="sei")]
+    lista_a = [
+        HabilidadeItem(habilidade_id=ids["Python"], tipo="sei"),
+        HabilidadeItem(habilidade_id=ids["React"], tipo="quero_aprender"),
+    ]
+    lista_b = [
+        HabilidadeItem(habilidade_id=ids["Cálculo 1"], tipo="sei"),
+        HabilidadeItem(habilidade_id=ids["JavaScript"], tipo="quero_aprender"),
+    ]
+    with SessionLocal() as db:
+        usuario = db.get(User, usuario_id)
+        users.salvar_habilidades(db, usuario, inicial)
+
+    remover_original = indice_matches.remover
+
+    def remover_lento(*args):
+        time.sleep(0.05)
+        remover_original(*args)
+
+    monkeypatch.setattr(indice_matches, "remover", remover_lento)
+    barreira = threading.Barrier(2)
+    erros = []
+
+    def salvar(itens):
+        try:
+            with SessionLocal() as db:
+                usuario = db.get(User, usuario_id)
+                barreira.wait()
+                users.salvar_habilidades(db, usuario, itens)
+        except Exception as erro:
+            erros.append(erro)
+
+    threads = [threading.Thread(target=salvar, args=(itens,)) for itens in (lista_a, lista_b)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert erros == []
+    with SessionLocal() as db:
+        banco = {
+            (relacao.habilidade_id, relacao.tipo)
+            for relacao in db.scalars(
+                select(UserHabilidade).where(UserHabilidade.usuario_id == usuario_id)
+            )
+        }
+    sei = {habilidade_id for habilidade_id, tipo in banco if tipo == "sei"}
+    quero = {
+        habilidade_id for habilidade_id, tipo in banco if tipo == "quero_aprender"
+    }
+    assert banco in (
+        {(item.habilidade_id, item.tipo) for item in lista_a},
+        {(item.habilidade_id, item.tipo) for item in lista_b},
+    )
+    assert indice_matches.habilidades_que_sei(usuario_id) == sei
+    assert indice_matches.habilidades_que_quero(usuario_id) == quero
