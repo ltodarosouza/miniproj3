@@ -713,6 +713,8 @@ Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada de
 - [38. Notificações como registro de atividade, com cursor opaco no front](docs/decisoes/38-notificacoes-registro-e-cursor.md).
 - [39. Mais estudadas por horas, coluna com respiro e avaliação dentro da conversa](docs/decisoes/39-ranking-por-horas-respiro-e-avaliacao-na-conversa.md).
   Pedido direto do dono; substitui o cartão flutuante de avaliação da decisão 8.
+- [40. Símbolo do Colmatch vira uma colmeia](docs/decisoes/40-logo-colmeia.md).
+  Pedido direto do dono; substitui o desenho de três células da decisão 32.
 
 ## Features
 
