@@ -1,10 +1,13 @@
 import base64
 import json
 import re
+import secrets
 from datetime import date, datetime, timedelta
 
 from fastapi import HTTPException
 from sqlalchemy import delete, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -203,10 +206,11 @@ def _ordenar(itens: list[dict]) -> None:
     itens.sort(key=lambda item: item["pos"][0], reverse=True)
 
 
-def _codificar_cursor(recorte: datetime, item: dict) -> str:
+def _codificar_cursor(recorte: datetime, sequencia: str, item: dict) -> str:
     em, tipo, ator_id, chave = item["pos"]
     dados = {
         "r": recorte.isoformat(),
+        "s": sequencia,
         "em": em.isoformat(),
         "t": tipo,
         "a": ator_id,
@@ -222,7 +226,7 @@ def _decodificar_cursor(cursor: str) -> dict:
             raise ValueError
         bruto = base64.urlsafe_b64decode(cursor + "=" * (-len(cursor) % 4))
         dados = json.loads(bruto)
-        if not isinstance(dados, dict) or set(dados) != {"r", "em", "t", "a", "k"}:
+        if not isinstance(dados, dict) or set(dados) != {"r", "s", "em", "t", "a", "k"}:
             raise ValueError
         recorte = datetime.fromisoformat(dados["r"])
         em = datetime.fromisoformat(dados["em"])
@@ -230,12 +234,15 @@ def _decodificar_cursor(cursor: str) -> dict:
             raise ValueError
         if (
             not isinstance(dados["t"], str)
+            or not isinstance(dados["s"], str)
+            or re.fullmatch(r"[0-9a-f]{16}", dados["s"]) is None
             or type(dados["a"]) is not int
             or type(dados["k"]) is not int
         ):
             raise ValueError
         return {
             "r": recorte,
+            "s": dados["s"],
             "em": em,
             "t": dados["t"],
             "a": dados["a"],
@@ -243,6 +250,77 @@ def _decodificar_cursor(cursor: str) -> dict:
         }
     except Exception as exc:
         raise HTTPException(status_code=422, detail="cursor inválido") from exc
+
+
+def _carregar_entregues(
+    db: Session, usuario_id: int, sequencia: str
+) -> dict[tuple[int, date], tuple[datetime, int]]:
+    return {
+        (linha.post_id, linha.dia): (linha.em, linha.ator_id)
+        for linha in db.scalars(
+            select(NotificacaoEntregue).where(
+                NotificacaoEntregue.usuario_id == usuario_id,
+                NotificacaoEntregue.sequencia == sequencia,
+            )
+        )
+    }
+
+
+def _recortar(
+    itens: list[dict],
+    posicao: dict | None,
+    antes_de: datetime | None,
+    offset: int,
+    limit: int,
+    entregues: dict[tuple[int, date], tuple[datetime, int]],
+) -> tuple[list[dict], bool]:
+    for item in itens:
+        item["pos"] = (item["em"], item["tipo"], item["ator_id"], item["chave"])
+        if item["tipo"] == "curtida":
+            guardado = entregues.get((item["chave"], item["em"].date()))
+            if guardado:
+                item["pos"] = (guardado[0], "curtida", guardado[1], item["chave"])
+    ordenados = list(itens)
+    _ordenar(ordenados)
+    if posicao is not None:
+        chave = (posicao["t"], posicao["a"], posicao["k"])
+        ordenados = [
+            item
+            for item in ordenados
+            if item["pos"][0] < posicao["em"]
+            or (item["pos"][0] == posicao["em"] and item["pos"][1:] > chave)
+        ]
+        inicio = 0
+    else:
+        inicio = 0 if antes_de is not None else offset
+    pagina = ordenados[inicio : inicio + limit]
+    return pagina, len(ordenados) > inicio + len(pagina)
+
+
+def _gravar_entregues(
+    db: Session,
+    usuario_id: int,
+    sequencia: str,
+    recorte: datetime,
+    pagina: list[dict],
+) -> None:
+    linhas = [
+        {
+            "usuario_id": usuario_id,
+            "sequencia": sequencia,
+            "recorte": recorte,
+            "post_id": item["chave"],
+            "dia": item["em"].date(),
+            "em": item["pos"][0],
+            "ator_id": item["pos"][2],
+        }
+        for item in pagina
+        if item["tipo"] == "curtida"
+    ]
+    if not linhas:
+        return
+    inserir = pg_insert if db.get_bind().dialect.name == "postgresql" else sqlite_insert
+    db.execute(inserir(NotificacaoEntregue).values(linhas).on_conflict_do_nothing())
 
 
 def listar(
@@ -258,8 +336,10 @@ def listar(
     posicao = _decodificar_cursor(cursor) if cursor is not None else None
     if posicao is not None:
         recorte = posicao["r"]
+        sequencia = posicao["s"]
         itens = _montar(db, pessoa, ate=recorte, inclusivo=True)
     elif antes_de is not None:
+        sequencia = secrets.token_hex(8)
         try:
             antes_de = para_utc_ingenuo(antes_de)
         except (OverflowError, ValueError) as exc:
@@ -267,6 +347,7 @@ def listar(
         itens = _montar(db, pessoa, ate=antes_de, inclusivo=False)
         recorte = antes_de
     else:
+        sequencia = secrets.token_hex(8)
         recorte = agora_utc()
         itens = _montar(db, pessoa, ate=recorte)
     limpeza_pendente = posicao is None and antes_de is None
@@ -277,69 +358,34 @@ def listar(
                 NotificacaoEntregue.recorte < agora_utc() - timedelta(days=1),
             )
         )
-    for item in itens:
-        item["pos"] = (item["em"], item["tipo"], item["ator_id"], item["chave"])
-    entregues: dict[tuple[int, date], tuple[datetime, int]] = {}
-    if posicao is not None:
-        entregues = {
-            (linha.post_id, linha.dia): (linha.em, linha.ator_id)
-            for linha in db.scalars(
-                select(NotificacaoEntregue).where(
-                    NotificacaoEntregue.usuario_id == pessoa.id,
-                    NotificacaoEntregue.recorte == posicao["r"],
-                )
-            )
-        }
-        for item in itens:
-            chave_dia = (item["chave"], item["em"].date())
-            if item["tipo"] == "curtida" and chave_dia in entregues:
-                em_guardado, ator_guardado = entregues[chave_dia]
-                item["pos"] = (em_guardado, "curtida", ator_guardado, item["chave"])
-    _ordenar(itens)
     total = len(itens)
-    if posicao is not None:
-        chave_posicao = (posicao["t"], posicao["a"], posicao["k"])
-        itens = [
-            item
-            for item in itens
-            if item["pos"][0] < posicao["em"]
-            or (
-                item["pos"][0] == posicao["em"]
-                and item["pos"][1:] > chave_posicao
-            )
-        ]
-        inicio = 0
-    elif antes_de is not None:
-        inicio = 0
-    else:
-        inicio = offset
-    pagina = itens[inicio : inicio + limit]
-    tem_mais = len(itens) > inicio + len(pagina)
+    entregues = _carregar_entregues(db, pessoa.id, sequencia)
+    pagina, tem_mais = _recortar(itens, posicao, antes_de, offset, limit, entregues)
     proximo = None
     if pagina and tem_mais:
-        ultimo = pagina[-1]
-        recorte_cursor = antes_de - timedelta(microseconds=1) if antes_de is not None else recorte
-        proximo = _codificar_cursor(recorte_cursor, ultimo)
-        novas_entregues = [
-            NotificacaoEntregue(
-                usuario_id=pessoa.id,
-                recorte=recorte_cursor,
-                post_id=item["chave"],
-                dia=item["em"].date(),
-                em=item["pos"][0],
-                ator_id=item["pos"][2],
+        recorte_cursor = (
+            antes_de - timedelta(microseconds=1) if antes_de is not None else recorte
+        )
+        for tentativa in range(3):
+            _gravar_entregues(db, pessoa.id, sequencia, recorte_cursor, pagina)
+            db.commit()
+            entregues = _carregar_entregues(db, pessoa.id, sequencia)
+            divergente = any(
+                (item["pos"][0], item["pos"][2])
+                != entregues.get((item["chave"], item["em"].date()))
+                for item in pagina
+                if item["tipo"] == "curtida"
             )
-            for item in pagina
-            if item["tipo"] == "curtida"
-            and (item["chave"], item["em"].date()) not in entregues
-        ]
-        if novas_entregues:
-            db.add_all(novas_entregues)
-        if novas_entregues or limpeza_pendente:
-            try:
-                db.commit()
-            except IntegrityError:
-                db.rollback()
+            if not divergente:
+                proximo = _codificar_cursor(recorte_cursor, sequencia, pagina[-1])
+                break
+            if tentativa == 2:
+                raise HTTPException(status_code=409, detail="notificações mudaram; tente de novo")
+            pagina, tem_mais = _recortar(itens, posicao, antes_de, offset, limit, entregues)
+            if not tem_mais or not pagina:
+                break
+        if limpeza_pendente:
+            db.commit()
     elif limpeza_pendente:
         db.commit()
     for item in pagina:
