@@ -22,7 +22,7 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
   pessoas conversam, agendam a troca e se avaliam.
 - **Como saberíamos que funcionou:** uma troca agendada termina com avaliação
   dos dois lados, e a pessoa volta para marcar outra.
-- **Onde o nicho aparece:** o catálogo reúne habilidades de programação e disciplinas da base (`backend/app/services/habilidades.py`, `CATALOGO`); o seed monta 32 pessoas, pares de troca garantidos e posts de rotina de estudo (`backend/scripts/seed.py`); a interface traz o Feed/Diário com “O que você estudou hoje?” e o livro de pares em `/matches` (decisões [32](docs/decisoes/32-identidade-colmatch-bolsa-de-saberes.md), [33](docs/decisoes/33-mesa-diario-e-cotacao.md) e [36](docs/decisoes/36-pares-e-busca.md)).
+- **Onde o nicho aparece:** o catálogo reúne habilidades de programação e disciplinas da base (`backend/app/services/habilidades.py`, `CATALOGO`); o seed monta 32 pessoas, pares de troca garantidos e posts de rotina de estudo, metade com foto ligada à habilidade (`backend/scripts/seed.py`); a interface traz o Feed/Diário com “O que você estudou hoje?” e o livro de pares em `/matches` (decisões [32](docs/decisoes/32-identidade-colmatch-bolsa-de-saberes.md), [33](docs/decisoes/33-mesa-diario-e-cotacao.md) e [36](docs/decisoes/36-pares-e-busca.md)).
 
 ## Decisões em destaque
 
@@ -717,6 +717,8 @@ Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada de
   Atualizada a pedido do dono: a coluna encosta na borda direita em telas largas.
 - [40. Símbolo do Colmatch vira uma colmeia](docs/decisoes/40-logo-colmeia.md).
   Pedido direto do dono; substitui o desenho de três células da decisão 32.
+- [41. Feed com mais imagem](docs/decisoes/41-feed-com-mais-imagem.md).
+  Pedido direto do dono.
 
 ## Features
 

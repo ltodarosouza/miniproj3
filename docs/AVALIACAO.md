@@ -55,7 +55,7 @@ seguir](../frontend/components/ui/BotaoSeguir.tsx).
 
 ### Alternativa local com seed
 
-Na raiz, rode `make seed` em um banco vazio. O script cria 32 contas, posts, follows, mensagens
+Na raiz, rode `make seed` em um banco vazio. O script cria 32 contas, 56 posts, metade com foto, follows, mensagens
 e trocas; todas as contas do seed usam a senha `senha-forte-123`
 ([`SENHA_SEED`](../backend/scripts/seed.py)). Para a demo, entre em `/login` com `ada`, `linus`
 ou `grace` e essa senha. O seed não roda se já houver usuários no banco; o README descreve a
