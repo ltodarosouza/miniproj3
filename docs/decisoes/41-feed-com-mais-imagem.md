@@ -17,7 +17,7 @@ Pedido direto do dono, sem issue.
   streak aceita. Todos os horários são distintos e anteriores ao momento do seed. Os textos têm até 90 caracteres: legendas próprias acompanham
   fotos, e posts sem foto usam frases de rotina. As fotos do Unsplash seguem o
   tema da habilidade, com rodízio por tema e sem repetir a mesma foto em posts
-  seguidos. As 38 URLs foram validadas em 2026-11-26 (HTTP 200 e folha de
+  seguidos. As 36 URLs únicas (38 entradas, duas repetidas entre temas) foram validadas em 2026-11-26 (HTTP 200 e folha de
   contato).
 - **O que cortamos e por quê.** Os 10 posts de progresso e o sorteio de 45%
   de fotos: não garantem um ritmo visual consistente. Não usamos `pg_dump`,
