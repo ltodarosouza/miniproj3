@@ -9,10 +9,10 @@ import { Composer } from "@/components/feed/Composer";
 import { CarrosselPodeTeEnsinar } from "@/components/feed/PodeTeEnsinar";
 import { CartaoPost } from "@/components/posts/CartaoPost";
 import { Botao, BotaoLink } from "@/components/ui/Botao";
-import { Icone } from "@/components/ui/Icone";
 import { PuxarParaAtualizar } from "@/components/ui/PuxarParaAtualizar";
 import { Revelar } from "@/components/ui/Revelar";
 import { EsqueletoPost } from "@/components/ui/Esqueleto";
+import { dataLocal } from "@/lib/datas";
 import { listarMatches, type Match, type Page } from "@/lib/api";
 import {
   listarEmAlta,
@@ -21,12 +21,13 @@ import {
   type HabilidadeEmAlta,
   type ItemFeed,
   type MeuProgresso,
+  formatarTempoEstudado,
   type Post,
 } from "@/lib/posts";
 import { meuId } from "@/lib/sessao";
 
 const POR_PAGINA = 20;
-// "Você chegou ao fim do feed" só aparece em feeds com mais posts que isso.
+// "Fim do Diário." só aparece quando a lista tem mais posts que isso.
 const MINIMO_PARA_AVISAR_FIM = 10;
 // Pede a próxima página quando faltam umas duas telas para o fim da lista.
 const ANTECIPAR_CARREGAMENTO = "1500px 0px";
@@ -35,12 +36,23 @@ const ANTECIPAR_ANIMACAO = "200px";
 const PESSOAS_NA_LATERAL = 5;
 const CARROSSEL_DEPOIS_DO = 3;
 
-function Descoberta({ titulo }: { titulo: string }) {
+const HOJE = new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
+
+// Cotação da semana em uma linha: "1º Algoritmos 3h05". Mostra a posição no ranking da semana;
+// não há histórico de semanas anteriores para mostrar se subiu ou desceu.
+function Cotacao({ habilidades }: { habilidades: HabilidadeEmAlta[] }) {
+  if (!habilidades.length) return null;
   return (
-    <p className="mb-2 inline-flex items-center gap-1.5 text-xs font-medium text-texto-3">
-      <Icone nome="busca" tamanho={14} />
-      {titulo}
-    </p>
+    <ul tabIndex={0} aria-label="Cotação da semana" className="flex rounded-controle focus-visible:outline-2 focus-visible:outline-marca gap-x-5 gap-y-1 overflow-x-auto border-y border-linha py-2 font-mono text-xs text-texto-2 [scrollbar-width:none]! [&::-webkit-scrollbar]:hidden">
+      {habilidades.map((h, i) => {
+        return (
+          <li key={h.id} className="shrink-0 whitespace-nowrap numeros">
+            <span className="text-marca-forte">{i + 1}º</span> <span className="inline-block max-w-[12rem] truncate align-bottom text-texto">{h.nome}</span>{" "}
+            {h.minutos > 0 ? formatarTempoEstudado(h.minutos) : `${h.posts} ${h.posts === 1 ? "post" : "posts"}`}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -59,6 +71,9 @@ function Feed() {
   const [emAlta, setEmAlta] = useState<HabilidadeEmAlta[] | null>(null);
   const [progresso, setProgresso] = useState<MeuProgresso | null>(null);
   const [tamanhoPrimeiraPagina, setTamanhoPrimeiraPagina] = useState(0);
+  // A data só existe no navegador, para não divergir entre servidor e cliente.
+  const [hoje, setHoje] = useState<Date | null>(null);
+  useEffect(() => setHoje(new Date()), []);
   const sentinela = useRef<HTMLDivElement>(null);
   const buscando = useRef(false);
   const geracao = useRef(0);
@@ -200,7 +215,7 @@ function Feed() {
   if (!logado) {
     conteudo = (
       <p className="text-sm leading-relaxed text-texto-2">
-        Entre na sua conta para ver o feed.{" "}
+        Entre na sua conta para ver a Mesa.{" "}
         <Link className="font-medium text-marca-forte underline" href="/login">
           Entrar
         </Link>
@@ -208,9 +223,12 @@ function Feed() {
     );
   } else if (carregando) {
     conteudo = (
-      <div className="space-y-4" aria-label="Carregando o feed">
+      <div className="divide-y divide-linha border-y border-linha" aria-label="Carregando o Diário">
         {[0, 1, 2].map((n) => (
-          <div key={n} className="h-40 animate-pulse rounded-cartao bg-superficie-2 motion-reduce:animate-none" />
+          <div key={n} className="grid grid-cols-[3.25rem_minmax(0,1fr)] gap-x-3 py-5 sm:grid-cols-[4rem_minmax(0,1fr)] sm:gap-x-4">
+            <div className="mt-1.5 h-3 w-9 animate-pulse rounded-controle bg-superficie-2 motion-reduce:animate-none" />
+            <div className="h-24 animate-pulse rounded-controle bg-superficie-2 motion-reduce:animate-none" />
+          </div>
         ))}
       </div>
     );
@@ -218,7 +236,7 @@ function Feed() {
     conteudo = (
       <div className="space-y-3">
         <p className="text-sm leading-relaxed text-texto-2">
-          Não consegui carregar o feed. Confira se o backend está rodando e tente de novo.
+          Não consegui carregar o Diário. Confira se o backend está rodando e tente de novo.
         </p>
         <Botao variante="secundario" tamanho="sm" onClick={tentarDeNovo}>
           Tentar de novo
@@ -228,11 +246,11 @@ function Feed() {
   } else if (itens.length === 0) {
     conteudo = (
       <>
-        <div className="space-y-3 rounded-cartao border border-dashed border-linha-forte p-6 text-center">
+        <div className="space-y-3 border-y border-linha py-6">
           <p className="text-sm leading-relaxed text-texto-2">
-            Seu feed ainda está vazio. Publique o que estudou hoje, siga quem estuda o mesmo que você ou veja quem pode te ensinar.
+            Seu Diário ainda está vazio. Publique o que estudou hoje, siga quem estuda o mesmo que você ou veja quem pode te ensinar.
           </p>
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex flex-wrap gap-2">
             <BotaoLink href="/busca" variante="secundario" tamanho="sm">
               Buscar pessoas
             </BotaoLink>
@@ -247,7 +265,7 @@ function Feed() {
   } else {
     conteudo = (
       <>
-        <ul className="space-y-4">
+        <ul className="divide-y divide-linha border-y border-linha">
           {itens.map((item, i) => (
             <Fragment key={item.id}>
               <li>
@@ -255,17 +273,21 @@ function Feed() {
                   atraso={i < tamanhoPrimeiraPagina ? Math.min(i, 6) * 40 : 0}
                   antecipacao={ANTECIPAR_ANIMACAO}
                 >
-                  {item.motivo === "descobrir" && <Descoberta titulo="Estuda o mesmo que você" />}
-                  <CartaoPost post={item} podeEnsinar={item.motivo === "pode_te_ensinar"} aoApagar={aoApagar} />
+                  <CartaoPost
+                    post={item}
+                    podeEnsinar={item.motivo === "pode_te_ensinar"}
+                    rotulo={item.motivo === "descobrir" ? "Estuda o mesmo que você" : undefined}
+                    aoApagar={aoApagar}
+                  />
                 </Revelar>
               </li>
-              {carrossel && i === Math.min(CARROSSEL_DEPOIS_DO, itens.length) - 1 && <li>{carrossel}</li>}
+              {carrossel && i === Math.min(CARROSSEL_DEPOIS_DO, itens.length) - 1 && <li className="py-5 lg:hidden">{carrossel}</li>}
             </Fragment>
           ))}
         </ul>
         {erro && (
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-center text-sm text-texto-2">Não consegui carregar mais posts.</p>
+          <div className="flex flex-col items-start gap-2 pt-4">
+            <p className="text-sm text-texto-2">Não consegui carregar mais posts.</p>
             <Botao variante="secundario" tamanho="sm" onClick={carregarMais}>
               Tentar de novo
             </Botao>
@@ -282,7 +304,7 @@ function Feed() {
           </div>
         )}
         {!temMais && itens.length > MINIMO_PARA_AVISAR_FIM && (
-          <p className="text-center text-sm text-texto-3">Você chegou ao fim do feed.</p>
+          <p className="pt-4 font-mono text-xs text-texto-3">Fim do Diário.</p>
         )}
       </>
     );
@@ -291,9 +313,14 @@ function Feed() {
   return (
     <div className="mx-auto grid w-full max-w-[60rem] gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="mx-auto w-full min-w-0 max-w-[37.5rem] space-y-6">
-        <header>
-          <h1 className="text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">Feed</h1>
-          <p className="mt-1 text-sm text-texto-2">O que você, quem você segue e quem pode te ensinar estudaram por aí.</p>
+        <header className="space-y-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <h1 className="font-display text-[2rem] font-bold leading-tight tracking-[-0.025em] text-texto">Mesa</h1>
+            <time className="font-mono text-xs text-texto-3 numeros" dateTime={hoje ? dataLocal(hoje) : undefined}>
+              {hoje ? HOJE.format(hoje).replace(/\./g, "") : null}
+            </time>
+          </div>
+          {logado && emAlta && <Cotacao habilidades={emAlta} />}
         </header>
         {logado && !carregando && <Composer aoPublicar={aoPublicar} pedidoDeAbrir={pedidoDeAbrir} />}
         {logado ? <PuxarParaAtualizar aoAtualizar={atualizar}>{conteudo}</PuxarParaAtualizar> : conteudo}

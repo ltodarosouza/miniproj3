@@ -107,7 +107,7 @@ export function PuxarParaAtualizar({
       <div
         ref={indicadorRef}
         role="status"
-        className="absolute left-1/2 top-0 z-10 -ml-[18px] flex size-9 items-center justify-center rounded-full border border-linha bg-superficie text-marca shadow-cartao"
+        className="absolute left-1/2 top-0 z-10 -ml-[18px] flex size-9 items-center justify-center rounded-controle border border-linha bg-superficie text-texto-2"
         style={{ opacity: 0 }}
       >
         <span className={`size-4 rounded-full border-2 border-current border-r-transparent${atualizando ? " animate-spin" : ""}`} />

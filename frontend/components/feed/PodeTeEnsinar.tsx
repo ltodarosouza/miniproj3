@@ -12,24 +12,24 @@ function Pessoa({ match, compacto }: { match: Match; compacto?: boolean }) {
     <div
       className={
         compacto
-          ? "flex h-full w-44 flex-col items-center gap-2 rounded-cartao border border-linha bg-superficie p-4 text-center"
-          : "flex items-center gap-3"
+          ? "flex h-full w-44 flex-col items-start gap-2 rounded-cartao border border-linha bg-superficie p-4"
+          : "flex items-center gap-2.5 py-2.5"
       }
     >
       <Link href={perfil} tabIndex={-1} aria-hidden="true">
-        <Avatar nome={usuario.name} url={usuario.avatar_url} tamanho={compacto ? "lg" : "md"} />
+        <Avatar nome={usuario.name} url={usuario.avatar_url} tamanho={compacto ? "md" : "sm"} />
       </Link>
       <div className="w-full min-w-0 flex-1">
         <Link href={perfil} className="block truncate text-sm font-medium text-texto hover:underline">
           {usuario.name}
         </Link>
-        <p className="truncate text-xs text-texto-3">
-          {me_ensina.length ? `Ensina ${me_ensina.map((h) => h.nome).join(", ")}` : `@${usuario.username}`}
+        <p className="truncate font-mono text-xs text-texto-3">
+          {me_ensina.length ? `ensina ${me_ensina.map((h) => h.nome).join(", ")}` : `@${usuario.username}`}
         </p>
       </div>
       <Link
         href={`/mensagens/${encodeURIComponent(usuario.username)}`}
-        className="inline-flex h-8 shrink-0 items-center rounded-full border border-linha-forte px-3 text-sm font-medium text-texto transition-colors duration-[var(--rapido)] hover:border-marca hover:text-marca-forte motion-reduce:transition-none"
+        className="inline-flex h-8 shrink-0 items-center rounded-controle border border-linha-forte px-2.5 text-sm font-medium text-texto transition-colors duration-[var(--rapido)] hover:border-marca hover:text-marca-forte motion-reduce:transition-none"
       >
         Conversar
       </Link>
@@ -39,7 +39,7 @@ function Pessoa({ match, compacto }: { match: Match; compacto?: boolean }) {
 
 export function ListaPodeTeEnsinar({ pessoas }: { pessoas: Match[] }) {
   return (
-    <ul className="space-y-3">
+    <ul className="divide-y divide-linha">
       {pessoas.map((match) => (
         <li key={match.usuario.id}>
           <Pessoa match={match} />
@@ -54,7 +54,7 @@ export function CarrosselPodeTeEnsinar({ pessoas }: { pessoas: Match[] }) {
   return (
     <section aria-labelledby="carrossel-ensinar" className="min-w-0 space-y-3 lg:hidden">
       <div className="flex items-baseline justify-between">
-        <h2 id="carrossel-ensinar" className="text-sm font-semibold text-texto">
+        <h2 id="carrossel-ensinar" className="font-mono text-xs uppercase tracking-[0.08em] text-texto-3">
           Pode te ensinar
         </h2>
         <Link href="/matches" className="text-sm text-marca-forte hover:underline">

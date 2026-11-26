@@ -33,7 +33,7 @@ export function ListaComentarios({ comentarios }: { comentarios: Comentario[] })
                     <Link href={perfil} className="block truncate font-medium text-texto hover:underline">
                       {comentario.autor.name}
                     </Link>
-                    <p className="truncate text-sm text-texto-3">
+                    <p className="truncate font-mono text-xs text-texto-3">
                       @{comentario.autor.username} ·{" "}
                       <time className="numeros" dateTime={comentario.created_at}>
                         {formatarQuando(comentario.created_at)}

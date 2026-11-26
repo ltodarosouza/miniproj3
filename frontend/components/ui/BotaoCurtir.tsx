@@ -12,7 +12,7 @@ export function BotaoCurtir({
 }: {
   curtido: boolean;
   total: number;
-  aoAlternar: () => void;
+  aoAlternar: () => boolean | void;
 }) {
   const [pulso, setPulso] = useState(0);
   const [explosao, setExplosao] = useState(0);
@@ -58,25 +58,26 @@ export function BotaoCurtir({
       aria-pressed={curtido}
       aria-label={curtido ? "Descurtir" : "Curtir"}
       onClick={() => {
+        // Clique ignorado (curtida anterior ainda no servidor) não anima nem vibra.
+        if (aoAlternar() === false) return;
         if (!curtido) {
           setPulso((p) => p + 1);
           vibrar(10);
           setExplosao((p) => p + 1);
         }
-        aoAlternar();
       }}
-      className={`group inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-sm transition-colors duration-[var(--rapido)] ${
-        curtido ? "text-perigo" : "text-texto-3 hover:bg-superficie-2 hover:text-perigo"
+      className={`group inline-flex h-8 items-center gap-1.5 rounded-controle px-2 text-sm transition-colors duration-[var(--rapido)] ${
+        curtido ? "text-marca-forte" : "text-texto-3 hover:bg-superficie-2 hover:text-texto"
       }`}
     >
       <span key={pulso} className={`relative ${pulso ? "[animation:pulsar-coracao_520ms_var(--ease-mola)]" : ""}`}>
-        <Icone nome="coracao" tamanho={18} preenchido={curtido} />
+        <Icone nome="coracao" tamanho={16} preenchido={curtido} />
         <span className="pointer-events-none absolute inset-0" aria-hidden="true">
           {Array.from({ length: 6 }, (_, i) => (
             <span
               key={i}
               ref={(el) => { particulas.current[i] = el; }}
-              className={`absolute left-1/2 top-1/2 -ml-[3px] -mt-[3px] size-1.5 rounded-full opacity-0 ${i % 2 === 0 ? "bg-perigo" : "bg-estrela"}`}
+              className={`absolute left-1/2 top-1/2 -ml-[3px] -mt-[3px] size-1.5 rounded-full opacity-0 ${i % 2 === 0 ? "bg-marca" : "bg-texto"}`}
             />
           ))}
         </span>

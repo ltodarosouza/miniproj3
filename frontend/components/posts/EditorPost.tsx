@@ -214,7 +214,7 @@ export function EditorPost({
               onClick={limparFoto}
               disabled={salvando || preparandoFoto}
               aria-label="Remover foto"
-              className="absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-full bg-superficie text-texto shadow-cartao ring-1 ring-linha transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
+              className="absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-controle bg-superficie text-texto ring-1 ring-linha transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
             >
               <Icone nome="fechar" tamanho={16} />
             </button>

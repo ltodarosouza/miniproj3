@@ -7,11 +7,9 @@ import { EditorPost } from "@/components/posts/EditorPost";
 import { Avatar } from "@/components/ui/Avatar";
 import { Botao } from "@/components/ui/Botao";
 import { BotaoCurtir } from "@/components/ui/BotaoCurtir";
-import { Cartao } from "@/components/ui/Cartao";
 import { Icone } from "@/components/ui/Icone";
-import { TagHabilidade } from "@/components/ui/TagHabilidade";
 import { ToqueDuplo } from "@/components/ui/ToqueDuplo";
-import { formatarQuando } from "@/lib/datas";
+import { formatarDataHora, formatarHora, formatarQuando } from "@/lib/datas";
 import {
   apagarPost,
   curtirPost,
@@ -22,7 +20,21 @@ import {
 } from "@/lib/posts";
 import { meuId } from "@/lib/sessao";
 
-export function CartaoPost({ post: inicial, podeEnsinar = false, aoApagar }: { post: Post; podeEnsinar?: boolean; aoApagar?: (id: number) => void }) {
+// Coluna da hora: hora para posts de hoje, "dd/mm" para os outros dias deste ano e "mês/aa" para anos anteriores.
+function horaDoDiario(iso: string): string {
+  const data = new Date(iso);
+  if (Number.isNaN(data.getTime())) return "";
+  const hoje = new Date();
+  if (data.toDateString() === hoje.toDateString()) return formatarHora(iso);
+  if (data.getFullYear() !== hoje.getFullYear()) {
+    const mes = data.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "");
+    return `${mes}/${String(data.getFullYear()).slice(-2)}`;
+  }
+  return `${String(data.getDate()).padStart(2, "0")}/${String(data.getMonth() + 1).padStart(2, "0")}`;
+}
+
+// Linha do Diário: hora na coluna da esquerda, registro à direita e régua entre um e outro.
+export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApagar }: { post: Post; podeEnsinar?: boolean; rotulo?: string; aoApagar?: (id: number) => void }) {
   const [post, setPost] = useState(inicial);
   const [editando, setEditando] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
@@ -37,6 +49,8 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, aoApagar }: { p
   const [erroApagar, setErroApagar] = useState(false);
   const rodape = useRef<HTMLElement>(null);
   const jaConfirmou = useRef(false);
+  // Segundo clique enquanto o primeiro ainda está no servidor é ignorado: evita contador fora de sincronia.
+  const curtindo = useRef(false);
   const perfil = `/perfil/${encodeURIComponent(post.autor.username)}`;
 
   useEffect(() => {
@@ -88,7 +102,14 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, aoApagar }: { p
 
   if (apagado) return null;
 
-  async function alternarCurtida() {
+  function alternarCurtida(): boolean {
+    if (curtindo.current) return false;
+    void enviarCurtida();
+    return true;
+  }
+
+  async function enviarCurtida() {
+    curtindo.current = true;
     const proximo = !curtido;
     setCurtido(proximo);
     setCurtidas((total) => total + (proximo ? 1 : -1));
@@ -97,32 +118,44 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, aoApagar }: { p
     } catch {
       setCurtido(!proximo);
       setCurtidas((total) => total + (proximo ? -1 : 1));
+    } finally {
+      curtindo.current = false;
     }
   }
 
+  const marcacao = rotulo ?? (podeEnsinar ? "Pode te ensinar" : null);
+
   return (
-    <ToqueDuplo desativado={editando} aoToqueDuplo={() => { if (!curtido) void alternarCurtida(); }}>
-      <Cartao interativo className="p-5">
-        <article>
-          <header className="flex items-center gap-3">
+    <ToqueDuplo desativado={editando} aoToqueDuplo={() => { if (!curtido) alternarCurtida(); }}>
+      <article className="grid grid-cols-[3.25rem_minmax(0,1fr)] gap-x-3 py-5 sm:grid-cols-[4rem_minmax(0,1fr)] sm:gap-x-4">
+        <time
+          className={`pt-1.5 font-mono text-xs text-texto-3 numeros ${marcacao ? "mt-6" : ""}`}
+          dateTime={post.created_at}
+          title={formatarDataHora(post.created_at)}
+        >
+          {horaDoDiario(post.created_at)}
+        </time>
+        <div className="col-start-2 min-w-0">
+          {marcacao && (
+            <p className="mb-2 h-4 font-mono text-[0.6875rem] uppercase leading-4 tracking-[0.08em] text-texto-2">
+              {marcacao}
+            </p>
+          )}
+          <header className="flex items-center gap-2.5">
             <Link href={perfil} aria-label={`Perfil de ${post.autor.name}`}>
-              <Avatar nome={post.autor.name} url={post.autor.avatar_url} />
+              <Avatar nome={post.autor.name} url={post.autor.avatar_url} tamanho="sm" />
             </Link>
-            <div className="min-w-0 flex-1">
-              <Link href={perfil} className="block truncate font-medium text-texto hover:underline">
+            <p className="flex min-w-0 flex-1 items-baseline gap-2">
+              <Link href={perfil} className="truncate font-medium text-texto hover:underline">
                 {post.autor.name}
               </Link>
-              <p className="truncate text-sm text-texto-3">
-                @{post.autor.username} ·{" "}
-                <time className="numeros" dateTime={post.created_at}>
-                  {formatarQuando(post.created_at)}
-                </time>
-                {post.editado_em && (
-                  <span title={`Editado ${formatarQuando(post.editado_em)}`}> · editado</span>
-                )}
-              </p>
-            </div>
-            {podeEnsinar && <TagHabilidade nome="Pode te ensinar" tipo="sei" />}
+              <span className="hidden truncate font-mono text-xs text-texto-3 sm:inline">@{post.autor.username}</span>
+              {post.editado_em && (
+                <span className="shrink-0 font-mono text-xs text-texto-3" title={`Editado ${formatarQuando(post.editado_em)}`}>
+                  · editado
+                </span>
+              )}
+            </p>
           </header>
 
           {editando ? (
@@ -136,21 +169,18 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, aoApagar }: { p
             />
           ) : (
             <>
-              <p className="mt-4 max-w-[65ch] whitespace-pre-line text-[0.9375rem] leading-relaxed text-texto">
+              <p className="mt-2.5 max-w-[65ch] whitespace-pre-line break-words text-[0.9375rem] leading-relaxed text-texto">
                 {post.texto}
               </p>
 
-              {post.minutos_estudados !== null && (
-                <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-texto-2">
-                  <Icone nome="relogio" tamanho={16} />
-                  <span className="font-mono">{formatarTempoEstudado(post.minutos_estudados)}</span>
-                  <span>de {post.habilidade ? post.habilidade.nome : "estudo"}</span>
+              {(post.minutos_estudados !== null || post.habilidade) && (
+                <p className="mt-2.5 flex flex-wrap items-center gap-2 font-mono text-xs text-texto-2 numeros">
+                  {post.minutos_estudados !== null && <span>{formatarTempoEstudado(post.minutos_estudados)}</span>}
+                  {post.minutos_estudados !== null && post.habilidade && <span aria-hidden="true">·</span>}
+                  {post.habilidade && (
+                    <span className="rounded-controle border border-linha px-1.5 py-0.5 text-texto">{post.habilidade.nome}</span>
+                  )}
                 </p>
-              )}
-              {post.minutos_estudados === null && post.habilidade && (
-                <div className="mt-3">
-                  <TagHabilidade nome={post.habilidade.nome} />
-                </div>
               )}
 
               {post.imagem_url && !imagemFalhou && (
@@ -159,20 +189,20 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, aoApagar }: { p
                   alt="Foto do post"
                   loading="lazy"
                   onError={() => setImagemFalhou(true)}
-                  className="mt-4 max-h-96 w-full rounded-controle object-cover ring-1 ring-linha"
+                  className="mt-3 max-h-[28rem] w-full rounded-controle object-cover ring-1 ring-linha"
                 />
               )}
             </>
           )}
 
-          <footer ref={rodape} data-sem-toque-duplo className="mt-3 -ml-2.5 flex flex-wrap items-center gap-1">
+          <footer ref={rodape} data-sem-toque-duplo className="mt-2 -ml-2 flex flex-wrap items-center gap-1">
             <BotaoCurtir curtido={curtido} total={curtidas} aoAlternar={alternarCurtida} />
             <Link
               href={`/posts/${post.id}#comentarios`}
               aria-label={`Comentários (${post.comentarios})`}
-              className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-sm text-texto-3 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 hover:text-texto motion-reduce:transition-none"
+              className="inline-flex h-8 items-center gap-1.5 rounded-controle px-2 text-sm text-texto-3 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 hover:text-texto motion-reduce:transition-none"
             >
-              <Icone nome="comentario" tamanho={18} />
+              <Icone nome="comentario" tamanho={16} />
               <span className="numeros">{post.comentarios}</span>
             </Link>
             {souAutor && !confirmando && !editando && (
@@ -190,7 +220,7 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, aoApagar }: { p
                   aria-controls={`menu-post-${post.id}`}
                   aria-expanded={menuAberto}
                   onClick={() => setMenuAberto((aberto) => !aberto)}
-                  className="inline-flex size-8 items-center justify-center rounded-full text-texto-3 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 hover:text-texto motion-reduce:transition-none"
+                  className="inline-flex size-8 items-center justify-center rounded-controle text-texto-3 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 hover:text-texto motion-reduce:transition-none"
                 >
                   <Icone nome="opcoes" tamanho={18} />
                 </button>
@@ -249,8 +279,8 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, aoApagar }: { p
             )}
             {erroApagar && <p role="alert" className="w-full text-sm text-perigo">Não deu para apagar. Tente de novo.</p>}
           </footer>
-        </article>
-      </Cartao>
+        </div>
+      </article>
     </ToqueDuplo>
   );
 }

@@ -1,8 +1,8 @@
 import { apiDelete } from "@/lib/api";
 
-export const LADO_MAXIMO_POST = 1600;
+const LADO_MAXIMO_POST = 1600;
 export const LADO_MAXIMO_AVATAR = 512;
-export const LIMITE_BYTES = 2 * 1024 * 1024;
+const LIMITE_BYTES = 2 * 1024 * 1024;
 
 type OpcoesPrepararImagem = {
   ladoMaximo?: number;
@@ -69,7 +69,7 @@ export async function prepararImagem(
           });
     const contexto = canvas.getContext("2d");
     if (!contexto) throw new Error("Não foi possível preparar a imagem.");
-    contexto.drawImage(bitmap, 0, 0, largura, altura);
+    (contexto as CanvasRenderingContext2D).drawImage(bitmap, 0, 0, largura, altura);
 
     const qualidadeInicial = opcoes.qualidade ?? 0.82;
     const qualidades = [qualidadeInicial, 0.7, 0.6];
@@ -95,11 +95,6 @@ export async function prepararImagem(
   } finally {
     bitmap.close();
   }
-}
-
-export function urlDaApi(caminho: string): string {
-  if (/^(http|blob:|data:)/i.test(caminho)) return caminho;
-  return `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}${caminho}`;
 }
 
 export function removerImagemDoPost(id: number): Promise<void> {
