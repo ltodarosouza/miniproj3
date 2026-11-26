@@ -1,8 +1,9 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.tempo import agora_utc
 from app.db import Base
 
 
@@ -15,6 +16,4 @@ class User(Base):
     bio: Mapped[str] = mapped_column(String(280), default="")
     avatar_url: Mapped[str] = mapped_column(String(300), default="")
     password_hash: Mapped[str] = mapped_column(String(100), default="")
-    created_at: Mapped[datetime] = mapped_column(
-        default=lambda: datetime.now(timezone.utc)
-    )
+    created_at: Mapped[datetime] = mapped_column(default=agora_utc)
