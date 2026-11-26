@@ -1,1 +1,1 @@
-export const NOME_REDE = "Troca";
+export const NOME_REDE = "Colmatch";

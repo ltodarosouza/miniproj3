@@ -1,30 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  --fundo: oklch(0.985 0.004 185);
-  --superficie: oklch(1 0 0);
-  --superficie-2: oklch(0.965 0.007 185);
-  --linha: oklch(0.915 0.01 185);
-  --linha-forte: oklch(0.84 0.014 185);
-  --texto: oklch(0.22 0.02 195);
-  --texto-2: oklch(0.47 0.02 195);
-  --texto-3: oklch(0.6 0.018 195);
-  --marca: oklch(0.56 0.105 182);
-  --marca-forte: oklch(0.47 0.095 184);
-  --marca-suave: oklch(0.955 0.03 182);
-  --marca-texto: oklch(0.99 0.01 182);
-  --troca: oklch(0.7 0.14 55);
-  --troca-suave: oklch(0.96 0.035 60);
-  --perigo: oklch(0.58 0.19 25);
-  --selo: oklch(0.55 0.21 25);
-  --selo-texto: oklch(1 0 0);
-  --sucesso: oklch(0.6 0.13 155);
-  --estrela: oklch(0.78 0.15 80);
-  --sombra: 0 1px 2px oklch(0.3 0.03 195 / 0.06), 0 4px 16px -4px oklch(0.3 0.03 195 / 0.08);
-  --sombra-alta: 0 2px 4px oklch(0.3 0.03 195 / 0.06), 0 16px 40px -12px oklch(0.3 0.04 195 / 0.22);
-  --brilho: oklch(0.56 0.105 182 / 0.1);
-  --raio: 14px;
-  --raio-sm: 10px;
+  --fundo: #F7F6F2;
+  --superficie: #FFFFFF;
+  --superficie-2: #EFEDE7;
+  --linha: #E2DFD6;
+  --linha-forte: #CFCBBF;
+  --texto: #1B1A17;
+  --texto-2: #57534A;
+  --texto-3: #8A857A;
+  --marca: #F2A900;
+  --marca-forte: #A86A00;
+  --foco: var(--marca-forte);
+  --logo-match: var(--marca-forte);
+  --marca-suave: #FBF0D2;
+  --marca-texto: #1B1A17;
+  --troca: var(--marca);
+  --troca-suave: var(--marca-suave);
+  --perigo: #B42318;
+  --selo: #F2A900;
+  --selo-texto: #1B1A17;
+  --sucesso: #2F7D4F;
+  --estrela: #F2A900;
+  --grafite: #1B1A17;
+  --grafite-texto: #F3F1EA;
+  --alta: #2F7D4F;
+  --baixa: #B42318;
+  --sombra: none;
+  --sombra-alta: 0 1px 2px rgb(27 26 23 / 0.08), 0 4px 12px -2px rgb(27 26 23 / 0.12);
+  --brilho: rgb(242 169 0 / 0.22);
+  --raio: 6px;
+  --raio-sm: 4px;
   --ease-saida: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-mola: cubic-bezier(0.34, 1.4, 0.64, 1);
   --rapido: 160ms;
@@ -35,53 +41,67 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --fundo: oklch(0.165 0.012 195);
-    --superficie: oklch(0.205 0.013 195);
-    --superficie-2: oklch(0.24 0.014 195);
-    --linha: oklch(0.29 0.014 195);
-    --linha-forte: oklch(0.37 0.016 195);
-    --texto: oklch(0.95 0.008 185);
-    --texto-2: oklch(0.76 0.014 190);
-    --texto-3: oklch(0.62 0.014 190);
-    --marca: oklch(0.74 0.11 180);
-    --marca-forte: oklch(0.8 0.1 180);
-    --marca-suave: oklch(0.29 0.045 185);
-    --marca-texto: oklch(0.18 0.03 190);
-    --troca: oklch(0.78 0.13 60);
-    --troca-suave: oklch(0.3 0.05 55);
-    --perigo: oklch(0.7 0.17 25);
-    --selo: oklch(0.55 0.21 25);
-    --selo-texto: oklch(1 0 0);
-    --sucesso: oklch(0.74 0.13 155);
-    --sombra: 0 1px 2px oklch(0 0 0 / 0.3), 0 4px 16px -4px oklch(0 0 0 / 0.35);
-    --sombra-alta: 0 2px 4px oklch(0 0 0 / 0.3), 0 18px 44px -12px oklch(0 0 0 / 0.6);
-    --brilho: oklch(0.74 0.11 180 / 0.12);
+    --fundo: #121110;
+    --superficie: #1B1A17;
+    --superficie-2: #24221E;
+    --linha: #2E2B26;
+    --linha-forte: #3D3A33;
+    --texto: #F3F1EA;
+    --texto-2: #B5B0A4;
+    --texto-3: #858073;
+    --marca: #F2A900;
+    --marca-forte: #F5B82E;
+    --foco: var(--marca);
+    --logo-match: var(--marca);
+    --marca-suave: #2E2614;
+    --marca-texto: #1B1A17;
+    --troca: var(--marca);
+    --troca-suave: var(--marca-suave);
+    --perigo: #F06A5E;
+    --selo: #F2A900;
+    --selo-texto: #1B1A17;
+    --sucesso: #5DBB84;
+    --estrela: #F2A900;
+    --grafite: #F3F1EA;
+    --grafite-texto: #1B1A17;
+    --alta: #5DBB84;
+    --baixa: #F06A5E;
+    --sombra: none;
+    --sombra-alta: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px -2px rgb(0 0 0 / 0.5);
+    --brilho: rgb(242 169 0 / 0.28);
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --fundo: oklch(0.165 0.012 195);
-  --superficie: oklch(0.205 0.013 195);
-  --superficie-2: oklch(0.24 0.014 195);
-  --linha: oklch(0.29 0.014 195);
-  --linha-forte: oklch(0.37 0.016 195);
-  --texto: oklch(0.95 0.008 185);
-  --texto-2: oklch(0.76 0.014 190);
-  --texto-3: oklch(0.62 0.014 190);
-  --marca: oklch(0.74 0.11 180);
-  --marca-forte: oklch(0.8 0.1 180);
-  --marca-suave: oklch(0.29 0.045 185);
-  --marca-texto: oklch(0.18 0.03 190);
-  --troca: oklch(0.78 0.13 60);
-  --troca-suave: oklch(0.3 0.05 55);
-  --perigo: oklch(0.7 0.17 25);
-  --selo: oklch(0.55 0.21 25);
-  --selo-texto: oklch(1 0 0);
-  --sucesso: oklch(0.74 0.13 155);
-  --sombra: 0 1px 2px oklch(0 0 0 / 0.3), 0 4px 16px -4px oklch(0 0 0 / 0.35);
-  --sombra-alta: 0 2px 4px oklch(0 0 0 / 0.3), 0 18px 44px -12px oklch(0 0 0 / 0.6);
-  --brilho: oklch(0.74 0.11 180 / 0.12);
+  --fundo: #121110;
+  --superficie: #1B1A17;
+  --superficie-2: #24221E;
+  --linha: #2E2B26;
+  --linha-forte: #3D3A33;
+  --texto: #F3F1EA;
+  --texto-2: #B5B0A4;
+  --texto-3: #858073;
+  --marca: #F2A900;
+  --marca-forte: #F5B82E;
+  --foco: var(--marca);
+  --logo-match: var(--marca);
+  --marca-suave: #2E2614;
+  --marca-texto: #1B1A17;
+  --troca: var(--marca);
+  --troca-suave: var(--marca-suave);
+  --perigo: #F06A5E;
+  --selo: #F2A900;
+  --selo-texto: #1B1A17;
+  --sucesso: #5DBB84;
+  --estrela: #F2A900;
+  --grafite: #F3F1EA;
+  --grafite-texto: #1B1A17;
+  --alta: #5DBB84;
+  --baixa: #F06A5E;
+  --sombra: none;
+  --sombra-alta: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px -2px rgb(0 0 0 / 0.5);
+  --brilho: rgb(242 169 0 / 0.28);
   color-scheme: dark;
 }
 
@@ -96,6 +116,7 @@
   --color-texto-3: var(--texto-3);
   --color-marca: var(--marca);
   --color-marca-forte: var(--marca-forte);
+  --color-foco: var(--foco);
   --color-marca-suave: var(--marca-suave);
   --color-marca-texto: var(--marca-texto);
   --color-troca: var(--troca);
@@ -105,12 +126,17 @@
   --color-selo-texto: var(--selo-texto);
   --color-sucesso: var(--sucesso);
   --color-estrela: var(--estrela);
+  --color-grafite: var(--grafite);
+  --color-grafite-texto: var(--grafite-texto);
+  --color-alta: var(--alta);
+  --color-baixa: var(--baixa);
   --radius-cartao: var(--raio);
   --radius-controle: var(--raio-sm);
   --shadow-cartao: var(--sombra);
   --shadow-alta: var(--sombra-alta);
-  --font-sans: var(--fonte-geist), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--fonte-geist-mono), ui-monospace, monospace;
+  --font-sans: var(--fonte-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--fonte-plex-mono), ui-monospace, monospace;
+  --font-display: var(--fonte-grotesk), var(--fonte-plex-sans), ui-sans-serif, sans-serif;
   --ease-saida: var(--ease-saida);
   --ease-mola: var(--ease-mola);
 }
@@ -149,7 +175,6 @@ html {
 body {
   background: var(--fundo);
   color: var(--texto);
-  font-feature-settings: "ss01", "cv11";
 }
 
 ::selection {
@@ -158,9 +183,9 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--marca);
+  outline: 2px solid var(--foco);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 input,
@@ -214,18 +239,13 @@ a {
   }
 }
 
-@keyframes brilho-esqueleto {
-  from {
-    background-position: 150% 0;
-  }
-  to {
-    background-position: -50% 0;
-  }
+@keyframes pulsar-esqueleto {
+  50% { opacity: 0.55; }
 }
 
 .esqueleto {
-  background: linear-gradient(90deg, var(--superficie-2) 30%, color-mix(in oklch, var(--superficie-2) 55%, var(--superficie)) 50%, var(--superficie-2) 70%) 0 0 / 200% 100%;
-  animation: brilho-esqueleto 1.4s linear infinite;
+  background: var(--superficie-2);
+  animation: pulsar-esqueleto 1.4s ease-in-out infinite;
 }
 
 @keyframes aparecer-escala {

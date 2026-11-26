@@ -15,7 +15,6 @@ const CAMINHOS = {
   fechar: "M6 6l12 12M18 6 6 18",
   link: "M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1.1 1.1M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.1-1.1",
   voltar: "M19 12H5m0 0 6-6m-6 6 6 6",
-  arrastar: "M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01",
   lixeira: "M4.5 7h15M10 4.5h4M6.5 7l.8 11.6a1.5 1.5 0 0 0 1.5 1.4h6.4a1.5 1.5 0 0 0 1.5-1.4L17.5 7M10 11v5M14 11v5",
   imagem: "M5 4.5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-13a1 1 0 0 1 1-1zM4 16l4.5-4.5L13 16m-1.5-1.5 2.5-2.5 6 6M15.5 9h.01",
   sol: "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 3v1.5M12 19.5V21M3 12h1.5M19.5 12H21M5.6 5.6l1.1 1.1M17.3 17.3l1.1 1.1M5.6 18.4l1.1-1.1M17.3 6.7l1.1-1.1",
@@ -23,10 +22,13 @@ const CAMINHOS = {
   busca: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zm9 2-4-4",
   sino: "M6.5 16.5V11a5.5 5.5 0 1 1 11 0v5.5l1.5 2h-14zM10 20.5h4",
   sair: "M14 4.5h4a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-4M10 16l-4-4 4-4M6 12h9",
-  opcoes: "M5.5 12h.01M12 12h.01M18.5 12h.01",
+  par: "M6 7L10.33 9.5L10.33 14.5L6 17L1.67 14.5L1.67 9.5ZM18 7L22.33 9.5L22.33 14.5L18 17L13.67 14.5L13.67 9.5ZM10.33 12h3.34",
+  ordem: "M6.5 3.5h11a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1zM9 8.5h6M9 12h6M9 15.5h3.5",
+  alta: "M12 6.5 18.5 17h-13z",
+  baixa: "M12 17.5 5.5 7h13z",
 } as const;
 
-export type NomeIcone = keyof typeof CAMINHOS;
+export type NomeIcone = keyof typeof CAMINHOS | "opcoes";
 
 export function Icone({
   nome,
@@ -46,13 +48,21 @@ export function Icone({
       viewBox="0 0 24 24"
       fill={preenchido ? "currentColor" : "none"}
       stroke="currentColor"
-      strokeWidth={nome === "arrastar" || nome === "opcoes" ? 2.6 : 1.7}
+      strokeWidth={1.5}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
       className={className}
     >
-      <path d={CAMINHOS[nome]} />
+      {nome === "opcoes" ? (
+        <>
+          <circle cx="5.5" cy="12" r="0.55" />
+          <circle cx="12" cy="12" r="0.55" />
+          <circle cx="18.5" cy="12" r="0.55" />
+        </>
+      ) : (
+        <path d={CAMINHOS[nome]} />
+      )}
     </svg>
   );
 }
