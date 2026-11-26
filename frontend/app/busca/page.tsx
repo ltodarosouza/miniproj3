@@ -17,7 +17,7 @@ import { meuId } from "@/lib/sessao";
 
 const ABAS: { tipo: TipoBusca; rotulo: string }[] = [
   { tipo: "pessoas", rotulo: "Pessoas" },
-  { tipo: "posts", rotulo: "Publicações" },
+  { tipo: "posts", rotulo: "Posts" },
   { tipo: "habilidades", rotulo: "Habilidades" },
 ];
 const POR_PAGINA = 20;
@@ -41,22 +41,26 @@ function Recomendados() {
   }, []);
 
   return (
-    <div className="grid items-start gap-6 md:grid-cols-2">
-      <section className="rounded-cartao border border-linha bg-superficie p-4 shadow-cartao">
-        <h2 className="mb-3 text-sm font-semibold text-texto">Pode te ensinar</h2>
-        {pessoas === null ? (
-          <p className="text-sm text-texto-3">Carregando…</p>
-        ) : pessoas.length ? (
-          <ListaPodeTeEnsinar pessoas={pessoas} />
-        ) : (
-          <p className="text-sm text-texto-3">
-            Marque no seu perfil o que quer aprender para ver quem pode te ensinar.
-          </p>
-        )}
+    <div className="space-y-8 md:grid md:grid-cols-2 md:gap-8 md:space-y-0">
+      <section>
+        <h2 className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.08em] text-texto-3">01 · Pode te ensinar</h2>
+        <div className="border-t border-linha pt-3">
+          {pessoas === null ? (
+            <p className="text-sm text-texto-3">Carregando…</p>
+          ) : pessoas.length ? (
+            <ListaPodeTeEnsinar pessoas={pessoas} />
+          ) : (
+            <p className="text-sm text-texto-3">
+              Marque no seu perfil o que quer aprender para ver quem pode te ensinar.
+            </p>
+          )}
+        </div>
       </section>
-      <section className="rounded-cartao border border-linha bg-superficie p-4 shadow-cartao">
-        <h2 className="mb-3 text-sm font-semibold text-texto">Em alta esta semana</h2>
-        {emAlta === null ? <p className="text-sm text-texto-3">Carregando…</p> : <EmAlta habilidades={emAlta} />}
+      <section>
+        <h2 className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.08em] text-texto-3">02 · Em alta esta semana</h2>
+        <div className="border-t border-linha pt-3">
+          {emAlta === null ? <p className="text-sm text-texto-3">Carregando…</p> : <EmAlta habilidades={emAlta} />}
+        </div>
       </section>
     </div>
   );
@@ -64,22 +68,22 @@ function Recomendados() {
 
 function Resultados({ resultado, aoApagar }: { resultado: ResultadoBusca; aoApagar: (id: number) => void }) {
   if (resultado.total === 0) {
-    return <p className="py-6 text-center text-sm text-texto-2">Nada encontrado. Tente outra palavra.</p>;
+    return <p className="py-6 text-sm text-texto-2">Nada encontrado. Tente outra palavra.</p>;
   }
   if (resultado.tipo === "pessoas") {
     return (
-      <ul className="divide-y divide-linha rounded-cartao border border-linha bg-superficie shadow-cartao">
+      <ul className="divide-y divide-linha border-y border-linha">
         {resultado.pessoas.map((p) => (
           <li key={p.id}>
             <Link
               href={`/perfil/${encodeURIComponent(p.username)}`}
-              className="flex items-center gap-3 p-4 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
+              className="flex items-center gap-3 px-2 py-3 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
             >
-              <Avatar nome={p.name} url={p.avatar_url} />
+              <Avatar nome={p.name} url={p.avatar_url} tamanho="sm" />
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium text-texto">{p.name}</span>
-                <span className="block truncate text-sm text-texto-3">
-                  @{p.username}
+                <span className="block truncate text-sm font-medium text-texto">{p.name}</span>
+                <span className="block truncate text-xs text-texto-2">
+                  <span className="font-mono text-texto-3">@{p.username}</span>
                   {p.bio && ` · ${p.bio}`}
                 </span>
               </span>
@@ -91,9 +95,9 @@ function Resultados({ resultado, aoApagar }: { resultado: ResultadoBusca; aoApag
   }
   if (resultado.tipo === "posts") {
     return (
-      <ul className="space-y-4">
+      <ul className="divide-y divide-linha border-y border-linha">
         {resultado.posts.map((post) => (
-          <li key={post.id}>
+          <li key={post.id} className="py-4">
             <CartaoPost post={post} aoApagar={aoApagar} />
           </li>
         ))}
@@ -101,16 +105,16 @@ function Resultados({ resultado, aoApagar }: { resultado: ResultadoBusca; aoApag
     );
   }
   return (
-    <ul className="grid gap-3 sm:grid-cols-2">
+    <ul className="divide-y divide-linha border-y border-linha">
       {resultado.habilidades.map((h) => (
         <li key={h.id}>
           <Link
             href={`/busca/habilidades/${h.id}`}
-            className="block rounded-cartao border border-linha bg-superficie p-4 shadow-cartao transition-colors duration-[var(--rapido)] hover:border-marca motion-reduce:transition-none"
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3 px-2 py-3 transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
           >
-            <span className="block font-medium text-texto">{h.nome}</span>
-            <span className="numeros text-sm text-texto-3">
-              {h.sabem} {h.sabem === 1 ? "sabe" : "sabem"} · {h.querem} {h.querem === 1 ? "quer" : "querem"} aprender
+            <span className="truncate text-sm font-medium text-texto">{h.nome}</span>
+            <span className="font-mono numeros text-xs text-texto-3">
+              {h.sabem} {h.sabem === 1 ? "sabe" : "sabem"} · {h.querem} {h.querem === 1 ? "quer" : "querem"}
             </span>
           </Link>
         </li>
@@ -136,6 +140,21 @@ function Busca() {
   useEffect(() => {
     setLogado(Boolean(meuId()));
     campo.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    const aoPressionar = (evento: KeyboardEvent) => {
+      const alvo = evento.target;
+      if (
+        evento.key !== "/" || evento.ctrlKey || evento.metaKey || evento.altKey ||
+        alvo instanceof HTMLElement && (alvo.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(alvo.tagName))
+      ) return;
+      evento.preventDefault();
+      campo.current?.focus();
+      campo.current?.select();
+    };
+    window.addEventListener("keydown", aoPressionar);
+    return () => window.removeEventListener("keydown", aoPressionar);
   }, []);
 
   // Voltar/Avançar mudam a URL: o campo e a aba acompanham.
@@ -217,10 +236,10 @@ function Busca() {
     <div className="space-y-5">
       <div className="relative">
         <label htmlFor="campo-busca" className="sr-only">
-          Buscar pessoas, publicações e habilidades
+          Buscar pessoas, posts ou habilidades
         </label>
         <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-texto-3">
-          <Icone nome="busca" tamanho={18} />
+          <Icone nome="busca" tamanho={20} />
         </span>
         <input
           ref={campo}
@@ -228,10 +247,11 @@ function Busca() {
           type="search"
           value={termo}
           onChange={(evento) => setTermo(evento.target.value)}
-          placeholder="Buscar pessoas, publicações, habilidades"
+          placeholder="Buscar pessoas, posts ou habilidades"
           maxLength={100}
-          className="h-12 w-full rounded-full border border-linha bg-superficie pl-11 pr-4 text-base text-texto placeholder:text-texto-3 focus:border-marca focus:shadow-[0_0_0_4px_var(--brilho)] focus:outline-none"
+          className="h-14 w-full rounded-controle border border-linha-forte bg-superficie pl-12 pr-14 text-base text-texto placeholder:text-texto-3 focus:border-marca focus:outline-none focus:ring-2 focus:ring-marca/40 sm:text-lg"
         />
+        {!termo && <kbd aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 hidden h-6 min-w-6 -translate-y-1/2 items-center justify-center rounded-[2px] border border-linha px-1.5 font-mono text-xs text-texto-3 sm:inline-flex">/</kbd>}
       </div>
 
       {termo.trim() ? (
@@ -244,9 +264,9 @@ function Busca() {
                 role="tab"
                 aria-selected={tipo === aba.tipo}
                 onClick={() => setTipo(aba.tipo)}
-                className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors duration-[var(--rapido)] motion-reduce:transition-none ${tipo === aba.tipo ? "border-marca text-texto" : "border-transparent text-texto-3 hover:text-texto"}`}
+                className={`-mb-px mr-5 border-b-2 px-1 py-2.5 text-sm transition-colors duration-[var(--rapido)] motion-reduce:transition-none ${tipo === aba.tipo ? "border-marca text-texto font-medium" : "border-transparent text-texto-3 hover:text-texto"}`}
               >
-                {aba.rotulo}
+                {aba.rotulo}{resultado?.tipo === aba.tipo && <> <span className="font-mono numeros text-xs text-texto-3">{resultado.total}</span></>}
               </button>
             ))}
           </div>
@@ -270,7 +290,7 @@ function Busca() {
               </div>
             ) : null}
             {resultado && mostrados < resultado.total && !carregando && (
-              <div className="flex justify-center">
+              <div className="flex justify-start">
                 <Botao variante="secundario" carregando={carregandoMais} onClick={carregarMais}>
                   Ver mais
                 </Botao>
