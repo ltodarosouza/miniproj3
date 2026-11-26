@@ -311,7 +311,7 @@ function Feed() {
   }
 
   return (
-    <div className="mx-auto grid w-full max-w-[64rem] gap-8 lg:gap-12 xl:gap-16 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <div className="grid w-full gap-8 lg:gap-12 xl:gap-16 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="mx-auto w-full min-w-0 max-w-[37.5rem] space-y-6">
         <header className="space-y-3">
           <div className="flex items-baseline justify-between gap-3">
