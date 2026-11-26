@@ -1,6 +1,9 @@
 import sys
+import random
+from datetime import datetime
 from pathlib import Path
 
+import pytest
 from sqlalchemy import func, select
 
 from app.core.matches import indice_matches
@@ -117,6 +120,41 @@ def test_posts_alternam_com_e_sem_foto(client):
     assert [bool(p.imagem_url) for p in posts] == [i % 2 == 1 for i in range(len(posts))]
     assert all(p.imagem_url in fotos_validas for p in com_foto)
     assert len({p.created_at for p in posts}) == len(posts)
+
+
+@pytest.mark.parametrize(
+    "agora",
+    [
+        datetime(2026, 11, 26, 3, 0),   # meia-noite em São Paulo
+        datetime(2026, 11, 26, 3, 5),   # 00:05 em São Paulo
+        datetime(2026, 11, 26, 6, 0),   # 03:00 em São Paulo
+        datetime(2026, 11, 27, 2, 59),  # 23:59 em São Paulo
+        datetime(2026, 11, 26, 0, 0),   # meia-noite UTC
+    ],
+)
+def test_posts_do_seed_respeitam_dia_local_e_agora(client, agora):
+    from app.core.streak import calcular_streak, dia_no_brasil
+    from app.models.habilidade import Habilidade
+    from app.models.post import Post
+    from app.models.user_habilidade import UserHabilidade
+
+    usuarios = rodar_seed()
+    with SessionLocal() as db:
+        perfis: dict[int, tuple[set[int], set[int]]] = {u.id: (set(), set()) for u in usuarios}
+        for uh in db.scalars(select(UserHabilidade)):
+            perfis[uh.usuario_id][0 if uh.tipo == "sei" else 1].add(uh.habilidade_id)
+        nomes = {h.id: h.nome for h in db.scalars(select(Habilidade))}
+
+    posts = seed.gerar_posts(usuarios, perfis, nomes, random.Random(42), agora=agora)
+    assert all(post.created_at < agora for post in posts)
+    assert len({post.created_at for post in posts}) == len(posts)
+    assert [bool(post.imagem_url) for post in posts] == [indice % 2 == 1 for indice in range(len(posts))]
+
+    constantes = [usuarios[indice] for indice in range(0, len(usuarios), 4)][: seed.USUARIOS_CONSTANTES]
+    for usuario in constantes:
+        dias = {dia_no_brasil(post.created_at) for post in posts if post.autor_id == usuario.id}
+        assert len(dias) == 4
+        assert calcular_streak(dias, dia_no_brasil(agora)) == 4
 
 
 def test_textos_do_seed_sao_curtos(client):

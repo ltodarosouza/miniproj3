@@ -2,7 +2,7 @@ import random
 import re
 import sys
 import unicodedata
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -13,6 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.tempo import agora_utc
+from app.core.streak import FUSO_BRASIL, dia_no_brasil
 from app.db import Base, SessionLocal, engine
 import app.models  # noqa: F401
 from app.models.avaliacao import Avaliacao
@@ -277,14 +278,23 @@ def _criar_follows(db: Session, usuarios: list[User], sorteio: random.Random) ->
     )
 
 
-def _momento_do_dia(dia: int, sorteio: random.Random) -> datetime:
-    agora = agora_utc()
-    meia_noite = agora.replace(hour=0, minute=0, second=0, microsecond=0)
-    if dia == 0:
-        return meia_noite + (agora - meia_noite) * sorteio.uniform(0.1, 0.9)
-    return meia_noite - timedelta(days=dia) + timedelta(
-        hours=sorteio.randint(8, 20), minutes=sorteio.randint(0, 59)
+def _momento_do_dia(dia: int, sorteio: random.Random, agora: datetime) -> datetime:
+    hoje = dia_no_brasil(agora)
+    meia_noite_local = datetime.combine(hoje, datetime.min.time(), tzinfo=FUSO_BRASIL)
+    meia_noite_utc = meia_noite_local.astimezone(timezone.utc).replace(tzinfo=None)
+    # Perto da virada, termina ontem para o streak aceitar a sequência completa.
+    deslocamento = 1 if agora - meia_noite_utc < timedelta(hours=2) else 0
+    dia_alvo = dia + deslocamento
+    inicio_local = meia_noite_local - timedelta(days=dia_alvo)
+    inicio_utc = inicio_local.astimezone(timezone.utc).replace(tzinfo=None)
+    if dia_alvo == 0:
+        limite = agora - timedelta(minutes=1)
+        duracao = max((limite - inicio_utc).total_seconds(), 0)
+        return inicio_utc + timedelta(seconds=sorteio.uniform(0, duracao))
+    hora_local = inicio_local + timedelta(
+        hours=sorteio.randint(8, 20), minutes=sorteio.randint(0, 59), seconds=sorteio.randint(0, 59)
     )
+    return hora_local.astimezone(timezone.utc).replace(tzinfo=None)
 
 
 def gerar_posts(
@@ -292,7 +302,9 @@ def gerar_posts(
     perfis: dict[int, tuple[set[int], set[int]]],
     nomes: dict[int, str],
     sorteio: random.Random,
+    agora: datetime | None = None,
 ) -> list[Post]:
+    agora = agora or agora_utc()
     posts = []
     constantes = 0
     for indice, usuario in enumerate(usuarios):
@@ -312,9 +324,18 @@ def gerar_posts(
                 autor_id=usuario.id,
                 habilidade_id=habilidade_id,
                 minutos_estudados=minutos,
-                created_at=_momento_do_dia(dia, sorteio),
+                created_at=_momento_do_dia(dia, sorteio, agora),
             ))
     posts.sort(key=lambda post: post.created_at)
+    while True:
+        posts.sort(key=lambda post: post.created_at)
+        empate = next(
+            (indice for indice in range(1, len(posts)) if posts[indice].created_at == posts[indice - 1].created_at),
+            None,
+        )
+        if empate is None:
+            break
+        posts[empate - 1].created_at -= timedelta(seconds=1)
     contadores: dict[str, int] = {}
     deslocamentos: dict[str, int] = {}
     anterior_foto = None
