@@ -104,17 +104,38 @@ def test_todo_usuario_do_seed_tem_avatar(client):
     assert len(avatares) == len(set(avatares))
 
 
-def test_boa_parte_dos_posts_tem_foto(client):
+def test_posts_alternam_com_e_sem_foto(client):
     from app.models.post import Post
 
     rodar_seed()
     fotos_validas = {url for urls in seed.FOTOS_POR_TEMA.values() for url in urls}
     with SessionLocal() as db:
-        posts = list(db.scalars(select(Post)))
+        posts = list(db.scalars(select(Post).order_by(Post.created_at, Post.id)))
     com_foto = [p for p in posts if p.imagem_url]
-    assert posts
-    assert len(com_foto) / len(posts) >= 0.40
+    assert 50 <= len(posts) <= 60
+    assert len(com_foto) * 2 == len(posts)
+    assert [bool(p.imagem_url) for p in posts] == [i % 2 == 1 for i in range(len(posts))]
     assert all(p.imagem_url in fotos_validas for p in com_foto)
+    assert len({p.created_at for p in posts}) == len(posts)
+
+
+def test_textos_do_seed_sao_curtos(client):
+    from app.models.post import Post
+
+    rodar_seed()
+    with SessionLocal() as db:
+        posts = list(db.scalars(select(Post)))
+    assert all(len(post.texto) <= 90 for post in posts)
+
+
+def test_fotos_seguidas_nao_se_repetem(client):
+    from app.models.post import Post
+
+    rodar_seed()
+    with SessionLocal() as db:
+        posts = list(db.scalars(select(Post).order_by(Post.created_at, Post.id)))
+    fotos = [post.imagem_url for post in posts if post.imagem_url]
+    assert all(a != b for a, b in zip(fotos, fotos[1:]))
 
 
 def test_foto_do_post_combina_com_a_habilidade(client):
@@ -150,4 +171,4 @@ def test_seed_tem_posts_recentes_com_foto(client):
             .where(Post.imagem_url.is_not(None))
             .where(Post.created_at >= agora - timedelta(hours=48), Post.created_at <= agora)
         )
-    assert recentes >= seed.TOTAL_POSTS_DE_PROGRESSO
+    assert recentes >= 4
