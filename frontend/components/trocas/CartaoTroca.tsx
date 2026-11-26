@@ -65,7 +65,7 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
         </span>
       </div>
 
-      <p className="text-sm text-texto">{propus ? `Você propôs a ${nomeOutraPessoa}` : `${nomeOutraPessoa} propôs a você`}</p>
+      <p className="text-sm text-texto [overflow-wrap:anywhere]">{propus ? `Você propôs a ${nomeOutraPessoa}` : `${nomeOutraPessoa} propôs a você`}</p>
 
       {(habilidadeEnsino || habilidadeAprendo) && (
         <div className="border-y border-linha py-2.5">
@@ -80,7 +80,7 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
             {habilidadeEnsino && habilidadeAprendo && (
               <div aria-hidden className="relative h-px bg-linha">
                 <span className="absolute left-1/2 top-1/2 flex size-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-linha bg-superficie text-marca-forte">
-                  <Icone nome="troca" tamanho={14} />
+                  <Icone nome="par" tamanho={14} />
                 </span>
               </div>
             )}
@@ -99,7 +99,7 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
 
       {troca.status === "proposta" && (
         propus ? (
-          <p className="flex items-center gap-2 text-sm text-texto-2">
+          <p className="flex items-center gap-2 text-sm text-texto-2 [overflow-wrap:anywhere]">
             <span className="size-2 rounded-full bg-troca animate-pulse motion-reduce:animate-none" />
             Aguardando @{outraPessoa.username} confirmar
           </p>
@@ -134,7 +134,7 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
         )
       )}
 
-      {troca.status === "recusada" && <p className="text-sm text-texto-2">{propus ? `${nomeOutraPessoa} não pôde desta vez. Que tal combinar outro horário?` : "Você recusou esta proposta."}</p>}
+      {troca.status === "recusada" && <p className="text-sm text-texto-2 [overflow-wrap:anywhere]">{propus ? `${nomeOutraPessoa} não pôde desta vez. Que tal combinar outro horário?` : "Você recusou esta proposta."}</p>}
       <p className="numeros border-t border-linha pt-2.5 text-xs text-texto-3">
         <time dateTime={momento}>{acao} {quandoTexto}</time>
       </p>
