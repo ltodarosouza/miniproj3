@@ -14,6 +14,7 @@ def upgrade() -> None:
     op.create_table('notificacoes_entregues',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('usuario_id', sa.Integer(), nullable=False),
+    sa.Column('sequencia', sa.String(length=32), nullable=False),
     sa.Column('recorte', sa.DateTime(), nullable=False),
     sa.Column('post_id', sa.Integer(), nullable=False),
     sa.Column('dia', sa.Date(), nullable=False),
@@ -21,7 +22,7 @@ def upgrade() -> None:
     sa.Column('ator_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['usuario_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('usuario_id', 'recorte', 'post_id', 'dia')
+    sa.UniqueConstraint('usuario_id', 'sequencia', 'post_id', 'dia')
     )
     op.create_index('ix_notificacoes_entregues_usuario_id', 'notificacoes_entregues', ['usuario_id'], unique=False)
 
