@@ -12,7 +12,7 @@ export function BotaoCurtir({
 }: {
   curtido: boolean;
   total: number;
-  aoAlternar: () => void;
+  aoAlternar: () => boolean | void;
 }) {
   const [pulso, setPulso] = useState(0);
   const [explosao, setExplosao] = useState(0);
@@ -58,12 +58,13 @@ export function BotaoCurtir({
       aria-pressed={curtido}
       aria-label={curtido ? "Descurtir" : "Curtir"}
       onClick={() => {
+        // Clique ignorado (curtida anterior ainda no servidor) não anima nem vibra.
+        if (aoAlternar() === false) return;
         if (!curtido) {
           setPulso((p) => p + 1);
           vibrar(10);
           setExplosao((p) => p + 1);
         }
-        aoAlternar();
       }}
       className={`group inline-flex h-8 items-center gap-1.5 rounded-controle px-2 text-sm transition-colors duration-[var(--rapido)] ${
         curtido ? "text-marca-forte" : "text-texto-3 hover:bg-superficie-2 hover:text-texto"

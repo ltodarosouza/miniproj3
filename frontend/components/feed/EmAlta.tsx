@@ -26,7 +26,7 @@ export function EmAlta({ habilidades }: { habilidades: HabilidadeEmAlta[] }) {
               </Link>
             </th>
             <td className="py-2 text-right font-mono text-texto-2 numeros">
-              {h.minutos > 0 ? formatarTempoEstudado(h.minutos) : "–"}
+              {h.minutos > 0 ? formatarTempoEstudado(h.minutos) : <><span aria-hidden="true">–</span><span className="sr-only">sem horas</span></>}
             </td>
             <td className="py-2 text-right font-mono text-texto-2 numeros">{h.posts}</td>
           </tr>

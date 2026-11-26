@@ -9,7 +9,7 @@ import { Botao } from "@/components/ui/Botao";
 import { BotaoCurtir } from "@/components/ui/BotaoCurtir";
 import { Icone } from "@/components/ui/Icone";
 import { ToqueDuplo } from "@/components/ui/ToqueDuplo";
-import { formatarDataHora, formatarQuando } from "@/lib/datas";
+import { formatarDataHora, formatarHora, formatarQuando } from "@/lib/datas";
 import {
   apagarPost,
   curtirPost,
@@ -19,6 +19,14 @@ import {
   type Post,
 } from "@/lib/posts";
 import { meuId } from "@/lib/sessao";
+
+// Coluna da hora: hora para posts de hoje, "dd/mm" para os outros dias (cabe em 4 caracteres de largura).
+function horaDoDiario(iso: string): string {
+  const data = new Date(iso);
+  const hoje = new Date();
+  if (data.toDateString() === hoje.toDateString()) return formatarHora(iso);
+  return `${String(data.getDate()).padStart(2, "0")}/${String(data.getMonth() + 1).padStart(2, "0")}`;
+}
 
 // Linha do Diário: hora na coluna da esquerda, registro à direita e régua entre um e outro.
 export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApagar }: { post: Post; podeEnsinar?: boolean; rotulo?: string; aoApagar?: (id: number) => void }) {
@@ -89,8 +97,13 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApaga
 
   if (apagado) return null;
 
-  async function alternarCurtida() {
-    if (curtindo.current) return;
+  function alternarCurtida(): boolean {
+    if (curtindo.current) return false;
+    void enviarCurtida();
+    return true;
+  }
+
+  async function enviarCurtida() {
     curtindo.current = true;
     const proximo = !curtido;
     setCurtido(proximo);
@@ -108,14 +121,14 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApaga
   const marcacao = rotulo ?? (podeEnsinar ? "Pode te ensinar" : null);
 
   return (
-    <ToqueDuplo desativado={editando} aoToqueDuplo={() => { if (!curtido) void alternarCurtida(); }}>
+    <ToqueDuplo desativado={editando} aoToqueDuplo={() => { if (!curtido) alternarCurtida(); }}>
       <article className="grid grid-cols-[3.25rem_minmax(0,1fr)] gap-x-3 py-5 sm:grid-cols-[4rem_minmax(0,1fr)] sm:gap-x-4">
         <time
           className={`pt-1.5 font-mono text-xs text-texto-3 numeros ${marcacao ? "mt-6" : ""}`}
           dateTime={post.created_at}
           title={formatarDataHora(post.created_at)}
         >
-          {formatarQuando(post.created_at)}
+          {horaDoDiario(post.created_at)}
         </time>
         <div className="col-start-2 min-w-0">
           {marcacao && (

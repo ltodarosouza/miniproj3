@@ -6,7 +6,7 @@
 - **Escolha.** A tela passa a se chamar Mesa: é onde o estudante vê o que foi
   estudado. O topo traz o título, a data de hoje em mono e uma linha com a
   cotação da semana. A lista vira o Diário: cada post é uma linha de registro
-  com a hora numa coluna à esquerda, separada da próxima por uma régua. Tempo
+  com a hora numa coluna à esquerda (ou o dia, em "dd/mm", para posts de outros dias), separada da próxima por uma régua. Tempo
   estudado e habilidade ficam numa linha de dados em mono, logo abaixo do
   texto. "Pode te ensinar" e "Estuda o mesmo que você" saem do canto do cartão
   e viram um rótulo mono acima da linha.
@@ -17,9 +17,8 @@
   o quê e o atalho para conversar.
 - **Dados.** Tudo vem de rotas que já existiam: `GET /feed/em-alta` para a
   cotação e `GET /feed/meu-progresso` para a semana. Não há histórico de semanas
-  anteriores, então a seta da cotação no topo não compara com a semana passada:
-  ela indica a posição no ranking (metade de cima ▲, metade de baixo ▼). O
-  leitor de tela ouve a posição, não a seta.
+  anteriores, então a cotação no topo mostra só a posição no ranking ("1º",
+  "2º"), sem seta de subida ou descida que daria a entender uma variação.
 - **Curtida.** Um segundo clique enquanto a primeira curtida ainda está no
   servidor é ignorado. Antes, dois cliques rápidos podiam deixar o contador
   diferente do servidor. O coração curtido usa mel e as animações ficaram mais

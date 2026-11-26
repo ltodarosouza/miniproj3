@@ -12,6 +12,7 @@ import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { PuxarParaAtualizar } from "@/components/ui/PuxarParaAtualizar";
 import { Revelar } from "@/components/ui/Revelar";
 import { EsqueletoPost } from "@/components/ui/Esqueleto";
+import { dataLocal } from "@/lib/datas";
 import { listarMatches, type Match, type Page } from "@/lib/api";
 import {
   listarEmAlta,
@@ -37,21 +38,17 @@ const CARROSSEL_DEPOIS_DO = 3;
 
 const HOJE = new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
 
-// Cotação da semana em uma linha: "Algoritmos 3h05 ▲". A seta vem da posição no ranking:
-// metade de cima sobe, metade de baixo desce. Não há histórico de semanas para comparar.
+// Cotação da semana em uma linha: "1º Algoritmos 3h05". Mostra a posição no ranking da semana;
+// não há histórico de semanas anteriores para mostrar se subiu ou desceu.
 function Cotacao({ habilidades }: { habilidades: HabilidadeEmAlta[] }) {
   if (!habilidades.length) return null;
-  const metade = Math.ceil(habilidades.length / 2);
   return (
-    <ul aria-label="Cotação da semana" className="flex gap-x-5 gap-y-1 overflow-x-auto border-y border-linha py-2 font-mono text-xs text-texto-2 [scrollbar-width:none]! [&::-webkit-scrollbar]:hidden">
+    <ul tabIndex={0} aria-label="Cotação da semana" className="flex rounded-controle focus-visible:outline-2 focus-visible:outline-marca gap-x-5 gap-y-1 overflow-x-auto border-y border-linha py-2 font-mono text-xs text-texto-2 [scrollbar-width:none]! [&::-webkit-scrollbar]:hidden">
       {habilidades.map((h, i) => {
-        const sobe = i < metade;
         return (
           <li key={h.id} className="shrink-0 whitespace-nowrap numeros">
-            <span className="text-texto">{h.nome}</span>{" "}
-            {h.minutos > 0 ? formatarTempoEstudado(h.minutos) : `${h.posts} ${h.posts === 1 ? "post" : "posts"}`}{" "}
-            <span aria-hidden="true" className={sobe ? "text-marca-forte" : "text-texto-3"}>{sobe ? "▲" : "▼"}</span>
-            <span className="sr-only">, {i + 1}º lugar</span>
+            <span className="text-marca-forte">{i + 1}º</span> <span className="text-texto">{h.nome}</span>{" "}
+            {h.minutos > 0 ? formatarTempoEstudado(h.minutos) : `${h.posts} ${h.posts === 1 ? "post" : "posts"}`}
           </li>
         );
       })}
@@ -319,7 +316,7 @@ function Feed() {
         <header className="space-y-3">
           <div className="flex items-baseline justify-between gap-3">
             <h1 className="font-display text-[2rem] font-bold leading-tight tracking-[-0.025em] text-texto">Mesa</h1>
-            <time className="font-mono text-xs text-texto-3 numeros" dateTime={hoje?.toISOString()}>
+            <time className="font-mono text-xs text-texto-3 numeros" dateTime={hoje ? dataLocal(hoje) : undefined}>
               {hoje ? HOJE.format(hoje).replace(/\./g, "") : null}
             </time>
           </div>
