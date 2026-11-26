@@ -450,3 +450,17 @@ def test_nao_lidas_e_rota_estatica(client, pessoa):
     resposta = client.get("/dms/nao-lidas", headers=ana)
     assert resposta.status_code == 200
     assert resposta.json() == {"total": 0, "por_conversa": {}}
+
+
+def test_username_com_maiusculas_acha_a_mesma_conversa(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    client.post("/dms/ana", json={"texto": "oi"}, headers=bia)
+
+    minusculas = client.get("/dms/bia", headers=ana)
+    maiusculas = client.get("/dms/BIA", headers=ana)
+
+    assert maiusculas.status_code == 200
+    assert maiusculas.json()["items"] == minusculas.json()["items"]
+    assert client.post("/dms/BIA/lidas", headers=ana).status_code == 200
+    assert client.post("/dms/ANA", json={"texto": "eu"}, headers=ana).status_code == 422

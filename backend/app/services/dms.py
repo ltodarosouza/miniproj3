@@ -19,12 +19,16 @@ from app.schemas.dm import (
     MensagemPage,
     NaoLidasOut,
 )
+from app.services import users
 
 
 def _destinatario(db: Session, username: str, eu: User) -> User:
-    outro = db.scalar(select(User).where(User.username == username))
-    if outro is None:
-        raise HTTPException(status_code=404, detail="usuário não encontrado")
+    try:
+        outro = users.por_username_ou_404(db, username)
+    except HTTPException as erro:
+        if erro.status_code != 404:
+            raise
+        raise HTTPException(status_code=404, detail="usuário não encontrado") from erro
     if outro.id == eu.id:
         raise HTTPException(
             status_code=422, detail="você não pode mandar mensagem para si mesmo"
