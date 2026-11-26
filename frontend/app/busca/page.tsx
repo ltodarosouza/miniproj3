@@ -57,7 +57,7 @@ function Recomendados() {
         </div>
       </section>
       <section>
-        <h2 className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.08em] text-texto-3">02 · Em alta esta semana</h2>
+        <h2 className="mb-3 font-mono text-xs font-medium uppercase tracking-[0.08em] text-texto-3">02 · Mais estudadas</h2>
         <div className="border-t border-linha pt-3">
           {emAlta === null ? <p className="text-sm text-texto-3">Carregando…</p> : <EmAlta habilidades={emAlta} />}
         </div>

@@ -38,12 +38,12 @@ const CARROSSEL_DEPOIS_DO = 3;
 
 const HOJE = new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
 
-// Cotação da semana em uma linha: "1º Algoritmos 3h05". Mostra a posição no ranking da semana;
-// não há histórico de semanas anteriores para mostrar se subiu ou desceu.
-function Cotacao({ habilidades }: { habilidades: HabilidadeEmAlta[] }) {
+// Mais estudadas em uma linha: "1º Algoritmos 3h05". Mostra a posição no ranking dos últimos 7 dias.
+function MaisEstudadas({ habilidades }: { habilidades: HabilidadeEmAlta[] }) {
   if (!habilidades.length) return null;
   return (
-    <ul tabIndex={0} aria-label="Cotação da semana" className="flex rounded-controle focus-visible:outline-2 focus-visible:outline-marca gap-x-5 gap-y-1 overflow-x-auto border-y border-linha py-2 font-mono text-xs text-texto-2 [scrollbar-width:none]! [&::-webkit-scrollbar]:hidden">
+    <ul tabIndex={0} aria-label="Mais estudadas nos últimos 7 dias, por horas" className="lg:hidden flex rounded-controle focus-visible:outline-2 focus-visible:outline-marca gap-x-5 gap-y-1 overflow-x-auto border-y border-linha py-2 font-mono text-xs text-texto-2 [scrollbar-width:none]! [&::-webkit-scrollbar]:hidden">
+      <li className="shrink-0 whitespace-nowrap text-texto-3">Mais estudadas · 7 dias</li>
       {habilidades.map((h, i) => {
         return (
           <li key={h.id} className="shrink-0 whitespace-nowrap numeros">
@@ -311,7 +311,7 @@ function Feed() {
   }
 
   return (
-    <div className="mx-auto grid w-full max-w-[60rem] gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <div className="mx-auto grid w-full max-w-[64rem] gap-8 lg:gap-12 xl:gap-16 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="mx-auto w-full min-w-0 max-w-[37.5rem] space-y-6">
         <header className="space-y-3">
           <div className="flex items-baseline justify-between gap-3">
@@ -320,7 +320,7 @@ function Feed() {
               {hoje ? HOJE.format(hoje).replace(/\./g, "") : null}
             </time>
           </div>
-          {logado && emAlta && <Cotacao habilidades={emAlta} />}
+          {logado && emAlta && <MaisEstudadas habilidades={emAlta} />}
         </header>
         {logado && !carregando && <Composer aoPublicar={aoPublicar} pedidoDeAbrir={pedidoDeAbrir} />}
         {logado ? <PuxarParaAtualizar aoAtualizar={atualizar}>{conteudo}</PuxarParaAtualizar> : conteudo}

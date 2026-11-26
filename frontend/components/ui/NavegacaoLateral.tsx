@@ -9,6 +9,7 @@ import { Icone } from "./Icone";
 import { Logo } from "./Logo";
 import { SeloContador } from "./SeloContador";
 import { Streak } from "./Streak";
+import { rotuloMensagens, totalMensagens, type NaoLidas } from "./useSelos";
 
 export function NavegacaoLateral({
   nomeRede,
@@ -16,7 +17,7 @@ export function NavegacaoLateral({
   streak,
 }: {
   nomeRede: string;
-  naoLidas: { mensagens: number | null; notificacoes: number | null };
+  naoLidas: NaoLidas;
   streak: { dias: number; postouHoje: boolean } | null;
 }) {
   const caminho = usePathname();
@@ -53,7 +54,7 @@ export function NavegacaoLateral({
             const comSelo = item.href === "/mensagens" || item.href === "/notificacoes";
             const totalNaoLidas =
               item.href === "/mensagens"
-                ? naoLidas.mensagens
+                ? totalMensagens(naoLidas)
                 : item.href === "/notificacoes"
                   ? naoLidas.notificacoes
                   : null;
@@ -62,6 +63,7 @@ export function NavegacaoLateral({
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  aria-label={item.href === "/mensagens" ? rotuloMensagens(naoLidas) : undefined}
                   aria-current={ativo ? "page" : undefined}
                   title={item.rotulo}
                   className={`relative flex h-10 items-center justify-center gap-3 rounded-controle text-[0.9375rem] transition-colors duration-[var(--rapido)] motion-reduce:transition-none xl:justify-start xl:px-2 ${
@@ -84,7 +86,7 @@ export function NavegacaoLateral({
                       <SeloContador total={totalNaoLidas} />
                     </span>
                   ) : null}
-                  {totalNaoLidas !== null && totalNaoLidas > 0 ? (
+                  {item.href === "/mensagens" ? null : totalNaoLidas !== null && totalNaoLidas > 0 ? (
                     <span className="sr-only">, {totalNaoLidas} não lidas</span>
                   ) : null}
                 </Link>

@@ -371,7 +371,8 @@ provisório troca. É uma mudança pequena, mas precisa acontecer na ordem:
   "Agendar troca" (data, hora, link do Meet, habilidades).
 - Card da troca dentro da conversa: confirmar ou recusar e "Adicionar ao
   Google Agenda".
-- Aviso de avaliação pendente (estrelas e campo de feedback) ao abrir o app.
+- Avaliação pendente (estrelas e campo de feedback) no cartão da troca,
+  dentro da conversa, com aviso no selo de Mensagens (decisão 39).
 
 ### Deploy
 

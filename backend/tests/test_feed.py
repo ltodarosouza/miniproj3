@@ -153,6 +153,33 @@ def test_em_alta_conta_posts_da_semana_por_habilidade(client, pessoa):
     assert client.get("/feed/em-alta").status_code == 401
 
 
+def test_em_alta_ordena_por_horas_e_desempata_por_posts(client, pessoa, monkeypatch):
+    monkeypatch.setattr(limitador_posts, "max_chamadas", 100)
+    ana = pessoa("ana")
+    a = habilidade(client, "Python")
+    b = habilidade(client, "React")
+    c = habilidade(client, "JavaScript")
+    d = habilidade(client, "SQL")
+    for minutos in (10, 10, 10):
+        client.post(
+            "/posts",
+            json={"texto": "A", "habilidade_id": a, "minutos_estudados": minutos},
+            headers=ana,
+        )
+    client.post(
+        "/posts",
+        json={"texto": "B", "habilidade_id": b, "minutos_estudados": 120},
+        headers=ana,
+    )
+    for hid, nome, quantidade in ((c, "C", 2), (d, "D", 1)):
+        for _ in range(quantidade):
+            client.post("/posts", json={"texto": nome, "habilidade_id": hid}, headers=ana)
+
+    r = client.get("/feed/em-alta", headers=ana)
+
+    assert [i["id"] for i in r.json()] == [b, a, c, d]
+
+
 def test_meu_progresso_soma_a_semana(client, pessoa):
     ana = pessoa("ana")
     client.post("/posts", json={"texto": "a", "minutos_estudados": 20}, headers=ana)
