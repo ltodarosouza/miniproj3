@@ -308,6 +308,68 @@ def test_marcar_lidas_faz_um_commit_so(client, pessoa, monkeypatch):
     assert commits == 1
 
 
+def test_marcar_lidas_refaz_tudo_apos_integrity_error(client, pessoa, monkeypatch):
+    from app.db import SessionLocal
+    from app.models.leitura_conversa import LeituraConversa
+    from app.models.mensagem import Mensagem
+    from app.models.user import User
+    from app.services import dms
+
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    client.post("/dms/ana", json={"texto": "uma"}, headers=bia)
+    client.post("/dms/ana", json={"texto": "duas"}, headers=bia)
+
+    atualizar_original = dms._atualizar_leitura
+    chamadas = 0
+
+    def simular_corrida(db, eu, outro, agora):
+        nonlocal chamadas
+        chamadas += 1
+        atualizar_original(db, eu, outro, agora)
+        if chamadas == 1:
+            db.add(
+                LeituraConversa(
+                    user_id=eu.id,
+                    com_id=outro.id,
+                    lida_em=datetime(2000, 1, 1),
+                )
+            )
+
+    monkeypatch.setattr(dms, "_atualizar_leitura", simular_corrida)
+
+    resposta = client.post("/dms/bia/lidas", headers=ana)
+
+    assert resposta.status_code == 200
+    assert chamadas == 2
+    with SessionLocal() as db:
+        ana_user = db.scalar(select(User).where(User.username == "ana"))
+        bia_user = db.scalar(select(User).where(User.username == "bia"))
+        leitura = db.scalar(
+            select(LeituraConversa).where(
+                LeituraConversa.user_id == ana_user.id,
+                LeituraConversa.com_id == bia_user.id,
+            )
+        )
+        mensagens = list(
+            db.scalars(
+                select(Mensagem).where(
+                    Mensagem.de_id == bia_user.id,
+                    Mensagem.para_id == ana_user.id,
+                )
+            )
+        )
+        assert len(mensagens) == 2
+        assert all(mensagem.lida_em is not None for mensagem in mensagens)
+        assert leitura is not None
+        assert leitura.lida_em == mensagens[0].lida_em
+        assert all(mensagem.lida_em == leitura.lida_em for mensagem in mensagens)
+
+    nao_lidas = client.get("/dms/nao-lidas", headers=ana)
+    assert nao_lidas.status_code == 200
+    assert nao_lidas.json()["total"] == 0
+
+
 def test_proposta_cria_conversa_e_conta_como_nao_lida(client, pessoa):
     from app.db import SessionLocal
     from app.models.habilidade import Habilidade
