@@ -15,7 +15,6 @@ const POR_PAGINA = 20;
 export default function EncontrarPessoasPage() {
   const [usuarios, setUsuarios] = useState<User[]>([]);
   const [total, setTotal] = useState(0);
-  const [euNoTotal, setEuNoTotal] = useState(false);
   const [proximoOffset, setProximoOffset] = useState(0);
   const [termo, setTermo] = useState("");
   const [busca, setBusca] = useState("");
@@ -48,8 +47,6 @@ export default function EncontrarPessoasPage() {
         return [...anteriores, ...novos.filter((usuario) => !ids.has(usuario.id))];
       });
       setTotal(pagina.total);
-      const euNaPagina = pagina.items.some((usuario) => usuario.id === idMeuUsuario);
-      setEuNoTotal((antes) => (offset === 0 ? !filtro.trim() || euNaPagina : antes || euNaPagina));
       setProximoOffset(pagina.offset + pagina.items.length);
     } catch (falha) {
       if (atual === requisicao.current) {
@@ -118,7 +115,7 @@ export default function EncontrarPessoasPage() {
       {logado && (
         <div className="flex items-baseline justify-between gap-3">
           <p className="font-mono text-xs uppercase tracking-[0.08em] text-texto-3">
-            01 · Pessoas{usuarios.length > 0 && <> · <span className="numeros">{euNoTotal ? total - 1 : total}</span></>}
+            01 · Pessoas · <span className="numeros">{usuarios.length} carregadas</span>
           </p>
           <Link href="/matches" className="shrink-0 text-sm font-medium text-marca-forte hover:underline">
             Ver seus pares →
