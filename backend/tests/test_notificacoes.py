@@ -34,9 +34,9 @@ def criar_troca(client, headers, ids, com="bia"):
     return resposta.json()["id"]
 
 
-def horario_utc(hora, minuto=0):
+def horario_utc(hora, minuto=0, segundo=0):
     return (agora_utc() - timedelta(days=1)).replace(
-        hour=hora, minute=minuto, second=0, microsecond=0
+        hour=hora, minute=minuto, second=segundo, microsecond=0
     )
 
 
@@ -264,7 +264,7 @@ def test_cursor_sem_sobreposicao_com_evento_novo_entre_paginas(client, pessoa):
     assert primeira_nova["items"][0]["ator"]["username"] == "novo"
 
 
-def test_cursor_mantem_grupo_de_post_nao_exibido_que_recebe_curtida_nova(client, pessoa):
+def test_cursor_mantem_grupo_de_post_nao_exibido_que_recebe_curtida_nova(client, pessoa, monkeypatch):
     ana, bia, caio = pessoa("ana"), pessoa("bia"), pessoa("caio")
     post_a = client.post("/posts", json={"texto": "A"}, headers=ana).json()["id"]
     post_b = client.post("/posts", json={"texto": "B"}, headers=ana).json()["id"]
@@ -275,9 +275,21 @@ def test_cursor_mantem_grupo_de_post_nao_exibido_que_recebe_curtida_nova(client,
         for curtida in curtidas:
             curtida.created_at = horario_utc(10, 0 if curtida.post_id == post_a else 1)
         db.commit()
+    monkeypatch.setattr("app.services.notificacoes.agora_utc", lambda: horario_utc(10, 1, 30))
     primeira = client.get("/notificacoes?limit=1", headers=ana).json()
     assert primeira["items"][0]["post_id"] == post_b
-    client.post(f"/posts/{post_a}/curtir", headers=caio)
+    monkeypatch.setattr("app.services.notificacoes.agora_utc", agora_utc)
+    assert client.post(f"/posts/{post_a}/curtir", headers=caio).status_code == 204
+    with SessionLocal() as db:
+        usuario_caio = db.scalar(select(User).where(User.username == "caio"))
+        curtida_caio = db.scalar(
+            select(Curtida).where(
+                Curtida.post_id == post_a,
+                Curtida.usuario_id == usuario_caio.id,
+            )
+        )
+        curtida_caio.created_at = horario_utc(10, 2)
+        db.commit()
     segunda = client.get(f"/notificacoes?limit=1&cursor={primeira['proximo_cursor']}", headers=ana).json()
     item = segunda["items"][0]
     assert item["post_id"] == post_a
@@ -285,6 +297,9 @@ def test_cursor_mantem_grupo_de_post_nao_exibido_que_recebe_curtida_nova(client,
     assert item["ator"]["username"] == "bia"
     assert item["texto_curto"] == "Bia curtiu seu post"
     assert segunda["proximo_cursor"] is None
+    sem_cursor = client.get("/notificacoes?limit=1", headers=ana).json()
+    assert sem_cursor["items"][0]["post_id"] == post_a
+    assert sem_cursor["items"][0]["texto_curto"] == "Caio e mais 1 curtiram seu post"
 
 
 def test_cursor_nao_repete_grupo_ja_exibido(client, pessoa):
@@ -306,6 +321,73 @@ def test_cursor_nao_repete_grupo_ja_exibido(client, pessoa):
     segunda = client.get(f"/notificacoes?limit=1&cursor={primeira['proximo_cursor']}", headers=ana).json()
     assert [item["post_id"] for item in segunda["items"]] == [post_b]
     assert segunda["proximo_cursor"] is None
+
+
+def test_cursor_nao_repete_grupo_apos_descurtida(client, pessoa):
+    ana, bia, caio, duda = (pessoa(n) for n in ("ana", "bia", "caio", "duda"))
+    post_a = client.post("/posts", json={"texto": "A"}, headers=ana).json()["id"]
+    post_b = client.post("/posts", json={"texto": "B"}, headers=ana).json()["id"]
+    for post_id, ator in ((post_a, bia), (post_a, caio), (post_b, duda)):
+        client.post(f"/posts/{post_id}/curtir", headers=ator)
+    with SessionLocal() as db:
+        curtidas = list(db.scalars(select(Curtida)))
+        minutos = {post_a: {"bia": 0, "caio": 5}, post_b: {"duda": 3}}
+        for curtida in curtidas:
+            username = db.get(User, curtida.usuario_id).username
+            curtida.created_at = horario_utc(10, minutos[curtida.post_id][username])
+        db.commit()
+
+    primeira = client.get("/notificacoes?limit=1", headers=ana).json()
+    assert primeira["items"][0]["post_id"] == post_a
+    assert client.delete(f"/posts/{post_a}/curtir", headers=caio).status_code == 204
+    segunda = client.get(
+        f"/notificacoes?limit=1&cursor={primeira['proximo_cursor']}", headers=ana
+    ).json()
+    assert [item["post_id"] for item in segunda["items"]] == [post_b]
+    assert segunda["proximo_cursor"] is None
+
+
+def test_cursor_nao_repete_grupo_apos_descurtida_com_duas_paginas(client, pessoa):
+    ana, bia, caio, duda = (pessoa(n) for n in ("ana", "bia", "caio", "duda"))
+    posts = {
+        nome: client.post("/posts", json={"texto": nome}, headers=ana).json()["id"]
+        for nome in ("A", "B", "C")
+    }
+    for nome, ator in (("A", bia), ("A", caio), ("B", duda), ("C", bia)):
+        client.post(f"/posts/{posts[nome]}/curtir", headers=ator)
+    with SessionLocal() as db:
+        curtidas = list(db.scalars(select(Curtida)))
+        minutos = {"A": {"bia": 0, "caio": 5}, "B": {"duda": 4}, "C": {"bia": 3}}
+        for curtida in curtidas:
+            post_nome = next(nome for nome, post_id in posts.items() if post_id == curtida.post_id)
+            username = db.get(User, curtida.usuario_id).username
+            curtida.created_at = horario_utc(10, minutos[post_nome][username])
+        db.commit()
+
+    primeira = client.get("/notificacoes?limit=1", headers=ana).json()
+    assert primeira["items"][0]["post_id"] == posts["A"]
+    segunda = client.get(
+        f"/notificacoes?limit=1&cursor={primeira['proximo_cursor']}", headers=ana
+    ).json()
+    assert [item["post_id"] for item in segunda["items"]] == [posts["B"]]
+    assert segunda["proximo_cursor"]
+    assert client.delete(f"/posts/{posts['A']}/curtir", headers=caio).status_code == 204
+    terceira = client.get(
+        f"/notificacoes?limit=1&cursor={segunda['proximo_cursor']}", headers=ana
+    ).json()
+    assert [item["post_id"] for item in terceira["items"]] == [posts["C"]]
+    assert terceira["proximo_cursor"] is None
+
+
+def test_antes_de_no_limite_minimo_nao_quebra(client, pessoa):
+    ana = pessoa("ana")
+    resposta = client.get("/notificacoes?antes_de=0001-01-01T00:00:00Z", headers=ana)
+    assert resposta.status_code == 200
+    assert resposta.json()["items"] == []
+    assert resposta.json()["proximo_cursor"] is None
+    assert client.get(
+        "/notificacoes?antes_de=0001-01-01T00:00:00%2B01:00", headers=ana
+    ).status_code == 422
 
 
 def test_antes_de_recorta_curtidas_antes_de_agrupar(client, pessoa):
@@ -355,6 +437,7 @@ def test_cursor_invalido_e_combinado_com_antes_de_dao_422(client, pessoa):
         client.post("/usuarios/ana/follow", headers=pessoa(username))
     valido = client.get("/notificacoes?limit=1", headers=ana).json()["proximo_cursor"]
     assert valido
+    assert client.get(f"/notificacoes?cursor={valido}!!!!", headers=ana).status_code == 422
     assert client.get(f"/notificacoes?cursor={valido}&antes_de=2030-01-01T00:00:00Z", headers=ana).status_code == 422
 
 
