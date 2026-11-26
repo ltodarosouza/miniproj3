@@ -25,10 +25,18 @@
   do último item: `em`, `tipo`, `ator_id` e uma chave interna. Com `cursor=`,
   o servidor ignora cada evento posterior ao recorte antes de agrupar
   curtidas, ordena por (`em` desc, `tipo`, `ator_id`, chave) e devolve os
-  itens estritamente depois da posição. Como toda curtida de um grupo cai no
-  mesmo dia, só um grupo do dia da posição pode descer para baixo dela se
-  alguém descurtir; por isso o cursor também leva os `post_id` dos grupos
-  de curtida já entregues naquele dia, e a página seguinte os exclui.
+  itens estritamente depois da posição.
+
+  Descurtir entre páginas baixaria o horário de um grupo já entregue e o
+  faria reaparecer. Por isso, a cada página com próxima, o servidor guarda
+  em `notificacoes_entregues` (migração 0006) a posição original de cada
+  grupo de curtida entregue (pessoa, recorte, post, dia, `em`, ator). Nas
+  páginas seguintes do mesmo recorte, esse grupo é ordenado pela posição
+  guardada, então continua acima do cursor. Levar a lista no próprio cursor
+  foi a primeira tentativa, mas ela crescia a cada página e estourava o
+  limite do parâmetro. Na tabela, o cursor tem tamanho fixo, e repetir o
+  mesmo cursor devolve a mesma página. Linhas com recorte de mais de um dia
+  são apagadas quando a pessoa pede a página 1.
 
   `antes_de=<iso>` continua por compatibilidade e recorta cada evento com
   `em < antes_de` antes de agrupar. Os dois parâmetros juntos ou um cursor
@@ -41,8 +49,10 @@
   numa nova transação. `_lidas_ate_id` e `_entregues_ate_id` viraram uma
   função com a coluna como parâmetro.
 - **O que cortamos e por quê:** snapshot persistido no banco (tabela de
-  notificações), que mudaria a decisão 21 inteira. Na página 1 pedida por
-  `offset` > 0, o cursor só conhece os grupos daquela página; quem pagina
-  com `cursor` desde o início não tem esse limite. A troca da busca de
+  notificações), que mudaria a decisão 21 inteira; guardamos só a posição
+  dos grupos de curtida, o único item cujo horário muda. Na página 1 pedida
+  por `offset` > 0, as páginas anteriores por offset não foram guardadas;
+  quem pagina com `cursor` desde o início não tem esse limite. Um cursor
+  com mais de um dia perde a proteção contra descurtida. A troca da busca de
   username em `dms.py` por `por_username_ou_404` fica para quando a #73
   entrar.
