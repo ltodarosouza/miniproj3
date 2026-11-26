@@ -215,7 +215,7 @@ function Feed() {
   if (!logado) {
     conteudo = (
       <p className="text-sm leading-relaxed text-texto-2">
-        Entre na sua conta para ver a Mesa.{" "}
+        Entre na sua conta para ver o Feed.{" "}
         <Link className="font-medium text-marca-forte underline" href="/login">
           Entrar
         </Link>
@@ -315,7 +315,7 @@ function Feed() {
       <div className="mx-auto w-full min-w-0 max-w-[37.5rem] space-y-6">
         <header className="space-y-3">
           <div className="flex items-baseline justify-between gap-3">
-            <h1 className="font-display text-[2rem] font-bold leading-tight tracking-[-0.025em] text-texto">Mesa</h1>
+            <h1 className="font-display text-[2rem] font-bold leading-tight tracking-[-0.025em] text-texto">Feed</h1>
             <time className="font-mono text-xs text-texto-3 numeros" dateTime={hoje ? dataLocal(hoje) : undefined}>
               {hoje ? HOJE.format(hoje).replace(/\./g, "") : null}
             </time>
