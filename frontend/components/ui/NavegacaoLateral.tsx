@@ -96,7 +96,7 @@ export function NavegacaoLateral({
         <Link
           href={HREF_PUBLICAR}
           title="Publicar"
-          className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-controle bg-marca font-semibold text-marca-texto transition-colors duration-[var(--rapido)] hover:bg-marca-forte hover:text-fundo motion-reduce:transition-none"
+          className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-controle bg-marca font-semibold text-marca-texto transition-colors duration-[var(--rapido)] hover:bg-marca/90 motion-reduce:transition-none"
         >
           <Icone nome="mais" tamanho={18} />
           <span className="sr-only xl:not-sr-only">Publicar</span>

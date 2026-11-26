@@ -55,7 +55,7 @@ export function CabecalhoCelular({
             href="/notificacoes"
             aria-label={rotuloComContagem("Notificações", naoLidas.notificacoes)}
             aria-current={linkAtivo("/notificacoes") ? "page" : undefined}
-            className={`relative inline-flex size-11 items-center justify-center transition-colors duration-[var(--rapido)] hover:text-texto ${linkAtivo("/notificacoes") ? "text-texto before:absolute before:inset-x-2.5 before:top-0 before:h-[2px] before:bg-marca before:content-['']" : "text-texto-2"}`}
+            className={`relative inline-flex size-11 items-center justify-center rounded-controle transition-colors duration-[var(--rapido)] hover:text-texto ${linkAtivo("/notificacoes") ? "text-texto before:absolute before:inset-x-2.5 before:top-0 before:h-[2px] before:bg-marca before:content-['']" : "text-texto-2"}`}
           >
             <Icone nome="sino" tamanho={20} />
             <span className="absolute right-0.5 top-1.5"><SeloContador total={naoLidas.notificacoes} /></span>
@@ -64,7 +64,7 @@ export function CabecalhoCelular({
             href="/mensagens"
             aria-label={rotuloComContagem("Mensagens", naoLidas.mensagens)}
             aria-current={linkAtivo("/mensagens") ? "page" : undefined}
-            className={`relative inline-flex size-11 items-center justify-center transition-colors duration-[var(--rapido)] hover:text-texto ${linkAtivo("/mensagens") ? "text-texto before:absolute before:inset-x-2.5 before:top-0 before:h-[2px] before:bg-marca before:content-['']" : "text-texto-2"}`}
+            className={`relative inline-flex size-11 items-center justify-center rounded-controle transition-colors duration-[var(--rapido)] hover:text-texto ${linkAtivo("/mensagens") ? "text-texto before:absolute before:inset-x-2.5 before:top-0 before:h-[2px] before:bg-marca before:content-['']" : "text-texto-2"}`}
           >
             <Icone nome="mensagem" tamanho={20} />
             <span className="absolute right-0.5 top-1.5"><SeloContador total={naoLidas.mensagens} /></span>
@@ -74,7 +74,7 @@ export function CabecalhoCelular({
             aria-label="Mais opções"
             aria-haspopup="dialog"
             onClick={() => setFolhaAberta(true)}
-            className="inline-flex size-11 items-center justify-center text-texto-2 transition-colors duration-[var(--rapido)] hover:text-texto"
+            className="inline-flex size-11 items-center justify-center rounded-controle text-texto-2 transition-colors duration-[var(--rapido)] hover:text-texto"
           >
             <Icone nome="opcoes" tamanho={20} />
           </button>
