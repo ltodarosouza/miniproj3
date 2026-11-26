@@ -10,7 +10,7 @@ from app.models.user import User
 from app.schemas.avaliacao import AvaliacaoCreate, AvaliacaoOut, ResumoAvaliacoes
 from app.schemas.troca import TrocaOut
 from app.schemas.user import UserOut
-from app.services.trocas import para_saidas
+from app.services import trocas as servico_trocas
 
 
 def _para_saidas(db: Session, avaliacoes: list[Avaliacao]) -> list[AvaliacaoOut]:
@@ -51,7 +51,7 @@ def pendentes(db: Session, pessoa: User) -> list[TrocaOut]:
             .order_by(Troca.data_hora)
         )
     )
-    return para_saidas(db, trocas)
+    return servico_trocas.para_saidas(db, trocas)
 
 
 def avaliar(
