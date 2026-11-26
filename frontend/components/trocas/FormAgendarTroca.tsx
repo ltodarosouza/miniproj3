@@ -208,7 +208,7 @@ export function FormAgendarTroca({
       }}
       className="m-auto w-[min(32rem,calc(100vw-2rem))] overflow-y-auto rounded-cartao border border-linha bg-superficie p-6 text-texto shadow-alta backdrop:bg-[oklch(0.16_0.012_200/0.55)] backdrop:backdrop-blur-sm open:animate-[aparecer-escala_var(--medio)_var(--ease-saida)_both] motion-reduce:open:animate-none max-sm:mt-auto max-sm:mb-0 max-sm:w-full max-sm:rounded-t-cartao max-sm:rounded-b-none max-sm:p-5"
     >
-      <form onSubmit={enviar} noValidate className="flex max-h-[calc(100dvh-2.5rem)] flex-col gap-5 max-sm:max-h-[calc(100dvh-1.25rem)]">
+      <form onSubmit={enviar} noValidate className="flex max-h-[calc(100dvh-5.5rem)] flex-col gap-5 max-sm:max-h-[calc(100dvh-5rem)]">
         <header className="space-y-1">
           <h2 id="titulo-agendar-troca" className="text-lg font-semibold tracking-tight">
             Agendar troca com {primeiroNome}
