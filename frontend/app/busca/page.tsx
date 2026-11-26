@@ -135,6 +135,7 @@ function Busca() {
   const [erro, setErro] = useState(false);
   const [logado, setLogado] = useState(true);
   const campo = useRef<HTMLInputElement>(null);
+  const abas = useRef<(HTMLButtonElement | null)[]>([]);
   const pedido = useRef(0);
 
   useEffect(() => {
@@ -149,9 +150,10 @@ function Busca() {
         evento.key !== "/" || evento.ctrlKey || evento.metaKey || evento.altKey ||
         alvo instanceof HTMLElement && (alvo.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(alvo.tagName))
       ) return;
+      if (!campo.current) return;
       evento.preventDefault();
-      campo.current?.focus();
-      campo.current?.select();
+      campo.current.focus();
+      campo.current.select();
     };
     window.addEventListener("keydown", aoPressionar);
     return () => window.removeEventListener("keydown", aoPressionar);
@@ -232,6 +234,19 @@ function Busca() {
 
   const mostrados = resultado ? resultado[resultado.tipo].length : 0;
 
+  function navegarAbas(evento: React.KeyboardEvent<HTMLDivElement>) {
+    const indiceAtual = ABAS.findIndex((aba) => aba.tipo === tipo);
+    let novoIndice: number;
+    if (evento.key === "ArrowRight") novoIndice = (indiceAtual + 1) % ABAS.length;
+    else if (evento.key === "ArrowLeft") novoIndice = (indiceAtual - 1 + ABAS.length) % ABAS.length;
+    else if (evento.key === "Home") novoIndice = 0;
+    else if (evento.key === "End") novoIndice = ABAS.length - 1;
+    else return;
+    evento.preventDefault();
+    setTipo(ABAS[novoIndice].tipo);
+    abas.current[novoIndice]?.focus();
+  }
+
   return (
     <div className="space-y-5">
       <div className="relative">
@@ -256,13 +271,17 @@ function Busca() {
 
       {termo.trim() ? (
         <>
-          <div role="tablist" aria-label="Tipo de resultado" className="flex gap-1 border-b border-linha">
+          <div role="tablist" aria-label="Tipo de resultado" onKeyDown={navegarAbas} className="flex gap-1 border-b border-linha">
             {ABAS.map((aba) => (
               <button
                 key={aba.tipo}
                 type="button"
                 role="tab"
+                ref={(el) => { abas.current[ABAS.indexOf(aba)] = el; }}
+                id={`aba-busca-${aba.tipo}`}
+                aria-controls="painel-busca"
                 aria-selected={tipo === aba.tipo}
+                tabIndex={tipo === aba.tipo ? 0 : -1}
                 onClick={() => setTipo(aba.tipo)}
                 className={`-mb-px mr-5 border-b-2 px-1 py-2.5 text-sm transition-colors duration-[var(--rapido)] motion-reduce:transition-none ${tipo === aba.tipo ? "border-marca text-texto font-medium" : "border-transparent text-texto-3 hover:text-texto"}`}
               >
@@ -270,7 +289,7 @@ function Busca() {
               </button>
             ))}
           </div>
-          <div role="tabpanel" aria-busy={carregando} className="space-y-4">
+          <div role="tabpanel" id="painel-busca" aria-labelledby={`aba-busca-${tipo}`} aria-busy={carregando} className="space-y-4">
             {erro && !resultado ? (
               <p className="text-sm text-texto-2">Não deu para buscar agora. Tente de novo.</p>
             ) : carregando && !resultado ? (
