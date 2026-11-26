@@ -87,17 +87,18 @@ def test_confirmar_recusar_e_permissoes(client, pessoa):
     bia = pessoa("bia")
     caio = pessoa("caio")
     ids = habilidades(client)
-    primeira = criar(client, ana, proposta(ids)).json()["id"]
-    segunda = criar(client, ana, proposta(ids)).json()["id"]
-
-    assert criar(client, ana, proposta(ids)).json()["respondida_em"] is None
+    criada = criar(client, ana, proposta(ids)).json()
+    primeira = criada["id"]
+    assert criada["respondida_em"] is None
     confirmada = client.post(f"/trocas/{primeira}/confirmar", headers=bia)
     assert confirmada.status_code == 200
     assert confirmada.json()["respondida_em"].endswith("Z")
-    assert client.post(f"/trocas/{segunda}/recusar", headers=bia).json()["status"] == "recusada"
-    assert client.post(f"/trocas/{primeira}/confirmar", headers=bia).status_code == 409
+
+    segunda = criar(client, ana, proposta(ids)).json()["id"]
     assert client.post(f"/trocas/{segunda}/confirmar", headers=ana).status_code == 403
     assert client.post(f"/trocas/{segunda}/confirmar", headers=caio).status_code == 404
+    assert client.post(f"/trocas/{segunda}/recusar", headers=bia).json()["status"] == "recusada"
+    assert client.post(f"/trocas/{primeira}/confirmar", headers=bia).status_code == 409
     assert client.post("/trocas/99999/confirmar", headers=bia).status_code == 404
 
 
@@ -107,7 +108,13 @@ def test_lista_ordena_futuras_e_passadas_e_filtra_por_pessoa(client, pessoa):
     pessoa("caio")
     ids = habilidades(client)
     datas = ["2030-01-10T10:00:00Z", "2030-01-12T10:00:00Z", "2030-01-14T10:00:00Z", "2030-01-16T10:00:00Z"]
-    trocas = [criar(client, ana, proposta(ids, "bia", data)).json() for data in datas]
+    trocas = []
+    for data in datas:
+        troca = criar(client, ana, proposta(ids, "bia", data)).json()
+        trocas.append(troca)
+        with SessionLocal() as db:
+            db.get(Troca, troca["id"]).status = "confirmada"
+            db.commit()
     with SessionLocal() as db:
         for troca, horas in zip(trocas[:2], (4, 2)):
             registro = db.get(Troca, troca["id"])
@@ -121,6 +128,29 @@ def test_lista_ordena_futuras_e_passadas_e_filtra_por_pessoa(client, pessoa):
     assert len(filtrada.json()["items"]) == 4
     assert client.get("/trocas?com=ausente", headers=ana).status_code == 404
     assert client.get("/trocas?com=caio", headers=ana).json()["items"] == []
+
+
+def test_segunda_proposta_pendente_do_par_da_409(client, pessoa):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    pessoa("caio")
+    ids = habilidades(client)
+
+    primeira = criar(client, ana, proposta(ids))
+    assert primeira.status_code == 201
+    repetida = criar(client, ana, proposta(ids))
+    assert repetida.status_code == 409
+    assert repetida.json()["detail"] == "já existe uma proposta sua aguardando resposta"
+    inversa = criar(client, bia, proposta(ids, "ana"))
+    assert inversa.status_code == 409
+    assert inversa.json()["detail"] == "esta pessoa já te enviou uma proposta, responda antes de propor outra"
+    assert criar(client, ana, proposta(ids, "caio")).status_code == 201
+    recusada = client.post(f"/trocas/{primeira.json()['id']}/recusar", headers=bia)
+    assert recusada.status_code == 200
+    segunda = criar(client, ana, proposta(ids))
+    assert segunda.status_code == 201
+    assert client.post(f"/trocas/{segunda.json()['id']}/confirmar", headers=bia).status_code == 200
+    assert criar(client, ana, proposta(ids)).status_code == 201
 
 
 def test_link_vindo_do_formulario_e_ignorado(client, pessoa):

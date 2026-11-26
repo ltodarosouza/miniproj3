@@ -141,6 +141,27 @@ def criar(db: Session, pessoa: User, dados: TrocaCreate) -> TrocaOut:
         and dados.habilidade_ensino_id == dados.habilidade_aprendo_id
     ):
         raise HTTPException(status_code=422, detail="escolha habilidades diferentes")
+    pendente = db.scalar(
+        select(Troca)
+        .where(
+            Troca.status == "proposta",
+            or_(
+                (Troca.proposta_por_id == pessoa.id) & (Troca.com_id == com.id),
+                (Troca.proposta_por_id == com.id) & (Troca.com_id == pessoa.id),
+            ),
+        )
+        .limit(1)
+    )
+    if pendente is not None:
+        if pendente.proposta_por_id == pessoa.id:
+            raise HTTPException(
+                status_code=409,
+                detail="já existe uma proposta sua aguardando resposta",
+            )
+        raise HTTPException(
+            status_code=409,
+            detail="esta pessoa já te enviou uma proposta, responda antes de propor outra",
+        )
     troca = Troca(
         proposta_por_id=pessoa.id,
         com_id=com.id,
