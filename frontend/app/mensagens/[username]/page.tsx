@@ -66,6 +66,7 @@ export default function PaginaConversa() {
   const mensagensRef = useRef(mensagens);
   const cargaInicialConcluida = useRef(false);
   const trocasRef = useRef(trocas);
+  const pedidoPendentesRef = useRef(0);
   mensagensRef.current = mensagens;
   trocasRef.current = trocas;
 
@@ -88,12 +89,21 @@ export default function PaginaConversa() {
   }), [mensagens, trocas]);
 
   const carregarConversa = useCallback(
-    () => Promise.all([listarMensagens(username), listarConversasComStatus(), listarTrocas(username), trocasPendentesAvaliacao().catch(() => null)]),
+    () => Promise.all([listarMensagens(username), listarConversasComStatus(), listarTrocas(username)]),
     [username],
   );
 
+  const atualizarPendentes = useCallback(() => {
+    const usernameSolicitado = username;
+    const pedido = ++pedidoPendentesRef.current;
+    void trocasPendentesAvaliacao().then((resposta) => {
+      if (pedido !== pedidoPendentesRef.current || conversaAtivaRef.current !== usernameSolicitado) return;
+      setPendentes(pendentesDaConversa(resposta.items, usernameSolicitado, avaliadasRef.current));
+    }).catch(() => {});
+  }, [username]);
+
   const aplicarCarga = useCallback(
-    ([resposta, conversas, trocasCarregadas, pendentesCarregadas]: Awaited<ReturnType<typeof carregarConversa>>) => {
+    ([resposta, conversas, trocasCarregadas]: Awaited<ReturnType<typeof carregarConversa>>) => {
       const dados = resposta as RespostaMensagens;
       cursorRef.current = maiorIdRecebido(dados.items, cursorRef.current);
       setMensagens((atuais) => reconciliarMensagens(atuais.filter((mensagem) => mensagem.id < 0), dados.items, username));
@@ -102,7 +112,6 @@ export default function PaginaConversa() {
         setMensagens((atuais) => atuais.map((mensagem) => mensagem.de_username !== username && mensagem.id > 0 && mensagem.id <= dados.lidas_ate_id! && !mensagem.lida_em ? { ...mensagem, entregue_em: mensagem.entregue_em ?? mensagem.em, lida_em: new Date().toISOString() } : mensagem));
       }
       setTrocas(trocasCarregadas.items);
-      if (pendentesCarregadas) setPendentes(pendentesDaConversa(pendentesCarregadas.items, username, avaliadasRef.current));
       setConversa(conversas.items.find((item) => item.com.username === username) ?? null);
       setSemConexao(false);
       cargaInicialConcluida.current = true;
@@ -156,6 +165,7 @@ export default function PaginaConversa() {
     cursorRef.current = 0;
     primeiroCarregamento.current = true;
     ciclosPolling.current = 0;
+    atualizarPendentes();
     carregarConversa()
       .then((dados) => {
         if (ativo) aplicarCarga(dados);
@@ -182,7 +192,7 @@ export default function PaginaConversa() {
         });
       });
     return () => { ativo = false; };
-  }, [idUsuario, username, rolarAteFim, carregarConversa, aplicarCarga, encerrarSessao]);
+  }, [idUsuario, username, rolarAteFim, carregarConversa, aplicarCarga, encerrarSessao, atualizarPendentes]);
 
   const aplicarLidasAte = useCallback((id: number | null | undefined) => {
     if (id == null) return;
@@ -206,8 +216,9 @@ export default function PaginaConversa() {
     pollingEmVoo.current = true;
     ciclosPolling.current += 1;
     const buscarTrocasAgora = ciclosPolling.current % 2 === 0;
+    if (buscarTrocasAgora) atualizarPendentes();
     try {
-      const [respostaBase, respostaTrocas, respostaPendentes] = await Promise.all([listarMensagens(username, cursorRef.current), buscarTrocasAgora ? listarTrocas(username) : Promise.resolve(null), buscarTrocasAgora ? trocasPendentesAvaliacao().catch(() => null) : Promise.resolve(null)]);
+      const [respostaBase, respostaTrocas] = await Promise.all([listarMensagens(username, cursorRef.current), buscarTrocasAgora ? listarTrocas(username) : Promise.resolve(null)]);
       if (conversaAtivaRef.current !== username) return;
       const resposta = respostaBase as RespostaMensagens;
       cursorRef.current = maiorIdRecebido(resposta.items, cursorRef.current);
@@ -216,7 +227,6 @@ export default function PaginaConversa() {
       const idsTrocasAtuais = new Set(trocasRef.current.map((troca) => troca.id));
       const trocasNovas = respostaTrocas?.items.filter((troca) => !idsTrocasAtuais.has(troca.id)) ?? [];
       if (respostaTrocas) setTrocas(respostaTrocas.items);
-      if (respostaPendentes) setPendentes(pendentesDaConversa(respostaPendentes.items, username, avaliadasRef.current));
       if (!resposta.items.length) {
         setSemConexao(false);
         if (trocasNovas.length) {
@@ -238,7 +248,7 @@ export default function PaginaConversa() {
     } finally {
       pollingEmVoo.current = false;
     }
-  }, [aplicarLidasAte, encerrarSessao, estaPertoDoFim, idUsuario, marcarLidas, rolarOuMarcarNovas, username]);
+  }, [aplicarLidasAte, atualizarPendentes, encerrarSessao, estaPertoDoFim, idUsuario, marcarLidas, rolarOuMarcarNovas, username]);
 
   useEffect(() => {
     if (!carregando && cargaInicialConcluida.current) marcarLidas();
