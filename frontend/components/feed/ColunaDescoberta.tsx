@@ -100,7 +100,7 @@ export function ColunaDescoberta({
       )}
 
       {emAlta && (
-        <Bloco numero="02" titulo="Cotação">
+        <Bloco numero="02" titulo="Mais estudadas">
           <EmAlta habilidades={emAlta} />
         </Bloco>
       )}

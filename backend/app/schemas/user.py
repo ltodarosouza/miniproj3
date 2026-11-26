@@ -54,15 +54,7 @@ class PerfilUpdate(BaseModel):
     avatar_url: str | None = Field(default=None, max_length=300)
 
 
-class PerfilOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    username: str
-    name: str
-    bio: str
-    avatar_url: str
-    created_at: datetime
+class PerfilOut(UserOut):
     seguidores: int
     seguindo: int
     streak: int

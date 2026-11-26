@@ -44,7 +44,7 @@ def test_feed_inclui_quem_pode_ensinar_com_motivo(client, pessoa, monkeypatch):
     dani = pessoa("dani")
     caio_id = int(caio["X-User-Id"])
     monkeypatch.setattr(
-        indice_matches, "quem_pode_ensinar", lambda usuario_id: {caio_id}
+        indice_matches, "pode_me_ensinar", lambda usuario_id: {caio_id}
     )
     client.post("/posts", json={"texto": "da bia"}, headers=bia)
     client.post("/posts", json={"texto": "do caio"}, headers=caio)
@@ -65,7 +65,7 @@ def test_quem_eu_sigo_e_pode_me_ensinar_aparece_uma_vez_como_seguindo(
     bia = pessoa("bia")
     bia_id = int(bia["X-User-Id"])
     monkeypatch.setattr(
-        indice_matches, "quem_pode_ensinar", lambda usuario_id: {bia_id}
+        indice_matches, "pode_me_ensinar", lambda usuario_id: {bia_id}
     )
     client.post("/posts", json={"texto": "da bia"}, headers=bia)
     seguir(client, ana, "bia")
@@ -81,7 +81,7 @@ def test_feed_mostra_meus_proprios_posts(client, pessoa, monkeypatch):
     bia = pessoa("bia")
     ana_id = int(ana["X-User-Id"])
     monkeypatch.setattr(
-        indice_matches, "quem_pode_ensinar", lambda usuario_id: {ana_id}
+        indice_matches, "pode_me_ensinar", lambda usuario_id: {ana_id}
     )
     client.post("/posts", json={"texto": "meu post"}, headers=ana)
     client.post("/posts", json={"texto": "da bia"}, headers=bia)
@@ -151,6 +151,33 @@ def test_em_alta_conta_posts_da_semana_por_habilidade(client, pessoa):
     assert r.json()[0]["minutos"] == 75
     assert len(r.json()) == 1
     assert client.get("/feed/em-alta").status_code == 401
+
+
+def test_em_alta_ordena_por_horas_e_desempata_por_posts(client, pessoa, monkeypatch):
+    monkeypatch.setattr(limitador_posts, "max_chamadas", 100)
+    ana = pessoa("ana")
+    a = habilidade(client, "Python")
+    b = habilidade(client, "React")
+    c = habilidade(client, "JavaScript")
+    d = habilidade(client, "SQL")
+    for minutos in (10, 10, 10):
+        client.post(
+            "/posts",
+            json={"texto": "A", "habilidade_id": a, "minutos_estudados": minutos},
+            headers=ana,
+        )
+    client.post(
+        "/posts",
+        json={"texto": "B", "habilidade_id": b, "minutos_estudados": 120},
+        headers=ana,
+    )
+    for hid, nome, quantidade in ((c, "C", 2), (d, "D", 1)):
+        for _ in range(quantidade):
+            client.post("/posts", json={"texto": nome, "habilidade_id": hid}, headers=ana)
+
+    r = client.get("/feed/em-alta", headers=ana)
+
+    assert [i["id"] for i in r.json()] == [b, a, c, d]
 
 
 def test_meu_progresso_soma_a_semana(client, pessoa):

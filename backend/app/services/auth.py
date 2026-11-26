@@ -2,13 +2,12 @@ import secrets
 
 import bcrypt
 from fastapi import HTTPException
-from sqlalchemy import select
 from sqlalchemy.orm import Session as DbSession
 
 from app.models.session import Session as SessionModel
 from app.models.user import User
 from app.schemas.auth import LoginIn, RegistroIn
-from app.services.users import criar_usuario
+from app.services.users import criar_usuario, por_username
 
 
 def _hash(senha: str) -> str:
@@ -25,7 +24,7 @@ def registrar(db: DbSession, dados: RegistroIn) -> User:
 
 
 def autenticar(db: DbSession, dados: LoginIn) -> User:
-    user = db.scalar(select(User).where(User.username == dados.username))
+    user = por_username(db, dados.username)
     if user is None or not user.password_hash:
         raise HTTPException(status_code=401, detail="usuário ou senha inválidos")
 

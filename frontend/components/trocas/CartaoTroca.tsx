@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { Botao } from "@/components/ui/Botao";
 import { Cartao } from "@/components/ui/Cartao";
+import { AvaliarTroca } from "@/components/avaliacoes/AvaliarTroca";
 import { Icone } from "@/components/ui/Icone";
 import { celebrar } from "@/components/ui/Celebrar";
 import { dataDaOrdem, numeroDaOrdem, ROTULO_STATUS, statusDaOrdem } from "@/lib/trocas";
@@ -12,9 +13,10 @@ import { confirmarTroca, recusarTroca, type Troca } from "@/lib/api";
 import { meuId } from "@/lib/sessao";
 import { vibrar } from "@/lib/movimento";
 
-export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar: (troca: Troca) => void }) {
+export function CartaoTroca({ troca, aoAtualizar, pendenteAvaliacao = false, aoAvaliar }: { troca: Troca; aoAtualizar: (troca: Troca) => void; pendenteAvaliacao?: boolean; aoAvaliar?: (trocaId: number) => void }) {
   const [carregando, setCarregando] = useState<"confirmar" | "recusar" | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [avaliacaoVisivel, setAvaliacaoVisivel] = useState(true);
   const [agora, setAgora] = useState(() => Date.now());
   useEffect(() => {
     const intervalo = setInterval(() => setAgora(Date.now()), 60000);
@@ -56,7 +58,7 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
   };
 
   return (
-    <Cartao className={`mx-auto w-full max-w-sm p-4 space-y-3 transition-[color,opacity] duration-[var(--medio)] ease-saida motion-reduce:transition-none ${troca.status === "recusada" ? "opacity-70" : ""}`}>
+    <Cartao id={`troca-${troca.id}`} className={`mx-auto w-full max-w-sm scroll-mt-4 p-4 space-y-3 transition-[color,opacity] duration-[var(--medio)] ease-saida motion-reduce:transition-none ${troca.status === "recusada" ? "opacity-70" : ""}`}>
       <div className="flex items-center justify-between gap-3">
         <span className="font-mono text-xs text-texto-2">{numeroDaOrdem(troca.id)}</span>
         <span className="flex items-center gap-1.5 text-xs font-medium text-texto-2">
@@ -120,7 +122,11 @@ export function CartaoTroca({ troca, aoAtualizar }: { troca: Troca; aoAtualizar:
 
       {(status === "confirmada" || status === "concluida") && (
         status === "concluida" ? (
-          <p className="text-sm text-texto-2">A troca já aconteceu</p>
+          pendenteAvaliacao && avaliacaoVisivel ? (
+            <div className="border-t border-linha pt-3"><AvaliarTroca troca={troca} aoAvaliar={(trocaId) => { setAvaliacaoVisivel(false); aoAvaliar?.(trocaId); }} /></div>
+          ) : (
+            <p className="text-sm text-texto-2">A troca já aconteceu</p>
+          )
         ) : (
           <div className="flex flex-col gap-2">
             <a href={troca.link_google_agenda} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 w-full select-none items-center justify-center gap-1.5 rounded-controle bg-marca px-3 text-sm font-medium text-marca-texto shadow-cartao transition-[background-color,border-color,color,box-shadow,scale] duration-[var(--rapido)] ease-saida active:scale-[0.97] hover:bg-marca-forte motion-reduce:transition-none">

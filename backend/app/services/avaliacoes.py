@@ -11,6 +11,7 @@ from app.schemas.avaliacao import AvaliacaoCreate, AvaliacaoOut, ResumoAvaliacoe
 from app.schemas.troca import TrocaOut
 from app.schemas.user import UserOut
 from app.services import trocas as servico_trocas
+from app.services import users
 
 
 def _para_saidas(db: Session, avaliacoes: list[Avaliacao]) -> list[AvaliacaoOut]:
@@ -94,9 +95,7 @@ def avaliar(
 
 
 def resumo(db: Session, username: str) -> ResumoAvaliacoes:
-    usuario = db.scalar(select(User).where(User.username == username))
-    if usuario is None:
-        raise HTTPException(status_code=404, detail="pessoa não encontrada")
+    usuario = users.por_username_ou_404(db, username)
     avaliacoes = list(
         db.scalars(
             select(Avaliacao)

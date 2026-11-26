@@ -82,7 +82,7 @@ export default function PaginaPost() {
       className="inline-flex items-center gap-1.5 text-sm text-texto-2 transition-colors duration-[var(--rapido)] hover:text-texto motion-reduce:transition-none"
     >
       <Icone nome="voltar" tamanho={16} />
-      Voltar à Mesa
+      Voltar ao Feed
     </Link>
   );
 

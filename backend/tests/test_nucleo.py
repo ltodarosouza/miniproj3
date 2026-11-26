@@ -7,7 +7,6 @@ Eles fixam o contrato do núcleo: rota, corpo e resposta. Renomear uma rota faz 
 teste falhar, então mudem o teste junto se mudarem o contrato.
 """
 
-import pytest
 from sqlalchemy import text
 
 SENHA = "senha-forte-123"

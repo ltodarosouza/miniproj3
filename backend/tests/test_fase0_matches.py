@@ -25,8 +25,8 @@ def test_adicionar_e_remover_atualizam_os_dicts():
     assert indice.querem == {}
 
 
-def test_quem_pode_ensinar_devolve_set():
-    assert IndiceMatches().quem_pode_ensinar(1) == set()
+def test_pode_me_ensinar_devolve_set():
+    assert IndiceMatches().pode_me_ensinar(1) == set()
 
 
 def test_singleton_e_instancia_de_indice_matches():

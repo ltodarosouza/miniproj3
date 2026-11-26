@@ -28,7 +28,7 @@ def _quem_estuda_o_mesmo(db: Session, eu: User) -> set[int]:
 
 def _motivos(db: Session, eu: User) -> dict[int, str]:
     seguidos = set(db.scalars(select(Follow.seguido_id).where(Follow.seguidor_id == eu.id)))
-    professores = indice_matches.quem_pode_ensinar(eu.id)
+    professores = indice_matches.pode_me_ensinar(eu.id)
     motivos = {autor: "pode_te_ensinar" for autor in professores}
     motivos.update({autor: "seguindo" for autor in seguidos})
     motivos[eu.id] = "meu"
@@ -61,12 +61,13 @@ def listar(db: Session, eu: User, offset: int, limit: int) -> FeedPage:
 def em_alta(db: Session, limite: int = 5) -> list[HabilidadeEmAlta]:
     desde = agora_utc() - SEMANA
     posts = func.count(Post.id).label("posts")
+    minutos = func.coalesce(func.sum(Post.minutos_estudados), 0).label("minutos")
     linhas = db.execute(
-        select(Habilidade, posts, func.coalesce(func.sum(Post.minutos_estudados), 0))
+        select(Habilidade, posts, minutos)
         .join(Post, Post.habilidade_id == Habilidade.id)
         .where(Post.created_at >= desde)
         .group_by(Habilidade.id)
-        .order_by(posts.desc(), Habilidade.nome)
+        .order_by(minutos.desc(), posts.desc(), Habilidade.nome)
         .limit(limite)
     )
     return [

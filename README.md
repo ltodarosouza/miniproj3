@@ -1,80 +1,129 @@
-# Mini-projeto 3: rede social de nicho
+# Colmatch
 
-Cada time constrói uma rede social para uma comunidade que escolhe (música,
-corrida, leitura, jogos da atlética...). A turma tem 7 times: 4 de 4 pessoas e
-3 de 3. A stack é FastAPI + SQLAlchemy + SQLite no backend e Next.js +
-TypeScript + Tailwind no frontend. Todos partem do mesmo ponto: um exemplo que
-já funciona, só de usuários (do banco até a tela), e a lista de testes do
-núcleo, que cada time implementa. Depois do núcleo, o catálogo traz ideias de
-features, e cada time escolhe as que fazem sentido para o seu nicho. O projeto
-é um exercício para treinar o senso de produto, então cada rede acaba
-diferente da outra.
+Colmatch é uma rede para iniciantes em tecnologia — universitários, pessoas em bootcamps e quem está migrando de área — compartilharem o que sabem e aprenderem em conjunto. A plataforma aproxima quem pode ensinar e destaca matches para trocas recíprocas de habilidades. As pessoas conversam, combinam uma troca e podem avaliá-la depois.
 
-Este é o treino final antes do hackathon de novembro.
+## Deploy
 
-## O que ler
+- **Frontend:** [miniproj3.vercel.app](https://miniproj3.vercel.app), hospedado na Vercel.
+- **Backend:** hospedado no Render, com banco PostgreSQL no Neon.
 
-| Documento | Para quê |
+## O que dá para fazer
+
+- Criar conta, entrar e montar um perfil com habilidades que sabe e quer aprender.
+- Registrar rotina de estudos em posts com foto, curtir e comentar.
+- Seguir pessoas e acompanhar o feed/Diário.
+- Explorar matches em dois níveis: pessoas que podem ensinar e matches de troca recíproca em [`/matches`](frontend/app/matches/page.tsx).
+- Conversar, propor e agendar uma troca, e avaliar depois que ela acontecer.
+- Receber notificações e acompanhar streak de estudos.
+- Buscar habilidades no catálogo com autocomplete e mapeamento opcional por IA.
+
+As páginas principais incluem [`/cadastro`](frontend/app/cadastro/page.tsx), [`/login`](frontend/app/login/page.tsx), [`/feed`](frontend/app/feed/page.tsx), [`/mensagens`](frontend/app/mensagens/page.tsx), [`/notificacoes`](frontend/app/notificacoes/page.tsx) e perfis em [`/perfil/[username]`](frontend/app/perfil/[username]/page.tsx).
+
+## Como rodar localmente
+
+### Requisitos
+
+- Python 3.12 (versão indicada em [`backend/.python-version`](backend/.python-version)).
+- Node.js 22 (versão indicada em [`frontend/.nvmrc`](frontend/.nvmrc)).
+- [uv](https://docs.astral.sh/uv/) e npm.
+
+### Instalar dependências
+
+```bash
+(cd backend && uv sync)
+(cd frontend && npm install && cp .env.local.example .env.local)
+```
+
+Configure as variáveis conforme [`backend/.env.example`](backend/.env.example) e [`frontend/.env.local.example`](frontend/.env.local.example). Para desenvolvimento, `NEXT_PUBLIC_API_URL` aponta para `http://localhost:8000`. `DATABASE_URL` pode ficar sem valor para usar SQLite local. `IA_PROVIDER`, `IA_API_KEY` e `IA_MODEL` configuram o mapeamento opcional de habilidades; sem chave, o sistema usa o fallback local com `difflib`.
+
+### Preparar e iniciar
+
+Na raiz do repositório:
+
+```bash
+make check
+make seed
+```
+
+Inicie backend e frontend em terminais separados:
+
+```bash
+make dev-back
+```
+
+A API fica em `http://localhost:8000` e a documentação interativa em `http://localhost:8000/docs`.
+
+```bash
+make dev-front
+```
+
+O site fica em `http://localhost:3000`.
+
+### Conta de demonstração
+
+`make seed` cria 32 usuários com posts, conexões e trocas. As contas `ada` e `linus` formam o primeiro par de troca recíproca garantido pelo seed. A senha de todas as contas de demonstração é `senha-forte-123` (constante `SENHA_SEED` em [`backend/scripts/seed.py`](backend/scripts/seed.py)). O seed não insere dados se o banco já tiver usuários.
+
+## Verificação
+
+Na raiz do projeto, execute:
+
+```bash
+make test
+```
+
+A suíte inteira deve passar, sem testes ignorados. Para verificar o TypeScript e gerar o build do frontend:
+
+```bash
+(cd frontend && npx tsc --noEmit -p tsconfig.json)
+(cd frontend && npm run build)
+```
+
+O comando `make bench` mede o índice de matches usando o script de benchmark do backend.
+
+## Organização do código
+
+### Backend
+
+- `backend/app/routers/`: endpoints HTTP; as rotas delegam regras aos serviços.
+- `backend/app/services/`: regras de negócio, como follows, matches, posts e trocas.
+- `backend/app/core/`: estruturas e lógica em Python puro: `catalogo.py` (trie do catálogo), `matches.py` (índice de matches), `contadores.py`, `limite.py`, `streak.py` e `tempo.py`.
+- `backend/app/models/`: modelos persistidos no banco.
+- `backend/app/schemas/`: contratos de entrada e saída da API.
+- `backend/migrations/`: migrações Alembic.
+- `backend/tests/`: testes do backend.
+
+### Frontend
+
+- `frontend/app/`: páginas e rotas do Next.js.
+- `frontend/components/`: componentes de funcionalidades, organizados por área.
+- `frontend/components/ui/`: componentes reutilizáveis de interface e navegação.
+- `frontend/lib/`: cliente da API, sessão e contratos usados pelas telas.
+
+Por exemplo, o fluxo de follow passa por [`model`](backend/app/models/follow.py) → [`schema`](backend/app/schemas/follow.py) → [`service`](backend/app/services/follows.py) → [`router`](backend/app/routers/follows.py) → botão usado no perfil em [`BotaoSeguir`](frontend/components/ui/BotaoSeguir.tsx).
+
+## Documentação
+
+| Documento | Conteúdo |
 |---|---|
-| [RUBRICA.md](RUBRICA.md) | Como vamos avaliar. Leiam hoje. |
-| [CATALOGO.md](CATALOGO.md) | Ideias de features para escolher. |
-| [CONTRATO.md](CONTRATO.md) | Sugestão de rotas, campos e status para as ideias do catálogo. |
-| [DECISIONS.md](DECISIONS.md) | O que o time preenche: produto, decisões, features, uso de IA. |
-| [docs/guias/](docs/guias/) | Setup, autenticação, git em equipe, deploy e outros. |
+| [DECISIONS.md](DECISIONS.md) | Produto, decisões, escolhas técnicas e uso de IA. |
+| [`docs/decisoes/`](docs/decisoes/) | Registros de decisões complementares. |
+| [docs/AVALIACAO.md](docs/AVALIACAO.md) | Roteiro de avaliação para a banca. |
+| [DESIGN.md](DESIGN.md) | Diretrizes visuais e componentes de interface. |
+| [RUBRICA.md](RUBRICA.md) | Critérios de avaliação do projeto. |
+| [CATALOGO.md](CATALOGO.md) | Catálogo de ideias e funcionalidades. |
+| [CONTRATO.md](CONTRATO.md) | Rotas, campos e estados combinados. |
+| [`docs/guias/`](docs/guias/) | Guias de setup, autenticação, equipe e deploy. |
 
-## Como começar
+## Time
 
-Instalem as dependências uma vez:
+| Frente | Responsável | Escopo |
+|---|---|---|
+| A | @italoosilva | Autenticação, perfil, habilidades, catálogo, autocomplete e IA. |
+| B | @NicoleAlverga | Posts de rotina, fotos, curtidas, comentários, feed e streak. |
+| C | @gecbeltrao | Follow, matches em dois níveis e seed de demonstração. |
+| D | @ltodarosouza | Chat, agendamento e avaliação das trocas, notificações e deploy. |
 
-```bash
-cd backend && uv sync && cd ..
-cd frontend && npm install && cp .env.local.example .env.local && cd ..
-```
-
-Depois validem o ambiente:
-
-```bash
-make check      # tudo precisa ficar verde
-make seed       # cria a rede de demo: 32 usuários, posts, follows e trocas (senha: senha-forte-123)
-make test       # deve mostrar "4 passed, 10 skipped"
-```
-
-Para rodar o projeto, abram dois terminais:
-
-```bash
-make dev-back   # API em localhost:8000, Swagger em localhost:8000/docs
-make dev-front  # site em localhost:3000/usuarios
-```
-
-Se algum comando falhar, vejam o [guia 00](docs/guias/00-setup.md).
-
-## Primeiros passos do time
-
-1. Leiam o slice de exemplo (`/usuarios`, do model à página). Toda feature
-   nova segue o mesmo caminho.
-2. Escolham o nicho e comecem a seção Produto e a tabela de donos no
-   [DECISIONS.md](DECISIONS.md). Não precisa ficar pronto agora: o arquivo muda
-   junto com o projeto.
-3. Abram uma issue por feature (há um template). O PR que entrega a feature
-   fecha a issue com `Closes #N`.
-4. Façam o núcleo antes do menu. Divisão de trabalho sugerida: [guia 07](docs/guias/07-organizacao-do-time.md).
-
-## Os testes do núcleo
-
-Os testes de `backend/tests/test_nucleo.py` são um roteiro. Um teste `skipped`
-é uma tarefa que ainda falta: removam o `@skip`, vejam o teste falhar e
-implementem até passar. Eles ajudam o time, mas não valem nota.
-
-## Estruturas de dados
-
-Quando fizer sentido, guardem a lógica de uma feature numa estrutura de dados
-em `backend/app/core/`, em Python puro, e façam o endpoint usá-la. Usem
-`core/contadores.py` como modelo. Isso conta no critério de organização do
-código, e a estrutura escolhida vale uma boa explicação no `DECISIONS.md`.
-
-## Uso de IA
-
-IA é permitida. Registrem no `DECISIONS.md` onde e como vocês a usaram.
+Mais detalhes sobre a divisão estão em [`docs/FRENTES.md`](docs/FRENTES.md).
 
 ## Prazos
 
@@ -82,11 +131,3 @@ IA é permitida. Registrem no `DECISIONS.md` onde e como vocês a usaram.
 |---|---|
 | Início | segunda, 16/11/2026 |
 | Entrega final | sexta, 27/11/2026 |
-
-## Guias
-
-Os guias ficam em `docs/guias/`: 00 setup, 01 autenticação (comecem por aqui),
-02 git em equipe, 03 boas práticas, 04 erros clássicos, 05 JWT (opcional),
-06 upload, 07 organização do time, 08 deploy, 09 escrever um teste seu (opcional), 10 do zero ao
-esqueleto. Para ideias com estrutura de dados, vejam `docs/estruturas/` (grafos,
-árvores, heaps e tries).

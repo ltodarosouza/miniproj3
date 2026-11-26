@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Fira_Sans, IBM_Plex_Mono, Literata } from "next/font/google";
 
 import { Navegacao } from "@/components/ui/Navegacao";
-import { AvisoAvaliacao } from "@/components/avaliacoes/AvisoAvaliacao";
 import { ToastNotificacoes } from "@/components/notificacoes/ToastNotificacoes";
 import { NOME_REDE } from "@/lib/marca";
 import { SCRIPT_TEMA } from "@/lib/tema";
@@ -47,7 +46,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="min-h-screen font-sans">
         <Navegacao nomeRede={NOME_REDE} />
         <main className="area-principal">{children}</main>
-        <AvisoAvaliacao />
         <ToastNotificacoes />
       </body>
     </html>

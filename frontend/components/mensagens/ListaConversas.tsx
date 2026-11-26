@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { listarConversasComStatus, type ConversaComStatus, type NaoLidasMensagens } from "@/lib/mensagens";
+import { EVENTO_AVALIACAO_ENVIADA, useConsultaPendentes } from "@/lib/avaliacoes";
 import { formatarPreviaTroca, formatarQuando } from "@/lib/datas";
 import { meuId } from "@/lib/sessao";
 import { Avatar } from "@/components/ui/Avatar";
@@ -14,11 +15,18 @@ import { ConviteAvisos } from "@/components/mensagens/ConviteAvisos";
 
 export function ListaConversas({ ativa, naoLidas }: { ativa?: string; naoLidas: NaoLidasMensagens | null }) {
   const [conversas, setConversas] = useState<ConversaComStatus[]>([]);
+  const [trocasParaAvaliar, setTrocasParaAvaliar] = useState<Set<string>>(() => new Set());
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(false);
   const [usuarioId, setUsuarioId] = useState<number | null | undefined>(undefined);
   const [primeiraCarga, setPrimeiraCarga] = useState(true);
   const buscando = useRef(false);
+  const consultarPendentes = useConsultaPendentes((trocas) => {
+    const id = meuId();
+    setTrocasParaAvaliar(new Set(trocas.map((troca) => (
+      troca.proposta_por.id === id ? troca.com.username : troca.proposta_por.username
+    ))));
+  });
 
   const buscar = useCallback(async (inicial = false) => {
     if (buscando.current) return;
@@ -31,8 +39,8 @@ export function ListaConversas({ ativa, naoLidas }: { ativa?: string; naoLidas: 
     setUsuarioId(meuId());
     try {
       buscando.current = true;
-      const resposta = await listarConversasComStatus();
-      setConversas(resposta.items);
+      const respostaConversas = await listarConversasComStatus();
+      setConversas(respostaConversas.items);
       setErro(false);
       if (inicial) setPrimeiraCarga(false);
     } catch {
@@ -45,18 +53,31 @@ export function ListaConversas({ ativa, naoLidas }: { ativa?: string; naoLidas: 
 
   useEffect(() => {
     void buscar(true);
+    consultarPendentes();
     const intervalo = window.setInterval(() => {
-      if (!document.hidden) void buscar();
+      if (!document.hidden) {
+        void buscar();
+        consultarPendentes();
+      }
     }, 5000);
     const aoVoltar = () => {
-      if (!document.hidden) void buscar();
+      if (!document.hidden) {
+        void buscar();
+        consultarPendentes();
+      }
     };
     document.addEventListener("visibilitychange", aoVoltar);
     return () => {
       window.clearInterval(intervalo);
       document.removeEventListener("visibilitychange", aoVoltar);
     };
-  }, [buscar]);
+  }, [buscar, consultarPendentes]);
+
+  useEffect(() => {
+    const aoAvaliar = () => { consultarPendentes(true); };
+    window.addEventListener(EVENTO_AVALIACAO_ENVIADA, aoAvaliar);
+    return () => window.removeEventListener(EVENTO_AVALIACAO_ENVIADA, aoAvaliar);
+  }, [consultarPendentes]);
 
   return (
     <section className="flex h-full min-h-0 flex-col" aria-label="Lista de conversas">
@@ -88,12 +109,13 @@ export function ListaConversas({ ativa, naoLidas }: { ativa?: string; naoLidas: 
           <ul>
             {conversas.map((conversa, i) => {
               const ativo = conversa.com.username === ativa;
+              const temTrocaParaAvaliar = trocasParaAvaliar.has(conversa.com.username);
               const quantidade = ativo ? 0 : conversa.nao_lidas ?? naoLidas?.por_conversa[conversa.com.username] ?? 0;
               const previa = conversa.ultimo_evento === "troca_proposta" && conversa.troca_data_hora ? formatarPreviaTroca(conversa.troca_data_hora) : conversa.ultimo_evento === "troca_confirmada" ? "Troca confirmada" : conversa.ultimo_evento === "troca_recusada" ? "Troca recusada" : `${conversa.ultima_de_mim ? "Você: " : ""}${conversa.ultima_mensagem}`;
               return (
                 <li key={conversa.com.username} className="border-b border-linha">
                   <Revelar atraso={primeiraCarga ? Math.min(i, 6) * 40 : 0}>
-                    <Link href={`/mensagens/${encodeURIComponent(conversa.com.username)}`} aria-label={`${conversa.com.name}${quantidade ? `, ${quantidade} mensagens não lidas` : ""}`} aria-current={ativo ? "page" : undefined} className={`flex min-h-16 items-center gap-3 px-4 py-3 transition-colors duration-[var(--rapido)] ease-saida hover:bg-superficie-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-marca ${ativo ? "bg-superficie-2 shadow-[inset_2px_0_0_var(--marca)]" : ""}`}>
+                    <Link href={`/mensagens/${encodeURIComponent(conversa.com.username)}`} aria-label={`${conversa.com.name}${quantidade ? `, ${quantidade} mensagens não lidas` : ""}${temTrocaParaAvaliar ? ", troca para avaliar" : ""}`} aria-current={ativo ? "page" : undefined} className={`flex min-h-16 items-center gap-3 px-4 py-3 transition-colors duration-[var(--rapido)] ease-saida hover:bg-superficie-2 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-marca ${ativo ? "bg-superficie-2 shadow-[inset_2px_0_0_var(--marca)]" : ""}`}>
                       <Avatar nome={conversa.com.name} url={conversa.com.avatar_url} />
                       <span className="min-w-0 flex-1">
                         <span className="flex items-baseline justify-between gap-2">
@@ -101,6 +123,7 @@ export function ListaConversas({ ativa, naoLidas }: { ativa?: string; naoLidas: 
                           <time className="shrink-0 font-mono text-[0.6875rem] tabular-nums text-texto-3" dateTime={conversa.em}>{formatarQuando(conversa.em)}</time>
                         </span>
                         <span className={`block truncate text-[0.8125rem] ${quantidade ? "text-texto" : "text-texto-2"}`}>{previa}</span>
+                        {temTrocaParaAvaliar && <span className="flex items-center gap-1.5 text-[0.8125rem] font-semibold text-marca-forte"><span aria-hidden="true" className="size-1.5 rounded-full bg-marca" />Avaliar troca</span>}
                       </span>
                       <SeloContador total={quantidade} />
                     </Link>
