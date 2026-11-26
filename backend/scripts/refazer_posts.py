@@ -171,6 +171,11 @@ def _dados_novos(db: Session, bots: list[User]):
 
 
 def _travar_tabelas(db: Session) -> None:
+    if db.bind.dialect.name == "sqlite":
+        # O primeiro statement de escrita faz o SQLite reservar a escrita antes
+        # das leituras do backup, impedindo que outro escritor altere o escopo.
+        db.execute(text("UPDATE posts SET id = id WHERE 0 = 1"))
+        return
     if db.bind.dialect.name != "postgresql":
         return
     try:
@@ -284,6 +289,8 @@ def restaurar(db: Session, caminho: Path) -> dict:
             for linha in arquivo["tabelas"][nome]:
                 dados = {}
                 for chave, valor in linha.items():
+                    if nome in ("likes", "comentarios", "notificacoes_entregues") and chave == "id":
+                        continue
                     if modelo is ImagemPost and chave == "conteudo":
                         valor = base64.b64decode(valor)
                     elif isinstance(valor, str) and colunas[chave].type.python_type in (datetime, date):

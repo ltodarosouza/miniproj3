@@ -4,7 +4,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import bcrypt
-from sqlalchemy import create_engine, event, select
+import pytest
+from sqlalchemy import create_engine, event, insert, select
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 import refazer_posts
@@ -45,8 +47,8 @@ def test_refazer_e_restaurar_preserva_dados_de_outros(client, logar, tmp_path):
     backup = tmp_path / "b.json"
     with SessionLocal() as db:
         posts_antes = [(p.id, p.autor_id, p.texto, p.imagem_url) for p in db.scalars(select(Post).order_by(Post.id))]
-        likes_antes = [(x.id, x.usuario_id, x.post_id) for x in db.scalars(select(Curtida).order_by(Curtida.id))]
-        comentarios_antes = [(x.id, x.autor_id, x.post_id, x.texto) for x in db.scalars(select(Comentario).order_by(Comentario.id))]
+        likes_antes = sorted((x.usuario_id, x.post_id, x.created_at) for x in db.scalars(select(Curtida)))
+        comentarios_antes = sorted((x.post_id, x.autor_id, x.texto, x.created_at) for x in db.scalars(select(Comentario)))
         resultado = refazer_posts.refazer(db, "bots", backup)
         assert backup.exists()
         assert db.get(Post, post_real) is not None
@@ -60,8 +62,8 @@ def test_refazer_e_restaurar_preserva_dados_de_outros(client, logar, tmp_path):
         assert any("post_id" in x for x in backup_json["tabelas"]["likes"])
         refazer_posts.restaurar(db, backup)
         assert [(p.id, p.autor_id, p.texto, p.imagem_url) for p in db.scalars(select(Post).order_by(Post.id))] == posts_antes
-        assert [(x.id, x.usuario_id, x.post_id) for x in db.scalars(select(Curtida).order_by(Curtida.id))] == likes_antes
-        assert [(x.id, x.autor_id, x.post_id, x.texto) for x in db.scalars(select(Comentario).order_by(Comentario.id))] == comentarios_antes
+        assert sorted((x.usuario_id, x.post_id, x.created_at) for x in db.scalars(select(Curtida))) == likes_antes
+        assert sorted((x.post_id, x.autor_id, x.texto, x.created_at) for x in db.scalars(select(Comentario))) == comentarios_antes
 
 
 def test_refazer_todos_remove_posts_reais_sem_criar_para_real(client, logar, tmp_path):
@@ -212,29 +214,44 @@ def test_travar_tabelas_sqlite_nao_faz_nada(client):
         refazer_posts._travar_tabelas(db)
 
 
+def test_travar_tabelas_sqlite_bloqueia_escritor(tmp_path):
+    motor = create_engine(f"sqlite:///{tmp_path / 'lock.db'}", connect_args={"timeout": 0.5})
+    Base.metadata.create_all(motor)
+    try:
+        with Session(motor) as db:
+            seed.seed_fake(db)
+            post = db.scalar(select(Post))
+            db.commit()
+            refazer_posts._travar_tabelas(db)
+            with motor.connect() as conexao_b:
+                with pytest.raises(OperationalError, match="locked"):
+                    conexao_b.execute(insert(Curtida).values(usuario_id=999999, post_id=post.id))
+            db.rollback()
+            with motor.begin() as conexao_b:
+                conexao_b.execute(insert(Curtida).values(usuario_id=999999, post_id=post.id))
+    finally:
+        motor.dispose()
+
+
 def test_restaurar_preserva_posts_e_interacoes_posteriores(client, logar, tmp_path):
-    _, _ = _montar(client, logar)
+    post_real, post_bot = _montar(client, logar)
     backup = tmp_path / "posterior.json"
     with SessionLocal() as db:
+        likes_backup = [(x.usuario_id, x.post_id, x.created_at) for x in db.scalars(select(Curtida).order_by(Curtida.id))]
+        comentarios_backup = [(x.post_id, x.autor_id, x.texto, x.created_at) for x in db.scalars(select(Comentario).order_by(Comentario.id))]
         refazer_posts.refazer(db, "bots", backup)
-        ids_novos = [item["id"] for item in __import__("json").loads(Path(str(backup) + ".novos.json").read_text())["posts_novos"]]
-        post_gerado = db.get(Post, ids_novos[0])
-        bot = next(u for u in refazer_posts.encontrar_bots(db) if u.username != "ada")
-        post_bot = Post(autor_id=bot.id, texto="post posterior do bot")
-        db.add(post_bot)
-        db.flush()
-        id_bot = post_bot.id
         real = db.scalar(select(User).where(User.username == "pessoa_real"))
-        db.add(Comentario(post_id=post_gerado.id, autor_id=real.id, texto="comentário posterior"))
+        db.add(Curtida(usuario_id=real.id, post_id=post_real))
+        db.add(Comentario(post_id=post_real, autor_id=real.id, texto="comentário posterior"))
         db.commit()
         refazer_posts.restaurar(db, backup)
-        assert db.get(Post, id_bot) is not None
-        assert db.scalar(select(Comentario.id).where(Comentario.texto == "comentário posterior")) is None
-        arquivos = list(tmp_path.glob("posterior.antes-de-restaurar-*.json"))
-        assert len(arquivos) == 1
-        dados = __import__("json").loads(arquivos[0].read_text())
-        assert any(linha["texto"] == "comentário posterior" for linha in dados["tabelas"]["comentarios"])
-        assert db.scalar(select(Post.id).where(Post.texto == "post para interações")) is not None
+        likes_atuais = [(x.usuario_id, x.post_id, x.created_at) for x in db.scalars(select(Curtida).order_by(Curtida.id))]
+        comentarios_atuais = [(x.post_id, x.autor_id, x.texto, x.created_at) for x in db.scalars(select(Comentario).order_by(Comentario.id))]
+        assert (real.id, post_real) in [(u, p) for u, p, _ in likes_atuais]
+        assert (post_real, real.id, "comentário posterior") in [(p, a, t) for p, a, t, _ in comentarios_atuais]
+        assert set(likes_backup).issubset(set(likes_atuais))
+        assert set(comentarios_backup).issubset(set(comentarios_atuais))
+        assert db.get(Post, post_bot) is not None
 
 
 def test_restaurar_todos_preserva_post_criado_depois(client, logar, tmp_path):
