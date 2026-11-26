@@ -4,19 +4,19 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
-import { Botao, BotaoLink } from "@/components/ui/Botao";
+import { Botao } from "@/components/ui/Botao";
 import { BotaoSeguir } from "@/components/ui/BotaoSeguir";
 import { Campo } from "@/components/ui/Campo";
-import { Cartao } from "@/components/ui/Cartao";
-import { Icone } from "@/components/ui/Icone";
-import { Revelar } from "@/components/ui/Revelar";
+import { TagHabilidade } from "@/components/ui/TagHabilidade";
 import { ErroApi, buscarUsuarios, type User } from "@/lib/api";
+import type { HabilidadePerfil } from "@/lib/perfil";
 import { meuId } from "@/lib/sessao";
 
 const POR_PAGINA = 20;
+type UsuarioComHabilidades = User & { habilidades?: HabilidadePerfil[] };
 
 export default function EncontrarPessoasPage() {
-  const [usuarios, setUsuarios] = useState<User[]>([]);
+  const [usuarios, setUsuarios] = useState<UsuarioComHabilidades[]>([]);
   const [total, setTotal] = useState(0);
   const [proximoOffset, setProximoOffset] = useState(0);
   const [termo, setTermo] = useState("");
@@ -88,7 +88,7 @@ export default function EncontrarPessoasPage() {
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6">
       <header>
-        <h1 className="text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">
+        <h1 className="font-display text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">
           Encontrar pessoas
         </h1>
         <p className="mt-1 text-sm text-texto-2">
@@ -98,10 +98,6 @@ export default function EncontrarPessoasPage() {
 
       {logado !== false && (
         <div className="space-y-4">
-          <BotaoLink variante="secundario" tamanho="sm" href="/matches">
-            <Icone nome="troca" tamanho={16} />
-            Ver quem pode te ensinar
-          </BotaoLink>
           <Campo
             rotulo="Buscar"
             type="search"
@@ -119,14 +115,31 @@ export default function EncontrarPessoasPage() {
         </p>
       )}
 
+      {logado && (
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="font-mono text-xs uppercase tracking-[0.08em] text-texto-3">
+            01 · Pessoas · <span className="numeros">{usuarios.length} carregadas</span>
+          </p>
+          <Link href="/matches" className="shrink-0 text-sm font-medium text-marca-forte hover:underline">
+            Ver seus pares →
+          </Link>
+        </div>
+      )}
+
       {logado && carregando && (
         <div role="status" aria-busy="true">
           <span className="sr-only">Carregando pessoas</span>
-          <div className="space-y-3" aria-hidden="true">
+          <ul className="divide-y divide-linha border-y border-linha" aria-hidden="true">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-20 animate-pulse rounded-cartao bg-superficie-2 motion-reduce:animate-none" />
+              <li key={i} className="flex items-center gap-3 py-3">
+                <span className="size-10 shrink-0 animate-pulse bg-superficie-2 motion-reduce:animate-none" />
+                <span className="min-w-0 flex-1 space-y-2">
+                  <span className="block h-3 w-2/5 animate-pulse bg-superficie-2 motion-reduce:animate-none" />
+                  <span className="block h-3 w-3/5 animate-pulse bg-superficie-2 motion-reduce:animate-none" />
+                </span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
 
@@ -145,31 +158,37 @@ export default function EncontrarPessoasPage() {
 
       {logado && !carregando && usuarios.length > 0 && (
         <>
-          <ul className="space-y-3">
-            {usuarios.map((usuario, i) => (
-              <li key={usuario.id}>
-                <Revelar atraso={Math.min(i, 6) * 40}>
-                  <Cartao interativo className="p-4">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <Link href={`/perfil/${encodeURIComponent(usuario.username)}`} aria-label={`Ver perfil de ${usuario.name}`} className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca">
-                        <Avatar nome={usuario.name} url={usuario.avatar_url} />
-                      </Link>
-                      <div className="min-w-0 flex-1">
-                        <Link href={`/perfil/${encodeURIComponent(usuario.username)}`} className="block truncate font-medium text-texto hover:underline">
-                          {usuario.name}
-                        </Link>
-                        <p className="truncate text-sm text-texto-3">@{usuario.username}</p>
-                        {usuario.bio && <p className="mt-1 line-clamp-2 text-sm text-texto-2">{usuario.bio}</p>}
-                      </div>
-                      <BotaoSeguir username={usuario.username} tamanho="sm" />
-                    </div>
-                  </Cartao>
-                </Revelar>
+          <ul className="divide-y divide-linha border-y border-linha">
+            {usuarios.map((usuario) => (
+              <li key={usuario.id} className="flex min-w-0 items-center gap-3 py-3">
+                <Link href={`/perfil/${encodeURIComponent(usuario.username)}`} aria-label={`Ver perfil de ${usuario.name}`} className="rounded-controle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca">
+                  <Avatar nome={usuario.name} url={usuario.avatar_url} />
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <Link href={`/perfil/${encodeURIComponent(usuario.username)}`} className="block truncate text-sm font-medium text-texto hover:underline">
+                    {usuario.name}
+                  </Link>
+                  <p className="truncate font-mono text-xs text-texto-3">@{usuario.username}</p>
+                  {usuario.habilidades?.length ? (
+                    <ul className="mt-1 flex min-w-0 flex-wrap gap-1" aria-label="Habilidades públicas">
+                      {usuario.habilidades.map((habilidade) => (
+                        <li key={`${habilidade.tipo}/${habilidade.id}`} className="min-w-0 max-w-full [&>span]:h-auto [&>span]:min-h-6 [&>span]:max-w-full [&>span]:[overflow-wrap:anywhere]">
+                          <TagHabilidade nome={habilidade.nome} tipo={habilidade.tipo} nivel={habilidade.nivel} />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : usuario.bio ? (
+                    <p className="truncate text-sm text-texto-2">{usuario.bio}</p>
+                  ) : null}
+                </div>
+                <span className="shrink-0">
+                  <BotaoSeguir username={usuario.username} tamanho="sm" />
+                </span>
               </li>
             ))}
           </ul>
           {proximoOffset < total && (
-            <div className="flex justify-center">
+            <div className="flex justify-start">
               <Botao variante="secundario" carregando={carregandoMais} onClick={carregarMais}>
                 Carregar mais
               </Botao>

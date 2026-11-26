@@ -748,6 +748,11 @@ contra a versão que percorre todos os usuários.
   três com Pillow em `frontend/app/favicon.ico`
   (`img48.save(..., format="ICO", sizes=[(16,16),(32,32),(48,48)])`).
 
-### 27 a 41. Rodada da auditoria e da repaginada Colmatch
+## Decisões da repaginada Colmatch
 
-Cada decisão desta rodada está em `docs/decisoes/<número>-<nome>.md`.
+Rodada da auditoria e da repaginada Colmatch (decisões 27 a 41). Cada decisão desta rodada está em `docs/decisoes/<número>-<nome>.md`.
+
+- [27. Bypass `X-User-Id` só no dev: produção recusa o boot com DEBUG](docs/decisoes/27-bypass-so-no-dev.md).
+- [36. Livro de pares e busca em paleta](docs/decisoes/36-pares-e-busca.md).
+  Com aval do dono, o escopo da #83 passou a incluir as habilidades públicas
+  nos itens de `GET /usuarios`, carregadas em lote para a página solicitada.

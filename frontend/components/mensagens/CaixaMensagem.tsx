@@ -42,29 +42,25 @@ export function CaixaMensagem({ aoEnviar, desabilitada = false }: { aoEnviar: (t
   }
 
   return (
-    <form className="border-t border-linha p-3" onSubmit={(evento) => { evento.preventDefault(); enviar(); }}>
-      <div className="flex items-end gap-2">
-        <textarea
-          ref={campo}
-          aria-label="Mensagem"
-          placeholder="Escreva uma mensagem"
-          value={texto}
-          maxLength={1000}
-          rows={1}
-          disabled={desabilitada}
-          onChange={(evento) => { setTexto(evento.target.value); ajustarAltura(); }}
-          onKeyDown={aoTeclar}
-          onCompositionStart={aoIniciarComposicao}
-          onCompositionEnd={aoTerminarComposicao}
-          className="max-h-[120px] min-h-10 flex-1 resize-none rounded-controle border border-linha-forte bg-superficie px-3 py-2.5 text-[0.9375rem] leading-relaxed text-texto placeholder:text-texto-3 transition-[border-color,box-shadow] duration-[var(--rapido)] ease-saida focus:border-marca focus:shadow-[0_0_0_4px_var(--brilho)] focus:outline-none disabled:opacity-50"
-        />
-        <button type="submit" aria-label="Enviar mensagem" disabled={!habilitada} className={`flex size-11 shrink-0 items-center justify-center rounded-full transition-[background-color,color,transform] duration-[var(--rapido)] ease-saida motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca ${habilitada ? "scale-100 bg-marca text-white" : "scale-95 bg-transparent text-texto-3"}`}>
-          <IconeEnviar tamanho={20} />
-        </button>
-      </div>
-      <div className="flex min-h-5 items-center justify-end px-1 pt-1">
-        {texto.length >= 900 && <span className="numeros text-xs text-texto-3">{texto.length}/1000</span>}
-      </div>
+    <form className="flex items-center gap-2 border-t border-linha bg-superficie px-3 py-2" onSubmit={(evento) => { evento.preventDefault(); enviar(); }}>
+      <textarea
+        ref={campo}
+        aria-label="Mensagem"
+        placeholder="Escreva uma mensagem"
+        value={texto}
+        maxLength={1000}
+        rows={1}
+        disabled={desabilitada}
+        onChange={(evento) => { setTexto(evento.target.value); ajustarAltura(); }}
+        onKeyDown={aoTeclar}
+        onCompositionStart={aoIniciarComposicao}
+        onCompositionEnd={aoTerminarComposicao}
+        className="min-h-10 max-h-[120px] flex-1 resize-none rounded-[4px] border border-linha-forte bg-superficie px-3 py-2 text-[0.9375rem] leading-normal text-texto placeholder:text-texto-3 transition-colors duration-[var(--rapido)] ease-saida focus:border-marca focus:outline-none focus:ring-1 focus:ring-marca disabled:opacity-50"
+      />
+      {texto.length >= 900 && <span className="shrink-0 font-mono text-[0.6875rem] tabular-nums text-texto-3">{texto.length}/1000</span>}
+      <button type="submit" aria-label="Enviar mensagem" disabled={!habilitada} className={`flex size-10 shrink-0 items-center justify-center rounded-[4px] transition-colors duration-[var(--rapido)] ease-saida motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca ${habilitada ? "bg-marca text-marca-texto hover:opacity-90" : "border border-linha bg-transparent text-texto-3"}`}>
+        <IconeEnviar tamanho={18} />
+      </button>
     </form>
   );
 }

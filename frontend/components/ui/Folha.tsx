@@ -96,7 +96,7 @@ export function Folha({
           evento.clientY <= caixa.bottom;
         if (!dentro) aoFechar();
       }}
-      className={`m-auto w-[min(28rem,calc(100vw-2rem))] rounded-cartao border border-linha bg-superficie p-5 text-texto shadow-alta backdrop:bg-[oklch(0.16_0.012_200/0.55)] backdrop:backdrop-blur-sm max-sm:mt-auto max-sm:mb-0 max-sm:w-full max-sm:max-w-none max-sm:rounded-t-cartao max-sm:rounded-b-none max-sm:pb-[calc(1.25rem+env(safe-area-inset-bottom))] max-sm:open:animate-[subir-folha_var(--medio)_var(--ease-saida)_both] sm:open:animate-[aparecer-escala_var(--medio)_var(--ease-saida)_both] motion-reduce:open:animate-none ${className ?? ""}`}
+      className={`m-auto w-[min(28rem,calc(100vw-2rem))] rounded-cartao border border-linha bg-superficie p-5 text-texto backdrop:bg-[rgb(18_17_16/0.55)] max-sm:mt-auto max-sm:mb-0 max-sm:w-full max-sm:max-w-none max-sm:rounded-t-cartao max-sm:rounded-b-none max-sm:pb-[calc(1.25rem+env(safe-area-inset-bottom))] max-sm:open:animate-[subir-folha_var(--medio)_var(--ease-saida)_both] sm:open:animate-[aparecer-escala_var(--medio)_var(--ease-saida)_both] motion-reduce:open:animate-none ${className ?? ""}`}
     >
       <button
         type="button"
@@ -113,9 +113,9 @@ export function Folha({
           }
         }}
       >
-        <span aria-hidden="true" className="h-1 w-10 rounded-full bg-linha-forte" />
+        <span aria-hidden="true" className="h-1 w-10 rounded-[2px] bg-linha-forte" />
       </button>
-      <h2 id={idTitulo} className="text-lg font-semibold tracking-tight">
+      <h2 id={idTitulo} className="font-display text-lg font-semibold tracking-[-0.02em]">
         {titulo}
       </h2>
       <div className="mt-3 flex flex-col gap-3">{children}</div>

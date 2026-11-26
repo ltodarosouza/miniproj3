@@ -22,21 +22,25 @@ class UserOut(BaseModel):
     created_at: datetime
 
 
-class UserPage(BaseModel):
-    """Padrão de paginação do projeto: todo endpoint de listagem devolve isto."""
-
-    items: list[UserOut]
-    total: int
-    offset: int
-    limit: int
-
-
 class HabilidadePerfilOut(BaseModel):
     id: int
     nome: str
     categoria: str
     tipo: str
     nivel: int
+
+
+class UserItemOut(UserOut):
+    habilidades: list[HabilidadePerfilOut]
+
+
+class UserPage(BaseModel):
+    """Padrão de paginação do projeto: todo endpoint de listagem devolve isto."""
+
+    items: list[UserItemOut]
+    total: int
+    offset: int
+    limit: int
 
 
 class HabilidadeItem(BaseModel):

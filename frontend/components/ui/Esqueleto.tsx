@@ -9,9 +9,9 @@ export function Esqueleto({ className }: { className?: string }) {
 
 export function EsqueletoPost() {
   return (
-    <div className="rounded-cartao border border-linha bg-superficie p-4 shadow-cartao">
+    <div className="rounded-cartao border border-linha bg-superficie p-4">
       <div className="flex items-center gap-3">
-        <Esqueleto className="size-10 rounded-full" />
+        <Esqueleto className="size-10 [clip-path:polygon(50%_0,93.3%_25%,93.3%_75%,50%_100%,6.7%_75%,6.7%_25%)]" />
         <div className="flex flex-col gap-2">
           <Esqueleto className="h-3.5 w-32" />
           <Esqueleto className="h-3 w-20" />
@@ -22,14 +22,14 @@ export function EsqueletoPost() {
         <Esqueleto className="h-3.5 w-11/12" />
         <Esqueleto className="h-3.5 w-2/3" />
       </div>
-      <Esqueleto className="mt-4 h-6 w-24 rounded-full" />
+      <Esqueleto className="mt-4 h-6 w-24 rounded-[2px]" />
     </div>
   );
 }
 
 export function EsqueletoLista({ itens = 3 }: { itens?: number }) {
   return (
-    <div role="status" aria-label="Carregando" className="flex flex-col gap-4">
+    <div role="status" aria-label="Carregando" className="flex flex-col gap-3">
       {Array.from({ length: itens }, (_, indice) => (
         <EsqueletoPost key={indice} />
       ))}
