@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useSair, rotaAtiva } from "./casca";
 import { BotaoTema } from "./BotaoTema";
 import { Icone } from "./Icone";
+import { Logo } from "./Logo";
 import { SeloContador } from "./SeloContador";
 import { Streak } from "./Streak";
 import { Folha } from "./Folha";
@@ -42,13 +43,10 @@ export function CabecalhoCelular({
     `${rotulo}${total !== null && total > 0 ? `, ${total} não lidas` : ""}`;
 
   return (
-    <header className="sticky top-0 z-40 lg:hidden border-b border-linha bg-[color-mix(in_oklch,var(--fundo)_88%,transparent)] backdrop-blur-md pt-[env(safe-area-inset-top)]">
+    <header className="sticky top-0 z-40 lg:hidden border-b border-linha bg-superficie pt-[env(safe-area-inset-top)]">
       <div className="flex h-14 items-center justify-between gap-2 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(0.375rem,env(safe-area-inset-right))]">
-        <Link href="/feed" className="inline-flex min-w-0 items-center gap-2 text-texto">
-          <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-marca text-marca-texto">
-            <Icone nome="troca" tamanho={16} />
-          </span>
-          <span className="truncate font-semibold tracking-tight text-texto">{nomeRede}</span>
+        <Link href="/feed" aria-label={nomeRede} className="inline-flex min-w-0 items-center rounded-controle text-texto">
+          <Logo variante="completo" tamanho="sm" />
         </Link>
 
         <div className="flex items-center">
@@ -57,28 +55,28 @@ export function CabecalhoCelular({
             href="/notificacoes"
             aria-label={rotuloComContagem("Notificações", naoLidas.notificacoes)}
             aria-current={linkAtivo("/notificacoes") ? "page" : undefined}
-            className={`relative inline-flex size-11 items-center justify-center rounded-controle transition-colors duration-[var(--rapido)] hover:text-texto active:bg-superficie-2 ${linkAtivo("/notificacoes") ? "text-marca-forte" : "text-texto-2"}`}
+            className={`relative inline-flex size-11 items-center justify-center transition-colors duration-[var(--rapido)] hover:text-texto ${linkAtivo("/notificacoes") ? "text-texto before:absolute before:inset-x-2.5 before:top-0 before:h-[2px] before:bg-marca before:content-['']" : "text-texto-2"}`}
           >
-            <Icone nome="sino" tamanho={22} />
-            <SeloContador total={naoLidas.notificacoes} className="absolute right-1.5 top-1.5" />
+            <Icone nome="sino" tamanho={20} />
+            <span className="absolute right-0.5 top-1.5"><SeloContador total={naoLidas.notificacoes} /></span>
           </Link>
           <Link
             href="/mensagens"
             aria-label={rotuloComContagem("Mensagens", naoLidas.mensagens)}
             aria-current={linkAtivo("/mensagens") ? "page" : undefined}
-            className={`relative inline-flex size-11 items-center justify-center rounded-controle transition-colors duration-[var(--rapido)] hover:text-texto active:bg-superficie-2 ${linkAtivo("/mensagens") ? "text-marca-forte" : "text-texto-2"}`}
+            className={`relative inline-flex size-11 items-center justify-center transition-colors duration-[var(--rapido)] hover:text-texto ${linkAtivo("/mensagens") ? "text-texto before:absolute before:inset-x-2.5 before:top-0 before:h-[2px] before:bg-marca before:content-['']" : "text-texto-2"}`}
           >
-            <Icone nome="mensagem" tamanho={22} />
-            <SeloContador total={naoLidas.mensagens} className="absolute right-1.5 top-1.5" />
+            <Icone nome="mensagem" tamanho={20} />
+            <span className="absolute right-0.5 top-1.5"><SeloContador total={naoLidas.mensagens} /></span>
           </Link>
           <button
             type="button"
             aria-label="Mais opções"
             aria-haspopup="dialog"
             onClick={() => setFolhaAberta(true)}
-            className="inline-flex size-11 items-center justify-center rounded-controle text-texto-2 transition-colors duration-[var(--rapido)] hover:text-texto active:bg-superficie-2"
+            className="inline-flex size-11 items-center justify-center text-texto-2 transition-colors duration-[var(--rapido)] hover:text-texto"
           >
-            <Icone nome="opcoes" tamanho={22} />
+            <Icone nome="opcoes" tamanho={20} />
           </button>
         </div>
       </div>

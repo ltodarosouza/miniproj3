@@ -7,16 +7,16 @@ import { useEffect } from "react";
 import { Botao } from "./Botao";
 import { BotaoTema } from "./BotaoTema";
 import { CabecalhoCelular } from "./CabecalhoCelular";
-import { Icone } from "./Icone";
+import { Logo } from "./Logo";
 import { NavegacaoLateral } from "./NavegacaoLateral";
 import { BarraInferior } from "./BarraInferior";
 import { useLogado } from "./casca";
-import { useNaoLidas } from "./useNaoLidas";
+import { useSelos } from "./useSelos";
 import { useStreak } from "./useStreak";
 
 export function Navegacao({ nomeRede }: { nomeRede: string }) {
   const logado = useLogado();
-  const naoLidas = useNaoLidas();
+  const naoLidas = useSelos();
   const streak = useStreak();
   const router = useRouter();
 
@@ -39,13 +39,10 @@ export function Navegacao({ nomeRede }: { nomeRede: string }) {
   }
 
   return (
-    <header className="sticky top-0 z-40 h-14 border-b border-linha bg-[color-mix(in_oklch,var(--fundo)_82%,transparent)] backdrop-blur-md">
+    <header className="sticky top-0 z-40 h-14 border-b border-linha bg-superficie">
       <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight text-texto">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-marca text-marca-texto">
-            <Icone nome="troca" tamanho={16} />
-          </span>
-          {nomeRede}
+        <Link href="/" aria-label={nomeRede} className="flex items-center rounded-controle text-texto">
+          <Logo variante="completo" tamanho="sm" />
         </Link>
         <div className="flex items-center gap-1.5">
           <BotaoTema />
