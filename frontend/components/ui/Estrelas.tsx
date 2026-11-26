@@ -37,8 +37,7 @@ export function Estrelas({
           aria-label={`${n} estrela${n > 1 ? "s" : ""}`}
           onPointerEnter={() => setSobre(n)}
           onClick={() => aoMudar(n)}
-          className="rounded-md p-0.5 transition-transform duration-[var(--medio)] ease-mola hover:scale-125 active:scale-95"
-          style={{ transitionDelay: sobre !== null && n <= ativo ? `${n * 25}ms` : "0ms" }}
+          className="rounded-controle p-0.5 transition-transform duration-[var(--rapido)] ease-saida hover:scale-110 active:scale-95"
         >
           <Icone
             nome="estrela"

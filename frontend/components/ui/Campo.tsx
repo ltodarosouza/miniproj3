@@ -3,7 +3,7 @@
 import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 
 const BASE =
-  "w-full rounded-controle border bg-superficie px-3 text-base md:text-[0.9375rem] text-texto placeholder:text-texto-3 transition-[border-color,box-shadow] duration-[var(--rapido)] ease-saida focus:outline-none focus:border-marca focus:shadow-[0_0_0_4px_var(--brilho)]";
+  "w-full rounded-controle border bg-superficie px-3 text-base md:text-[0.9375rem] text-texto placeholder:text-texto-3 transition-[border-color,box-shadow] duration-[var(--rapido)] ease-saida focus:outline-none focus:border-marca focus:ring-2 focus:ring-marca/40";
 
 function Rotulo({
   id,
@@ -20,7 +20,7 @@ function Rotulo({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-texto">
+      <label htmlFor={id} className="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-texto-2">
         {rotulo}
       </label>
       {children}
@@ -117,7 +117,7 @@ export function Selecao({
           fill="none"
           className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-texto-3"
         >
-          <path d="m5 7.5 5 5 5-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="m5 7.5 5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </span>
     </Rotulo>

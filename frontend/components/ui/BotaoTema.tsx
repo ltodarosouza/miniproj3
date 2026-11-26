@@ -31,7 +31,7 @@ export function BotaoTema() {
       onClick={alternarTema}
       aria-label={rotulo}
       title={rotulo}
-      className="inline-flex size-9 items-center justify-center rounded-controle text-texto-2 hover:bg-superficie-2 hover:text-texto transition-colors duration-[var(--rapido)] motion-reduce:transition-none"
+      className="inline-flex size-9 items-center justify-center rounded-controle border border-transparent text-texto-2 hover:border-linha hover:text-texto transition-colors duration-[var(--rapido)] motion-reduce:transition-none"
     >
       <Icone nome={tema === "claro" ? "lua" : "sol"} tamanho={18} />
     </button>
