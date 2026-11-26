@@ -8,8 +8,7 @@ Pedido direto do dono, sem issue.
   feed; colocar foto em todo post, o que vira vitrine e esconde o diário de
   rotina; alternar exatamente um post sem foto e um com foto.
 - **Escolha.** Alternância exata 1:1 na ordem cronológica de todos os posts
-  do seed (o feed de cada pessoa filtra por quem ela segue e por quem pode
-  ensinar, então ali a proporção fica perto de metade, sem alternância
+  do seed (o feed de cada pessoa mostra só os próprios posts e os de quem ela segue, de quem pode ensinar e de quem estuda as mesmas habilidades, então ali a proporção fica perto de metade, sem alternância
   garantida): 56 posts, 28 com
   foto e 28 sem. O seed mantém oito pessoas constantes postando por quatro
   dias seguidos, incluindo hoje, e as outras 24 postando uma vez nos últimos
@@ -34,17 +33,21 @@ Pedido direto do dono, sem issue.
   criados apenas para usuários falsos. Com `--aplicar`, grava um backup JSON
   com as linhas de `posts`, `likes`, `comentarios`, `imagens_post` e
   `notificacoes_entregues` a apagar, e então apaga e repõe tudo numa transação.
-  Curtidas e comentários são criados entre usuários falsos. `--restaurar`
-  apaga os posts atuais dos autores do backup e devolve as linhas originais
-  com os mesmos ids. O backup padrão é
+  Curtidas e comentários são criados entre usuários falsos. O aplicar também
+  grava `<backup>.novos.json` com os ids dos posts que criou. `--restaurar`
+  exige esse arquivo, descarta só esses posts (antes salva o que tiverem
+  ganhado depois, como curtidas e comentários, em
+  `<backup>.antes-de-restaurar-AAAAMMDD-HHMMSS.json`) e devolve as linhas
+  originais com os mesmos ids; posts criados depois da aplicação ficam. O backup padrão é
   `backup-posts-AAAAMMDD-HHMMSS.json`; `--backup` define outro caminho.
   `--listar-reais` lista os posts de gente real (id, autor, data, foto, começo
   do texto) e `--posts-reais 107,109` apaga também esses posts reais escolhidos
   por id, que entram no backup e voltam com `--restaurar`; os autores reais não
   ganham posts novos.
   No PostgreSQL, o script trava as tabelas de posts, curtidas, comentários,
-  imagens e notificações entregues durante a operação (escritas do app esperam;
-  leituras seguem), e a restauração nunca recua as sequências de id. O backup
+  imagens e notificações entregues durante a operação (`ACCESS EXCLUSIVE`: leituras e
+  escritas do app esperam alguns segundos, para nenhuma requisição gravar algo
+  ligado a um post apagado), e a restauração nunca recua as sequências de id. O backup
   nunca sobrescreve um arquivo existente.
   Antes de aplicar, recomenda-se criar também um branch do banco no painel do
   Neon.

@@ -61,11 +61,11 @@ O site fica em `http://localhost:3000`.
 
 ### Conta de demonstração
 
-`make seed` cria 32 usuários e 56 posts (metade com foto: na ordem cronológica de todos os posts do seed, um sem foto e um com foto se alternam; o feed de cada pessoa filtra por quem ela segue e por quem pode ensinar, então ali a proporção fica perto de metade, sem alternância garantida), além de conexões e trocas. As contas `ada` e `linus` formam o primeiro par de troca recíproca garantido pelo seed. A senha de todas as contas de demonstração é `senha-forte-123` (constante `SENHA_SEED` em [`backend/scripts/seed.py`](backend/scripts/seed.py)). O seed não insere dados se o banco já tiver usuários.
+`make seed` cria 32 usuários e 56 posts (metade com foto: na ordem cronológica de todos os posts do seed, um sem foto e um com foto se alternam; o feed de cada pessoa mostra só os próprios posts e os de quem ela segue, de quem pode ensinar e de quem estuda as mesmas habilidades, então ali a proporção fica perto de metade, sem alternância garantida), além de conexões e trocas. As contas `ada` e `linus` formam o primeiro par de troca recíproca garantido pelo seed. A senha de todas as contas de demonstração é `senha-forte-123` (constante `SENHA_SEED` em [`backend/scripts/seed.py`](backend/scripts/seed.py)). O seed não insere dados se o banco já tiver usuários.
 
 ### Refazer os posts no deploy
 
-Sem `--aplicar`, o script só mostra o plano e não cria arquivo. Com `--aplicar`, ele grava o backup JSON (`backup-posts-AAAAMMDD-HHMMSS.json` na pasta atual, ou o caminho de `--backup`) antes de apagar qualquer coisa e se recusa a sobrescrever um backup que já existe; depois de aplicar, copie esse arquivo para um lugar seguro, porque ele é o único jeito de usar `--restaurar`. No diretório `backend`:
+Sem `--aplicar`, o script só mostra o plano e não cria arquivo. Com `--aplicar`, ele grava o backup JSON (`backup-posts-AAAAMMDD-HHMMSS.json` na pasta atual, ou o caminho de `--backup`) antes de apagar qualquer coisa e se recusa a sobrescrever um backup que já existe; depois de aplicar, copie esse arquivo para um lugar seguro, junto com o `.novos.json` que nasce ao lado dele, porque os dois são o único jeito de usar `--restaurar`. No diretório `backend`:
 
 ```bash
 DATABASE_URL='<url do Neon>' uv run python scripts/refazer_posts.py
