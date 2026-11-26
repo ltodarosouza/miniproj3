@@ -34,14 +34,17 @@
   de curtida entregue (pessoa, sequência, post, dia, `em`, ator). Nas
   páginas seguintes da mesma sequência, esse grupo é ordenado pela posição
   guardada, então continua acima do cursor. A gravação usa ON CONFLICT DO
-  NOTHING e confere as posições antes de emitir o cursor; se outra
-  requisição gravou outra posição, a página é recalculada (até 3 vezes,
-  depois 409). O id da sequência separa duas paginações com o mesmo
+  NOTHING; depois o servidor recarrega as posições, recalcula a página e só
+  emite o cursor se ela sair idêntica. Se outra requisição fixou outra
+  posição, a página é recalculada (até 3 vezes, depois 409). O id da sequência separa duas paginações com o mesmo
   `antes_de`. Levar a lista no próprio cursor
   foi a primeira tentativa, mas ela crescia a cada página e estourava o
   limite do parâmetro. Na tabela, o cursor tem tamanho fixo, e repetir o
-  mesmo cursor devolve a mesma página. Linhas com recorte de mais de um dia
-  são apagadas quando a pessoa pede a página 1.
+  mesmo cursor devolve a mesma página. Linhas criadas há mais de um dia
+  (`criada_em`) são apagadas quando a pessoa pede a página 1. O custo é
+  uma escrita por listagem que tem próxima página (até `limit` linhas,
+  só dos grupos de curtida). Com cursor, `total` conta os itens do
+  recorte inteiro, não os que faltam.
 
   `antes_de=<iso>` continua por compatibilidade e recorta cada evento com
   `em < antes_de` antes de agrupar. Os dois parâmetros juntos ou um cursor
