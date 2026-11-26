@@ -13,3 +13,4 @@ from app.models.leitura_notificacoes import LeituraNotificacoes  # noqa: F401
 from app.models.leitura_conversa import LeituraConversa  # noqa: F401
 from app.models.imagem_post import ImagemPost  # noqa: F401
 from app.models.imagem_avatar import ImagemAvatar  # noqa: F401
+from app.models.notificacao_entregue import NotificacaoEntregue  # noqa: F401
