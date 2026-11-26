@@ -16,7 +16,7 @@ router = APIRouter(prefix="/notificacoes", tags=["notificacoes"])
 def listar(
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=20, ge=1, le=100),
-    cursor: str | None = Query(default=None, max_length=4096),
+    cursor: str | None = Query(default=None, max_length=512),
     antes_de: datetime | None = Query(default=None),
     db: Session = Depends(get_db),
     pessoa: User = Depends(get_current_user),
