@@ -29,7 +29,7 @@ const CONTORNO_CLARO = "border-grafite-texto/50! text-grafite-texto! hover:borde
 function Numero({ valor, rotulo, href, children }: { valor: ReactNode; rotulo: string; href?: string; children?: ReactNode }) {
   const corpo = (
     <>
-      <span className="block font-mono text-xl text-texto numeros">{valor}</span>
+      <span className="block font-mono text-xl font-medium text-texto numeros">{valor}</span>
       {children}
       <span className={`mt-1 block ${ROTULO}`}>{rotulo}</span>
     </>
