@@ -1,5 +1,6 @@
 import base64
 import json
+import re
 from datetime import date, datetime, timedelta
 
 from fastapi import HTTPException
@@ -201,13 +202,14 @@ def _ordenar(itens: list[dict]) -> None:
     itens.sort(key=lambda item: item["em"], reverse=True)
 
 
-def _codificar_cursor(recorte: datetime, item: dict) -> str:
+def _codificar_cursor(recorte: datetime, item: dict, curtidas_dia: list[int]) -> str:
     dados = {
         "r": recorte.isoformat(),
         "em": item["em"].isoformat(),
         "t": item["tipo"],
         "a": item["ator_id"],
         "k": item["chave"],
+        "p": sorted(set(curtidas_dia)),
     }
     bruto = json.dumps(dados, separators=(",", ":")).encode()
     return base64.urlsafe_b64encode(bruto).rstrip(b"=").decode()
@@ -215,9 +217,11 @@ def _codificar_cursor(recorte: datetime, item: dict) -> str:
 
 def _decodificar_cursor(cursor: str) -> dict:
     try:
+        if re.fullmatch(r"[A-Za-z0-9_-]+", cursor) is None or len(cursor) % 4 == 1:
+            raise ValueError
         bruto = base64.urlsafe_b64decode(cursor + "=" * (-len(cursor) % 4))
         dados = json.loads(bruto)
-        if not isinstance(dados, dict) or set(dados) != {"r", "em", "t", "a", "k"}:
+        if not isinstance(dados, dict) or set(dados) != {"r", "em", "t", "a", "k", "p"}:
             raise ValueError
         recorte = datetime.fromisoformat(dados["r"])
         em = datetime.fromisoformat(dados["em"])
@@ -227,6 +231,8 @@ def _decodificar_cursor(cursor: str) -> dict:
             not isinstance(dados["t"], str)
             or type(dados["a"]) is not int
             or type(dados["k"]) is not int
+            or not isinstance(dados["p"], list)
+            or any(type(x) is not int for x in dados["p"])
         ):
             raise ValueError
         return {
@@ -235,6 +241,7 @@ def _decodificar_cursor(cursor: str) -> dict:
             "t": dados["t"],
             "a": dados["a"],
             "k": dados["k"],
+            "p": dados["p"],
         }
     except Exception as exc:
         raise HTTPException(status_code=422, detail="cursor inválido") from exc
@@ -255,15 +262,27 @@ def listar(
         recorte = posicao["r"]
         itens = _montar(db, pessoa, ate=recorte, inclusivo=True)
     elif antes_de is not None:
-        antes_de = para_utc_ingenuo(antes_de)
+        try:
+            antes_de = para_utc_ingenuo(antes_de)
+        except (OverflowError, ValueError) as exc:
+            raise HTTPException(status_code=422, detail="antes_de inválido") from exc
         itens = _montar(db, pessoa, ate=antes_de, inclusivo=False)
-        recorte = antes_de - timedelta(microseconds=1)
+        recorte = antes_de
     else:
         recorte = agora_utc()
         itens = _montar(db, pessoa, ate=recorte)
     _ordenar(itens)
     total = len(itens)
     if posicao is not None:
+        ids_dia = set(posicao["p"])
+        itens = [
+            item for item in itens
+            if not (
+                item["tipo"] == "curtida"
+                and item["em"].date() == posicao["em"].date()
+                and item["chave"] in ids_dia
+            )
+        ]
         chave_posicao = (posicao["t"], posicao["a"], posicao["k"])
         itens = [
             item
@@ -281,7 +300,19 @@ def listar(
         inicio = offset
     pagina = itens[inicio : inicio + limit]
     tem_mais = len(itens) > inicio + len(pagina)
-    proximo = _codificar_cursor(recorte, pagina[-1]) if pagina and tem_mais else None
+    proximo = None
+    if pagina and tem_mais:
+        ultimo = pagina[-1]
+        dia = ultimo["em"].date()
+        ids_dia = [
+            item["chave"]
+            for item in pagina
+            if item["tipo"] == "curtida" and item["em"].date() == dia
+        ]
+        if posicao is not None and posicao["em"].date() == dia:
+            ids_dia.extend(posicao["p"])
+        recorte_cursor = antes_de - timedelta(microseconds=1) if antes_de is not None else recorte
+        proximo = _codificar_cursor(recorte_cursor, ultimo, ids_dia)
     for item in pagina:
         item.pop("ator_id", None)
         item.pop("chave", None)
