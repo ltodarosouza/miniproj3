@@ -10,14 +10,19 @@ import { Icone } from "@/components/ui/Icone";
 import { BalaoMensagem } from "@/components/mensagens/BalaoMensagem";
 import { CaixaMensagem } from "@/components/mensagens/CaixaMensagem";
 import { aplicarEntreguesAte, chaveMensagem, confirmarEnvio, maiorIdRecebido, reconciliarMensagens, type MensagemLocal } from "@/components/mensagens/mensagemLocal";
-import { listarConversas, listarMensagens, listarTrocas, type Conversa, type Troca } from "@/lib/api";
+import { ErroApi, listarMensagens, listarTrocas, type Troca } from "@/lib/api";
 import { chaveDoDia, formatarDia } from "@/lib/datas";
 import { meuId } from "@/lib/sessao";
 import { CartaoTroca } from "@/components/trocas/CartaoTroca";
 import { FormAgendarTroca } from "@/components/trocas/FormAgendarTroca";
-import { enviarMensagemComId, marcarConversaLida } from "@/lib/mensagens";
+import { enviarMensagemComId, listarConversasComStatus, marcarConversaLida, type ConversaComStatus } from "@/lib/mensagens";
+import { prefereMenosMovimento } from "@/lib/movimento";
 
 type RespostaMensagens = { items: MensagemLocal[]; lidas_ate_id?: number | null; entregues_ate_id?: number | null };
+
+function ehSessaoEncerrada(erro: unknown) {
+  return erro instanceof ErroApi && erro.status === 401;
+}
 
 type ItemLinhaDoTempo = { tipo: "mensagem"; mensagem: MensagemLocal } | { tipo: "troca"; troca: Troca };
 
@@ -28,11 +33,12 @@ export default function PaginaConversa() {
   const [mensagens, setMensagens] = useState<MensagemLocal[]>([]);
   const [trocas, setTrocas] = useState<Troca[]>([]);
   const [idsRecentes, setIdsRecentes] = useState<number[]>([]);
-  const [conversa, setConversa] = useState<Conversa | null>(null);
+  const [conversa, setConversa] = useState<ConversaComStatus | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [naoEncontrado, setNaoEncontrado] = useState(false);
   const [erroInicial, setErroInicial] = useState(false);
   const [semConexao, setSemConexao] = useState(false);
+  const [sessaoEncerrada, setSessaoEncerrada] = useState(false);
   const [novas, setNovas] = useState(false);
   const [formAberto, setFormAberto] = useState(false);
   const lista = useRef<HTMLDivElement>(null);
@@ -40,6 +46,7 @@ export default function PaginaConversa() {
   const ciclosPolling = useRef(0);
   const proximoIdLocal = useRef(-1);
   const pollingEmVoo = useRef(false);
+  const sessaoEncerradaRef = useRef(false);
   const cursorRef = useRef(0);
   const mensagensRef = useRef(mensagens);
   const cargaInicialConcluida = useRef(false);
@@ -66,7 +73,7 @@ export default function PaginaConversa() {
   }), [mensagens, trocas]);
 
   const carregarConversa = useCallback(
-    () => Promise.all([listarMensagens(username), listarConversas(), listarTrocas(username)]),
+    () => Promise.all([listarMensagens(username), listarConversasComStatus(), listarTrocas(username)]),
     [username],
   );
 
@@ -93,6 +100,22 @@ export default function PaginaConversa() {
     setNovas(false);
   }, []);
 
+  const estaPertoDoFim = useCallback(() => {
+    const c = lista.current;
+    return !c || c.scrollHeight - c.scrollTop - c.clientHeight < 120;
+  }, []);
+
+  const rolarOuMarcarNovas = useCallback((pertoDoFim: boolean) => {
+    if (pertoDoFim) requestAnimationFrame(() => rolarAteFim(prefereMenosMovimento() ? "auto" : "smooth"));
+    else setNovas(true);
+  }, [rolarAteFim]);
+
+  const encerrarSessao = useCallback(() => {
+    sessaoEncerradaRef.current = true;
+    setSessaoEncerrada(true);
+    setSemConexao(false);
+  }, []);
+
   useEffect(() => {
     setIdUsuario(meuId());
   }, []);
@@ -109,6 +132,8 @@ export default function PaginaConversa() {
     setConversa(null);
     setNaoEncontrado(false);
     setErroInicial(false);
+    setSessaoEncerrada(false);
+    sessaoEncerradaRef.current = false;
     cargaInicialConcluida.current = false;
     cursorRef.current = 0;
     primeiroCarregamento.current = true;
@@ -119,6 +144,10 @@ export default function PaginaConversa() {
       })
       .catch((erro: unknown) => {
         if (!ativo) return;
+        if (ehSessaoEncerrada(erro)) {
+          encerrarSessao();
+          return;
+        }
         const detalhe = erro instanceof Error ? erro.message.toLocaleLowerCase("pt-BR") : "";
         if (detalhe.includes("usuário não encontrado")) setNaoEncontrado(true);
         else {
@@ -135,7 +164,7 @@ export default function PaginaConversa() {
         });
       });
     return () => { ativo = false; };
-  }, [idUsuario, username, rolarAteFim, carregarConversa, aplicarCarga]);
+  }, [idUsuario, username, rolarAteFim, carregarConversa, aplicarCarga, encerrarSessao]);
 
   const aplicarLidasAte = useCallback((id: number | null | undefined) => {
     if (id == null) return;
@@ -148,12 +177,12 @@ export default function PaginaConversa() {
   }, [username]);
 
   const marcarLidas = useCallback(() => {
-    if (document.hidden || !cargaInicialConcluida.current) return;
+    if (sessaoEncerradaRef.current || document.hidden || !cargaInicialConcluida.current) return;
     void marcarConversaLida(username).then((resposta) => aplicarLidasAte(resposta.lidas_ate_id)).catch(() => {});
   }, [aplicarLidasAte, username]);
 
   const buscarNovas = useCallback(async () => {
-    if (document.hidden || idUsuario === null || pollingEmVoo.current) return;
+    if (sessaoEncerradaRef.current || document.hidden || idUsuario === null || pollingEmVoo.current) return;
     pollingEmVoo.current = true;
     ciclosPolling.current += 1;
     const buscarTrocasAgora = ciclosPolling.current % 2 === 0;
@@ -169,42 +198,32 @@ export default function PaginaConversa() {
       if (!resposta.items.length) {
         setSemConexao(false);
         if (trocasNovas.length) {
-          const container = lista.current;
-          const pertoDoFim = !container || container.scrollHeight - container.scrollTop - container.clientHeight < 120;
-          if (pertoDoFim) requestAnimationFrame(() => rolarAteFim(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"));
-          else setNovas(true);
+          rolarOuMarcarNovas(estaPertoDoFim());
         }
         return;
       }
-      const container = lista.current;
-      const pertoDoFim = !container || container.scrollHeight - container.scrollTop - container.clientHeight < 120;
+      const pertoDoFim = estaPertoDoFim();
       const recebidas = resposta.items;
       const chegaramDoOutro = recebidas.some((mensagem) => mensagem.de_username === username);
       if (chegaramDoOutro) marcarLidas();
       setIdsRecentes(recebidas.filter((mensagem) => mensagem.de_username === username).map((mensagem) => mensagem.id));
       setMensagens((atuais) => reconciliarMensagens(atuais, recebidas, username));
       setSemConexao(false);
-      if (trocasNovas.length) {
-        if (pertoDoFim) requestAnimationFrame(() => rolarAteFim(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"));
-        else setNovas(true);
-      } else if (pertoDoFim || recebidas.some((mensagem) => mensagem.de_username !== username)) {
-        requestAnimationFrame(() => rolarAteFim(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"));
-      } else {
-        setNovas(true);
-      }
-    } catch {
-      setSemConexao(true);
+      rolarOuMarcarNovas(trocasNovas.length ? pertoDoFim : pertoDoFim || recebidas.some((mensagem) => mensagem.de_username !== username));
+    } catch (erro: unknown) {
+      if (ehSessaoEncerrada(erro)) encerrarSessao();
+      else setSemConexao(true);
     } finally {
       pollingEmVoo.current = false;
     }
-  }, [aplicarLidasAte, idUsuario, marcarLidas, rolarAteFim, username]);
+  }, [aplicarLidasAte, encerrarSessao, estaPertoDoFim, idUsuario, marcarLidas, rolarOuMarcarNovas, username]);
 
   useEffect(() => {
     if (!carregando && cargaInicialConcluida.current) marcarLidas();
   }, [carregando, marcarLidas]);
 
   useEffect(() => {
-    if (idUsuario === null) return;
+    if (idUsuario === null || sessaoEncerrada) return;
     const temporizador = window.setInterval(() => { void buscarNovas(); }, 1500);
     const aoMudarVisibilidade = () => { if (!document.hidden) { marcarLidas(); void buscarNovas(); } };
     document.addEventListener("visibilitychange", aoMudarVisibilidade);
@@ -212,7 +231,7 @@ export default function PaginaConversa() {
       window.clearInterval(temporizador);
       document.removeEventListener("visibilitychange", aoMudarVisibilidade);
     };
-  }, [buscarNovas, idUsuario, marcarLidas]);
+  }, [buscarNovas, idUsuario, marcarLidas, sessaoEncerrada]);
 
   function aoEnviar(texto: string) {
     const idLocal = proximoIdLocal.current--;
@@ -222,11 +241,12 @@ export default function PaginaConversa() {
       ?? "";
     const temporaria: MensagemLocal = { id: idLocal, idLocal, cliente_id: clienteId, de_username: meuUsername, para_username: username, texto, em: new Date().toISOString(), estado: "enviando" };
     setMensagens((atuais) => [...atuais, temporaria]);
-    requestAnimationFrame(() => rolarAteFim(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"));
+    requestAnimationFrame(() => rolarAteFim(prefereMenosMovimento() ? "auto" : "smooth"));
     void enviarMensagemComId(username, texto, clienteId).then((enviada) => {
       setMensagens((atuais) => confirmarEnvio(atuais, clienteId, enviada, username));
-    }).catch(() => {
+    }).catch((erro: unknown) => {
       setMensagens((atuais) => atuais.map((mensagem) => mensagem.idLocal === idLocal && mensagem.id < 0 ? { ...mensagem, estado: "falhou" } : mensagem));
+      if (ehSessaoEncerrada(erro)) encerrarSessao();
     });
   }
 
@@ -238,8 +258,9 @@ export default function PaginaConversa() {
     if (!clienteId) return;
     void enviarMensagemComId(username, mensagem.texto, clienteId).then((enviada) => {
       setMensagens((atuais) => confirmarEnvio(atuais, clienteId, enviada, username));
-    }).catch(() => {
+    }).catch((erro: unknown) => {
       setMensagens((atuais) => atuais.map((item) => item.idLocal === idLocal && item.id < 0 ? { ...item, estado: "falhou" } : item));
+      if (ehSessaoEncerrada(erro)) encerrarSessao();
     });
   }
 
@@ -247,12 +268,16 @@ export default function PaginaConversa() {
     return <div className="flex h-full items-center justify-center px-6 text-center"><div className="max-w-sm"><p className="text-texto">Entre na sua conta para ver suas mensagens.</p><Link className="mt-3 inline-block text-sm font-medium text-marca-forte" href="/login">Entrar</Link></div></div>;
   }
 
+  if (sessaoEncerrada) {
+    return <div className="flex h-full items-center justify-center px-6 text-center"><div className="max-w-sm"><p className="text-texto">Sessão encerrada. Entre de novo.</p><Link className="mt-3 inline-block text-sm font-medium text-marca-forte" href="/login">Entrar</Link></div></div>;
+  }
+
   if (naoEncontrado) {
     return <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"><p className="text-lg font-medium text-texto">Não encontramos @{username}</p><Link href="/mensagens" className="text-sm font-medium text-marca-forte">Voltar para as conversas</Link></div>;
   }
 
   if (erroInicial && mensagens.length === 0) {
-    return <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"><p className="max-w-sm text-texto-2">Não conseguimos carregar esta conversa. Confira sua conexão e tente de novo.</p><Botao variante="secundario" onClick={() => { setErroInicial(false); setCarregando(true); void carregarConversa().then(aplicarCarga).catch(() => { setErroInicial(true); setSemConexao(true); }).finally(() => setCarregando(false)); }}>Tentar de novo</Botao></div>;
+    return <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"><p className="max-w-sm text-texto-2">Não conseguimos carregar esta conversa. Confira sua conexão e tente de novo.</p><Botao variante="secundario" onClick={() => { setErroInicial(false); setCarregando(true); void carregarConversa().then(aplicarCarga).catch((erro: unknown) => { if (ehSessaoEncerrada(erro)) encerrarSessao(); else { setErroInicial(true); setSemConexao(true); } }).finally(() => setCarregando(false)); }}>Tentar de novo</Botao></div>;
   }
 
   const com = conversa?.com;
