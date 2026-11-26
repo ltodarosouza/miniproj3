@@ -124,3 +124,10 @@ Por exemplo, o fluxo de follow passa por [`model`](backend/app/models/follow.py)
 | D | @ltodarosouza | Chat, agendamento e avaliação das trocas, notificações e deploy. |
 
 Mais detalhes sobre a divisão estão em [`docs/FRENTES.md`](docs/FRENTES.md).
+
+## Prazos
+
+| Marco | Data |
+|---|---|
+| Início | segunda, 16/11/2026 |
+| Entrega final | sexta, 27/11/2026 |
