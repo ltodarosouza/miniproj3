@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
 import { Icone } from "@/components/ui/Icone";
 import { dataLocal, resumoDoHorario } from "@/lib/datas";
@@ -45,12 +45,14 @@ export function SeletorDeHorario({
   aoMudarData,
   aoMudarHora,
   erro,
+  rotulo = "Quando",
 }: {
   data: string;
   hora: string;
   aoMudarData: (data: string) => void;
   aoMudarHora: (hora: string) => void;
   erro?: string;
+  rotulo?: ReactNode;
 }) {
   const hoje = useMemo(() => inicioDoDia(new Date()), []);
   const inicial = useMemo(() => (semHorarioLivre(hoje) ? somarDias(hoje, 1) : hoje), [hoje]);
@@ -121,7 +123,7 @@ export function SeletorDeHorario({
 
   return (
     <fieldset className="min-w-0 space-y-3">
-      <legend className="mb-2 text-sm font-medium text-texto">Quando</legend>
+      <legend className="mb-2 text-sm font-medium text-texto">{rotulo}</legend>
 
       <div className="flex flex-wrap gap-2">
         {atalhos.map(({ rotulo, dia }) => {
@@ -132,7 +134,7 @@ export function SeletorDeHorario({
               type="button"
               onClick={() => escolher(dia)}
               aria-pressed={ativo}
-              className={`h-8 rounded-full border px-3 text-sm font-medium transition-colors duration-[var(--rapido)] motion-reduce:transition-none ${ativo ? "border-marca bg-marca text-marca-texto" : "border-linha-forte text-texto hover:border-marca hover:text-marca-forte"}`}
+              className={`h-8 rounded-controle border px-3 text-sm font-medium transition-colors duration-[var(--rapido)] motion-reduce:transition-none ${ativo ? "border-marca bg-marca text-marca-texto" : "border-linha-forte text-texto hover:border-marca hover:text-marca-forte"}`}
             >
               {rotulo}
             </button>
@@ -187,7 +189,7 @@ export function SeletorDeHorario({
                     aria-selected={escolhido}
                     aria-label={POR_EXTENSO.format(dia)}
                     onClick={() => escolher(dia)}
-                    className={`numeros mx-auto flex size-9 items-center justify-center rounded-full text-sm transition-colors duration-[var(--rapido)] motion-reduce:transition-none disabled:text-texto-3 disabled:opacity-40 ${escolhido ? "bg-marca font-semibold text-marca-texto" : ehHoje ? "font-semibold text-marca-forte ring-1 ring-marca" : "text-texto hover:bg-superficie-2"}`}
+                    className={`font-mono numeros mx-auto flex size-9 items-center justify-center rounded-full text-sm transition-colors duration-[var(--rapido)] motion-reduce:transition-none disabled:text-texto-3 disabled:opacity-40 ${escolhido ? "bg-marca font-semibold text-marca-texto" : ehHoje ? "font-semibold text-marca-forte ring-1 ring-marca" : "text-texto hover:bg-superficie-2"}`}
                   >
                     {dia.getDate()}
                   </button>
@@ -199,8 +201,8 @@ export function SeletorDeHorario({
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium text-texto">Horário</p>
-        <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
+        <p className="font-mono text-xs uppercase tracking-wide text-texto-2">Horário</p>
+        <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
           {HORARIOS.map((horario) => {
             const indisponivel = !data || horarioPassou(data, horario);
             const ativo = horario === hora;
@@ -211,7 +213,7 @@ export function SeletorDeHorario({
                 disabled={indisponivel}
                 aria-pressed={ativo}
                 onClick={() => aoMudarHora(horario)}
-                className={`numeros h-9 shrink-0 rounded-full border px-3 text-sm transition-colors duration-[var(--rapido)] motion-reduce:transition-none disabled:opacity-35 ${ativo ? "border-marca bg-marca font-medium text-marca-texto" : "border-linha-forte text-texto hover:border-marca"}`}
+                className={`font-mono numeros h-9 w-full rounded-controle border text-sm transition-colors duration-[var(--rapido)] motion-reduce:transition-none disabled:opacity-35 ${ativo ? "border-marca bg-marca font-medium text-marca-texto" : "border-linha-forte text-texto hover:border-marca"}`}
               >
                 {horario}
               </button>
@@ -222,7 +224,7 @@ export function SeletorDeHorario({
       </div>
 
       {data && hora && (
-        <p className="numeros rounded-controle bg-marca-suave px-3 py-2 text-sm font-medium text-marca-forte" aria-live="polite">
+        <p className="font-mono numeros rounded-controle bg-marca-suave px-3 py-2 text-sm font-medium text-marca-forte" aria-live="polite">
           {resumoDoHorario(data, hora)}
         </p>
       )}
