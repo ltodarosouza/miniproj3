@@ -22,11 +22,10 @@
     com a primeira letra maiúscula.
   - Confirmar com sucesso chama `celebrar()` e `vibrar(10)`. O confete
     agora são 40 hexágonos mel e grafite em 1,1 s; com
-    `prefers-reduced-motion` nada é desenhado. As cores leem `--mel` e
-    `--grafite` e caem para `--troca` e `--texto` enquanto esses tokens
-    não existem.
+    `prefers-reduced-motion` nada é desenhado. As cores leem `--marca`
+    (mel) e `--grafite`, definidos nos temas claro e escuro.
   - `FormAgendarTroca`: blocos `01 · Você ensina`, `02 · Você aprende`,
     `03 · Quando`, horários em grade mono (4 colunas no celular, 6 no
     computador) e o resumo da ordem sempre visível antes de "Propor troca".
-  - O nó de match usa o ícone `troca`; quando o ícone `par` existir no
-    `Icone.tsx`, é só trocar o nome.
+  - O nó de match usa o ícone `par` do sistema visual. O ponto da ordem
+    aberta usa `--troca`, alias de `--marca`.

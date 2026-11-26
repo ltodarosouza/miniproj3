@@ -43,8 +43,8 @@ export function celebrar(): void {
 
   const estilos = getComputedStyle(document.documentElement);
   const lerCor = (variavel: string) => estilos.getPropertyValue(variavel).trim();
-  let mel = lerCor("--mel") || lerCor("--troca");
-  let grafite = lerCor("--grafite") || lerCor("--texto");
+  let mel = lerCor("--marca");
+  let grafite = lerCor("--grafite");
   if (!mel && !grafite) mel = grafite = "currentColor";
   else {
     mel ||= grafite;
