@@ -47,8 +47,8 @@ function TabelaPares({
   vazio: ReactNode;
 }) {
   const colunas = troca
-    ? "sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
-    : "sm:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)_auto]";
+    ? "sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_6.5rem]"
+    : "sm:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)_6.5rem]";
   return (
     <section className="space-y-3">
       <header>
@@ -86,7 +86,7 @@ function TabelaPares({
                   <span className="font-mono text-[0.6875rem] uppercase text-texto-3 sm:hidden">Você ensina</span>
                   {m.eu_ensino.map((h) => <TagHabilidade key={h.id} nome={h.nome} tipo="sei" nivel={h.nivel} />)}
                 </div>}
-                <BotaoLink href={`/mensagens/${encodeURIComponent(m.usuario.username)}`} aria-label={`Conversar com ${m.usuario.name}`} tamanho="sm" variante={troca ? "troca" : "secundario"} className="order-1 sm:order-last">
+                <BotaoLink href={`/mensagens/${encodeURIComponent(m.usuario.username)}`} aria-label={`Conversar com ${m.usuario.name}`} tamanho="sm" variante={troca ? "troca" : "secundario"} className="order-1 sm:order-last sm:justify-self-end">
                   Conversar
                 </BotaoLink>
               </li>
