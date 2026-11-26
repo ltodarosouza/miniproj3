@@ -2,7 +2,7 @@
 
 **Time:** @italoosilva (Pessoa A), @NicoleAlverga (Pessoa B), @gecbeltrao (Pessoa C) e @ltodarosouza (Pessoa D)
 
-**Rede:** troca de habilidades entre iniciantes em tech. Nome da rede: _a decidir_.
+**Rede:** Colmatch, troca de habilidades entre iniciantes em tech.
 
 Este arquivo acompanha o projeto. Atualizem quando as decisões mudarem. O
 escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
@@ -22,6 +22,21 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
   pessoas conversam, agendam a troca e se avaliam.
 - **Como saberíamos que funcionou:** uma troca agendada termina com avaliação
   dos dois lados, e a pessoa volta para marcar outra.
+- **Onde o nicho aparece:** o catálogo reúne habilidades de programação e disciplinas da base (`backend/app/services/habilidades.py`, `CATALOGO`); o seed monta 32 pessoas, pares de troca garantidos e posts de rotina de estudo (`backend/scripts/seed.py`); a interface traz a Mesa/Diário com “O que você estudou hoje?” e o livro de pares em `/matches` (decisões [32](docs/decisoes/32-identidade-colmatch-bolsa-de-saberes.md), [33](docs/decisoes/33-mesa-diario-e-cotacao.md) e [36](docs/decisoes/36-pares-e-busca.md)).
+
+## Decisões em destaque
+
+O time registrou cada decisão à medida que o produto mudou; estas cinco são as que mudaram o que a rede é.
+
+| Decisão | Escolha | O que cortamos e por quê |
+|---|---|---|
+| [1. Match em dois níveis](#1-match-em-dois-níveis) | Separar quem pode ensinar de quem tem troca recíproca, destacando os pares de troca. | Troca recíproca pura deixaria muita gente sem resultado numa rede pequena. |
+| [2. Agendamento interno, sem login com Google](#2-agendamento-interno-sem-login-com-google) | Propor e confirmar horário no chat; abrir evento preenchido no Google Agenda. | OAuth exigiria consentimento e usuários de teste no Google Cloud; o link resolve o uso prático. |
+| [3. A IA só traduz para o catálogo, não cria habilidade](#3-a-ia-só-traduz-para-o-catálogo-não-cria-habilidade) | Mapear a entrada para habilidades existentes e pedir escolha quando não houver correspondência. | Criar habilidades pela IA poluiria o catálogo e reduziria a confiabilidade do match. |
+| [5. Feed com meus posts, quem eu sigo e quem pode me ensinar](#5-feed-com-meus-posts-quem-eu-sigo-e-quem-pode-me-ensinar) | Feed cronológico com posts próprios, de seguidos e de quem pode ensinar, com motivo. | Feed só de seguidos deixava vazia a descoberta e removia os próprios posts. |
+| [28. Troca só avalia o que aconteceu](docs/decisoes/28-troca-so-avalia-o-que-aconteceu.md) | Confirmar antes do horário e permitir uma proposta pendente por par. | Cortamos índice único parcial por diferenças e migrações entre SQLite e Postgres; a criação serializada evita duplicatas. |
+
+A decisão 1 é a escolha que vai para o vídeo/pitch, conforme [docs/AVALIACAO.md](docs/AVALIACAO.md).
 
 ## Decisões de produto
 
@@ -309,77 +324,6 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
   - Fallback difflib: O(N × M) no pior caso, onde M é o tamanho médio dos
     nomes, mas roda só quando a IA falha e o catálogo é pequeno.
 
-## Features
-
-| Feature | Dono | Por quê (1 frase) |
-|---|---|---|
-| Auth (núcleo) | @italoosilva | Sem login não existe troca entre pessoas. |
-| Perfil com nível e habilidades (núcleo + diferencial) | @italoosilva | O perfil é o "currículo" que decide se vale trocar com alguém. |
-| Catálogo de habilidades com autocomplete e IA | @italoosilva | Garante que o match compare a mesma habilidade. |
-| Posts de rotina com tempo e foto (núcleo) | @NicoleAlverga | Mostra que a pessoa estuda aquilo de verdade. |
-| Curtidas e comentários (núcleo) | @NicoleAlverga | Motivação e dúvidas rápidas na rotina dos outros. |
-| Feed misto (núcleo) | @NicoleAlverga | Ajuda a descobrir quem pode te ensinar. |
-| Streak de estudo | @NicoleAlverga | Incentiva a voltar todo dia. |
-| Follow (núcleo) | @gecbeltrao | Acompanhar quem estuda o mesmo que você. |
-| Match em dois níveis | @gecbeltrao | É o centro do produto. |
-| Seed fake (núcleo) | @gecbeltrao | A demo começa com matches de verdade. |
-| Chat 1-para-1 | @ltodarosouza | É onde a troca é combinada. |
-| Agendamento de troca | @ltodarosouza | Marca a troca e avisa quando avaliar. |
-| Avaliação pós-troca | @ltodarosouza | Passa confiança sobre quem ensina bem. |
-| Deploy | @ltodarosouza | Bônus de +10 e banca testando na URL. |
-
-Extras, só depois de tudo acima pronto: notificações, trending de habilidades
-e badges.
-
-## Uma escolha técnica
-
-_(a preencher)_ Candidata principal: o índice invertido do match em
-`backend/app/core/matches.py`. Para cada habilidade, guardamos quem sabe e
-quem quer aprender. O match de troca vira uma interseção de conjuntos, sem
-varrer todos os usuários. Expliquem o Big O e, se der, meçam com `make bench`
-contra a versão que percorre todos os usuários.
-
-## Uso de IA
-
-- Claude para ajudar a definir o produto, recortar o escopo e dividir as
-  frentes.
-- IA dentro do produto: mapear a habilidade digitada para um item do catálogo.
-- Frente D (chat, agendamento e avaliação): Claude Code planejou a frente,
-  escreveu os models, schemas e o contrato do `api.ts`, e dividiu o resto em
-  tarefas pequenas para agentes do Codex (GPT-6 Luna) em paralelo, um arquivo
-  por agente. Claude revisou cada entrega, rodou os testes e conferiu as
-  telas no navegador antes de mesclar.
-- Frente C (follow): Claude Code escreveu model, service, rotas, testes e as
-  telas de seguidores/seguindo seguindo o slice de usuários, e conferiu o
-  botão de seguir no navegador. Um subagente revisor apontou bugs no
-  frontend (erro engolido, resposta velha na lista, hydration), que foram
-  corrigidos antes do PR.
-- Frente A (auth e perfil): IA escreveu models, schemas, services, rotas,
-  testes e as telas de login/cadastro e perfil, revisou a integração com o
-  follow e realizou os testes (incluindo testes visuais no navegador) antes
-  do PR.
-- Frente B (posts e comentários, frontend): Claude Code escreveu o contrato
-  em `lib/posts.ts` e dividiu as telas em tarefas curtas para agentes do Codex
-  (GPT-6 Luna), em duas ondas e um dono por arquivo. Dois revisores Luna só de
-  leitura (lógica e design) apontaram achados; Claude fez a triagem, corrigiu
-  os reais e testou criar post com e sem foto, apagar, comentar e curtir no
-  navegador, em 375 px e nos dois temas.
-- Notificações (issue #50): Claude Code dividiu a issue em nove tarefas
-  pequenas para agentes do Codex (GPT-6 Luna), em ondas e com um dono por
-  arquivo: model e migração, schemas, service, router, testes, lib com o
-  hook, item, toast e página. Claude revisou cada entrega, corrigiu o hook
-  (timer do toast reiniciando a cada consulta e polling que não começava
-  depois do login), rodou a suíte e testou o toast, a página e o "seguir de
-  volta" no navegador, em 375 px e nos dois temas.
-- Design e celular (issue #49): Claude Code pesquisou padrões de navegação e
-  apresentou três opções por decisão para o dono escolher. Escreveu o contrato
-  `casca.ts` e dividiu o restante em cerca de 15 tarefas pequenas para agentes
-  do Codex (GPT-6 Luna), em quatro ondas, um dono por arquivo. Claude revisou
-  as entregas e corrigiu contraste da sequência, dica fora da tela, clique no
-  padding da Folha, contador cortado na curtida e zoom do iOS no toque duplo.
-  Testou em 375 px e 1440 px no navegador.
-- _(completem conforme usarem)_
-
 ### 15. Banco de produção no Postgres do Neon, com migrações Alembic
 
 - **Contexto:** com SQLite no disco do Render (decisão 13), cada deploy
@@ -457,7 +401,7 @@ contra a versão que percorre todos os usuários.
   dicionários em O(h), sendo h o número de habilidades das duas. O
   `em_andamento` faz duas consultas extras (mensagens e trocas) limitadas aos
   candidatos do índice.
-  
+
 ### 18. Editor de habilidades por toque, mesma skill nos dois tipos
 
 - **Contexto:** o editor anterior exigia buscar cada habilidade pelo nome, uma
@@ -748,12 +692,121 @@ contra a versão que percorre todos os usuários.
   três com Pillow em `frontend/app/favicon.ico`
   (`img48.save(..., format="ICO", sizes=[(16,16),(32,32),(48,48)])`).
 
+
 ## Decisões da repaginada Colmatch
 
-Rodada da auditoria e da repaginada Colmatch (decisões 27 a 41). Cada decisão desta rodada está em `docs/decisoes/<número>-<nome>.md`.
+Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada decisão desta rodada está em `docs/decisoes/<número>-<nome>.md`.
 
 - [27. Bypass `X-User-Id` só no dev: produção recusa o boot com DEBUG](docs/decisoes/27-bypass-so-no-dev.md).
+- [28. Troca só avalia o que aconteceu](docs/decisoes/28-troca-so-avalia-o-que-aconteceu.md).
+- [29. Índice com tranca e normalização única](docs/decisoes/29-indice-com-tranca-e-normalizacao-unica.md).
+- [30. Cursor temporal e leitura atômica](docs/decisoes/30-cursor-temporal-e-leitura-atomica.md).
+- [31. Erro honesto em post apagado, limite de 5 posts por minuto e validação única de upload](docs/decisoes/31-erro-honesto-e-limite-de-posts.md).
+- [32. Identidade Colmatch e sistema visual “Bolsa de saberes”](docs/decisoes/32-identidade-colmatch-bolsa-de-saberes.md).
+- [33. Mesa, Diário e cotação da semana](docs/decisoes/33-mesa-diario-e-cotacao.md).
+- [34. Mensagens e sessão encerrada](docs/decisoes/34-mensagens-e-sessao-encerrada.md).
 - [36. Livro de pares e busca em paleta](docs/decisoes/36-pares-e-busca.md).
   Com aval do dono, o escopo da #83 passou a incluir as habilidades públicas
   nos itens de `GET /usuarios`, carregadas em lote para a página solicitada.
-- [38. Notificações como registro, com cursor opaco no front](docs/decisoes/38-notificacoes-registro-e-cursor.md).
+- [37. A proposta de troca vira uma ordem numerada, e confirmar celebra](docs/decisoes/37-trocas-como-ordem.md).
+- [38. Notificações como registro de atividade, com cursor opaco no front](docs/decisoes/38-notificacoes-registro-e-cursor.md).
+
+## Features
+
+| Feature | Dono | Por quê (1 frase) |
+|---|---|---|
+| Auth (núcleo) | @italoosilva | Sem login não existe troca entre pessoas. |
+| Perfil com nível e habilidades (núcleo + diferencial) | @italoosilva | O perfil é o "currículo" que decide se vale trocar com alguém. |
+| Catálogo de habilidades com autocomplete e IA | @italoosilva | Garante que o match compare a mesma habilidade. |
+| Posts de rotina com tempo e foto (núcleo) | @NicoleAlverga | Mostra que a pessoa estuda aquilo de verdade. |
+| Curtidas e comentários (núcleo) | @NicoleAlverga | Motivação e dúvidas rápidas na rotina dos outros. |
+| Feed misto (núcleo) | @NicoleAlverga | Ajuda a descobrir quem pode te ensinar. |
+| Streak de estudo | @NicoleAlverga | Incentiva a voltar todo dia. |
+| Follow (núcleo) | @gecbeltrao | Acompanhar quem estuda o mesmo que você. |
+| Match em dois níveis | @gecbeltrao | É o centro do produto. |
+| Seed fake (núcleo) | @gecbeltrao | A demo começa com matches de verdade. |
+| Chat 1-para-1 | @ltodarosouza | É onde a troca é combinada. |
+| Agendamento de troca | @ltodarosouza | Marca a troca e avisa quando avaliar. |
+| Avaliação pós-troca | @ltodarosouza | Passa confiança sobre quem ensina bem. |
+| Deploy | @ltodarosouza | Bônus de +10 e banca testando na URL. |
+| Notificações | @ltodarosouza | Mantêm a pessoa informada sobre atividade e mensagens. |
+| Busca de pessoas e habilidades | @gecbeltrao | Ajuda a encontrar pessoas e habilidades relevantes. |
+| Mesa/Diário com cotação da semana | @gecbeltrao | Reúne a rotina de estudo e o contexto das habilidades em alta. |
+| Fotos de post e de perfil | @NicoleAlverga | Dá contexto visual às publicações e aos perfis. |
+| Identidade Colmatch | @ltodarosouza | Dá unidade visual e nome à rede. |
+
+**Ficou de fora, e por quê:**
+
+- **Badges e ranking de pessoas:** viram métrica de vaidade e não aproximam
+  ninguém de uma troca; a sequência de estudo e a avaliação pós-troca já dão o
+  sinal de quem estuda e de quem ensina bem.
+- **Login com Google (OAuth):** pediria consentimento e usuários de teste no
+  Google Cloud; o link preenchido do Google Agenda resolve (decisão 2).
+- **WebSocket no chat:** exigiria conexão aberta no servidor e complicaria o
+  deploy; polling com o id da última mensagem basta para conversa 1-para-1
+  (decisão 7).
+- **Pagamento e aula paga:** a rede é troca entre iguais, sem dinheiro.
+- **IA criando habilidades:** poluiria o catálogo e quebraria o match (decisão 3).
+
+## Uma escolha técnica
+
+O índice invertido de `backend/app/core/matches.py` guarda dois mapas habilidade → conjunto de usuários (`sabem` e `querem`) e dois mapas usuário → conjunto de habilidades (`_sei` e `_quero`). Para buscar troca, une os buckets de quem sabe cada habilidade que eu quero e cruza o resultado com a união dos buckets de quem quer cada habilidade que eu sei.
+
+A construção custa O(R), com R registros usuário–habilidade; adicionar ou remover custa O(1) por registro ao salvar habilidades, sob a tranca da [decisão 29](docs/decisoes/29-indice-com-tranca-e-normalizacao-unica.md). A consulta percorre a soma dos tamanhos dos buckets das minhas habilidades, em vez de O(U × h) da varredura de todos os usuários. Como o catálogo é pequeno, os buckets crescem junto com U e a consulta continua linear em U, mas faz uma fração do trabalho; o ganho aumenta quando as habilidades ficam mais espalhadas.
+
+`make bench` compara os resultados do índice e da varredura, valida antes da medição que ambos retornam o mesmo conjunto e mede a construção e as consultas. A partir de 1.000 usuários, o índice ficou cerca de 12× mais rápido; construir para 50 mil levou cerca de 0,1 s.
+
+```text
+Mede a construção do índice invertido e o tempo de consulta de matches de troca.
+A varredura percorre todos os usuários; consultas reportadas como mediana por pessoa.
+  usuários   construção do índice (ms)   consulta índice (µs, mediana)    consulta varredura (µs, mediana)   vezes mais rápido   tamanho médio do resultado de troca
+       100                        0.12                            1.21                               12.00                 9.9                                  2.34
+     1,000                        1.06                           10.38                              127.08                12.2                                 29.54
+    10,000                       16.28                          106.35                             1217.60                11.4                                297.13
+    50,000                       91.91                          573.37                             6396.08                11.2                               1647.25
+Nota: para N=50.000, a mediana usa 20 consultas para manter a execução rápida.
+```
+
+O índice fica na memória de um processo (um worker no Render) e é reconstruído no startup a partir do banco. Se o sistema crescesse 100× e tivesse várias instâncias, substituiria essa estrutura por uma consulta SQL com índice por habilidade ou por um cache compartilhado. A outra estrutura em `core/` é a trie do catálogo, descrita na [decisão 14](#14-catálogo-trie-em-memória-autocomplete-e-ia-genérica-com-fallback).
+
+## Uso de IA
+
+- Claude para ajudar a definir o produto, recortar o escopo e dividir as
+  frentes.
+- IA dentro do produto: mapear a habilidade digitada para um item do catálogo.
+- Frente D (chat, agendamento e avaliação): Claude Code planejou a frente,
+  escreveu os models, schemas e o contrato do `api.ts`, e dividiu o resto em
+  tarefas pequenas para agentes do Codex (GPT-6 Luna) em paralelo, um arquivo
+  por agente. Claude revisou cada entrega, rodou os testes e conferiu as
+  telas no navegador antes de mesclar.
+- Frente C (follow): Claude Code escreveu model, service, rotas, testes e as
+  telas de seguidores/seguindo seguindo o slice de usuários, e conferiu o
+  botão de seguir no navegador. Um subagente revisor apontou bugs no
+  frontend (erro engolido, resposta velha na lista, hydration), que foram
+  corrigidos antes do PR.
+- Frente A (auth e perfil): IA escreveu models, schemas, services, rotas,
+  testes e as telas de login/cadastro e perfil, revisou a integração com o
+  follow e realizou os testes (incluindo testes visuais no navegador) antes
+  do PR.
+- Frente B (posts e comentários, frontend): Claude Code escreveu o contrato
+  em `lib/posts.ts` e dividiu as telas em tarefas curtas para agentes do Codex
+  (GPT-6 Luna), em duas ondas e um dono por arquivo. Dois revisores Luna só de
+  leitura (lógica e design) apontaram achados; Claude fez a triagem, corrigiu
+  os reais e testou criar post com e sem foto, apagar, comentar e curtir no
+  navegador, em 375 px e nos dois temas.
+- Notificações (issue #50): Claude Code dividiu a issue em nove tarefas
+  pequenas para agentes do Codex (GPT-6 Luna), em ondas e com um dono por
+  arquivo: model e migração, schemas, service, router, testes, lib com o
+  hook, item, toast e página. Claude revisou cada entrega, corrigiu o hook
+  (timer do toast reiniciando a cada consulta e polling que não começava
+  depois do login), rodou a suíte e testou o toast, a página e o "seguir de
+  volta" no navegador, em 375 px e nos dois temas.
+- Design e celular (issue #49): Claude Code pesquisou padrões de navegação e
+  apresentou três opções por decisão para o dono escolher. Escreveu o contrato
+  `casca.ts` e dividiu o restante em cerca de 15 tarefas pequenas para agentes
+  do Codex (GPT-6 Luna), em quatro ondas, um dono por arquivo. Claude revisou
+  as entregas e corrigiu contraste da sequência, dica fora da tela, clique no
+  padding da Folha, contador cortado na curtida e zoom do iOS no toque duplo.
+  Testou em 375 px e 1440 px no navegador.
+- Rodada da auditoria e da repaginada Colmatch (issues #72 a #86): coordenadores Claude Code dividiram cada issue em tarefas pequenas para agentes do Codex (GPT-6 Luna), revisaram os diffs, rodaram testes, tsc e build e passaram cada PR por um agente revisor antes do merge.
+- Documentação e critérios de avaliação (este PR): Claude Code levantou os critérios da RUBRICA.md, agentes do Codex escreveram README, roteiro de avaliação (docs/AVALIACAO.md), o benchmark do índice e a limpeza de backend da issue #77; Claude revisou e corrigiu.
