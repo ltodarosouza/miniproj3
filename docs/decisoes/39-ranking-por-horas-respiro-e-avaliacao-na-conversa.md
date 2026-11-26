@@ -45,3 +45,13 @@ Pedido direto do dono, sem issue, depois de usar a Mesa e as trocas.
   flutuante saiu, porque o pedido não fica mais no caminho: ele espera na
   conversa até a pessoa avaliar. A faixa do topo da Mesa continua sem seta de
   subida ou descida, porque ainda não há histórico de semanas (decisão 33).
+- **Atualização (pedido direto do dono, nov/2026).** O vão maior não
+  resolveu: em 1920 px a coluna ficava grudada no Diário (x 1273–1593) e
+  sobravam 317 px vazios à direita. O grid do Feed deixa de ter largura
+  máxima: a coluna de 20rem encosta na borda direita da área de conteúdo,
+  com a margem normal da página (24 px), e o Diário segue centralizado na
+  coluna da esquerda, com até 37,5rem. Medido com `getBoundingClientRect` no
+  navegador do Orca: em 1024 e 1100 px nada muda (vão de 48 px, coluna a
+  24 px da borda); em 1440 px a coluna vai de x 1033–1353 para 1085–1405
+  (vão de 137 px); em 1920 px, de 1273–1593 para 1565–1885 (vão de 377 px).
+  O Diário fica no mesmo lugar e não há rolagem horizontal.
