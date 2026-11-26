@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from app.db import SessionLocal
 from app.models.habilidade import Habilidade
+from app.schemas.user import UserOut
 
 
 def ids(*nomes: str) -> list[int]:
@@ -126,6 +127,56 @@ def test_busca_de_usuarios_por_nome_ou_username(client, logar):
     assert r.json()["total"] == 2
     assert client.get("/usuarios?q=%25").json()["total"] == 0
     assert client.get("/usuarios").json()["total"] == 3
+
+
+def test_lista_de_usuarios_inclui_habilidades_da_pagina_sem_alterar_user_out(client, logar):
+    alfa = logar("alfa_dev", "Alfa")
+    beta = logar("beta_dev", "Beta")
+    logar("charlie_dev", "Charlie")
+    logar("delta", "Delta")
+    react, python = ids("React", "Python")
+    client.put(
+        "/usuarios/eu/habilidades",
+        json=[{"habilidade_id": react, "tipo": "sei", "nivel": 4}],
+        headers=alfa,
+    )
+    client.put(
+        "/usuarios/eu/habilidades",
+        json=[{"habilidade_id": python, "tipo": "quero_aprender", "nivel": 2}],
+        headers=beta,
+    )
+
+    pagina = client.get("/usuarios?q=dev&offset=1&limit=2").json()
+    assert pagina["total"] == 3
+    assert [item["username"] for item in pagina["items"]] == [
+        "beta_dev",
+        "charlie_dev",
+    ]
+    assert pagina["items"][0]["habilidades"] == [
+        {
+            "id": python,
+            "nome": "Python",
+            "categoria": "tech",
+            "tipo": "quero_aprender",
+            "nivel": 2,
+        }
+    ]
+    assert pagina["items"][1]["habilidades"] == []
+
+    primeira = client.get("/usuarios?q=dev&limit=1").json()
+    assert primeira["items"][0]["habilidades"][0]["nome"] == "React"
+
+    resposta_eu = client.get("/auth/eu", headers=beta)
+    assert resposta_eu.status_code == 200
+    assert set(resposta_eu.json()) == set(UserOut.model_fields)
+    assert set(UserOut.model_fields) == {
+        "id",
+        "username",
+        "name",
+        "bio",
+        "avatar_url",
+        "created_at",
+    }
 
 
 def test_habilidade_nos_dois_tipos_aparece_em_ambas_as_listas_no_perfil(client, logar):

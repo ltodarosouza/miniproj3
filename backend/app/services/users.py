@@ -16,13 +16,15 @@ from app.schemas.user import (
     PerfilOut,
     PerfilUpdate,
     UserCreate,
+    UserItemOut,
+    UserOut,
 )
 from app.services import avaliacoes, follows, posts, streak
 
 
 def listar(
     db: Session, offset: int, limit: int, busca: str | None = None
-) -> tuple[list[User], int]:
+) -> tuple[list[UserItemOut], int]:
     consulta = select(User)
     termo = (busca or "").strip().lower()
     if termo:
@@ -34,7 +36,15 @@ def listar(
     users = list(
         db.scalars(consulta.order_by(User.username).offset(offset).limit(limit))
     )
-    return users, total
+    habilidades_por_usuario = _habilidades_por_usuario(db, [usuario.id for usuario in users])
+    items = [
+        UserItemOut(
+            **UserOut.model_validate(usuario).model_dump(),
+            habilidades=habilidades_por_usuario[usuario.id],
+        )
+        for usuario in users
+    ]
+    return items, total
 
 
 def criar_usuario(
@@ -86,23 +96,33 @@ def _buscar_por_username(db: Session, username: str) -> User:
     return usuario
 
 
-def _habilidades_do_usuario(db: Session, usuario_id: int) -> list[HabilidadePerfilOut]:
+def _habilidades_por_usuario(
+    db: Session, ids: list[int]
+) -> dict[int, list[HabilidadePerfilOut]]:
+    saida: dict[int, list[HabilidadePerfilOut]] = {id_: [] for id_ in ids}
+    if not ids:
+        return saida
     rows = db.execute(
         select(UserHabilidade, Habilidade)
         .join(Habilidade, UserHabilidade.habilidade_id == Habilidade.id)
-        .where(UserHabilidade.usuario_id == usuario_id)
+        .where(UserHabilidade.usuario_id.in_(ids))
         .order_by(UserHabilidade.tipo, Habilidade.nome)
-    ).all()
-    return [
-        HabilidadePerfilOut(
-            id=habilidade.id,
-            nome=habilidade.nome,
-            categoria=habilidade.categoria,
-            tipo=relacao.tipo,
-            nivel=relacao.nivel,
+    )
+    for relacao, habilidade in rows:
+        saida[relacao.usuario_id].append(
+            HabilidadePerfilOut(
+                id=habilidade.id,
+                nome=habilidade.nome,
+                categoria=habilidade.categoria,
+                tipo=relacao.tipo,
+                nivel=relacao.nivel,
+            )
         )
-        for relacao, habilidade in rows
-    ]
+    return saida
+
+
+def _habilidades_do_usuario(db: Session, usuario_id: int) -> list[HabilidadePerfilOut]:
+    return _habilidades_por_usuario(db, [usuario_id])[usuario_id]
 
 
 def perfil(db: Session, username: str) -> PerfilOut:
