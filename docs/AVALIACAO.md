@@ -15,7 +15,7 @@ Consulte também a [rubrica completa](../RUBRICA.md), o [README do projeto](../R
 | Vídeo, cerca de 4 min | [telas de cadastro e login](../frontend/app/cadastro/page.tsx), [feed](../frontend/app/feed/page.tsx), [perfil](../frontend/app/perfil/[username]/page.tsx), [matches](../frontend/app/matches/page.tsx) | Grave a sequência de produto descrita no roteiro abaixo, incluindo até duas features e uma decisão. |
 | Pitch, 3 min + pergunta | [DECISIONS.md, Produto](../DECISIONS.md#produto), [decisão 1: match em dois níveis](../DECISIONS.md#1-match-em-dois-níveis) | Explique público, problema, solução e um corte; reserve tempo para uma pergunta. |
 | Funcionamento — fluxo principal | [cadastro](../frontend/app/cadastro/page.tsx), [login](../frontend/app/login/page.tsx), [feed](../frontend/app/feed/page.tsx), [perfil](../frontend/app/perfil/[username]/page.tsx) | Reproduza cadastro → login → post → follow → feed, no deploy ou local. |
-| Funcionamento — features escolhidas | [matches](../frontend/app/matches/page.tsx), [conversa](../frontend/app/mensagens/[username]/page.tsx), [avaliação](../frontend/components/avaliacoes/AvisoAvaliacao.tsx) | Use um par com habilidades compatíveis, abra a conversa e demonstre os estados realmente disponíveis. |
+| Funcionamento — features escolhidas | [matches](../frontend/app/matches/page.tsx), [conversa](../frontend/app/mensagens/[username]/page.tsx), [avaliação](../frontend/components/avaliacoes/AvaliarTroca.tsx) | Use um par com habilidades compatíveis, abra a conversa e demonstre os estados realmente disponíveis. |
 | Código 1 — sem duplicação | [services](../backend/app/services/), [componentes](../frontend/components/) | Compare comportamentos semelhantes e veja se a regra ou componente é reaproveitado. |
 | Código 2 — nomes claros | [models](../backend/app/models/), [schemas](../backend/app/schemas/), [routers](../backend/app/routers/) | Siga nomes de domínio entre model, schema, endpoint e tela. |
 | Código 3 — cada coisa no seu lugar | [routers](../backend/app/routers/), [services](../backend/app/services/), [core](../backend/app/core/) | Confira router fino, regra no service e estrutura de dados em `core/`. |
@@ -79,20 +79,21 @@ matches](../backend/app/services/matches.py).
 No perfil ou em Matches, abra uma conversa em `/mensagens/<username>`. O botão **Agendar
 troca** abre a proposta: escolha o que cada pessoa ensina/aprende e um horário, então use
 **Propor troca**. A outra pessoa pode **Confirmar** ou **Recusar**. Em troca confirmada, o
-cartão oferece **Agendar no Google Agenda**; depois do horário, a avaliação pode ser enviada em
+cartão oferece **Agendar no Google Agenda**; depois do horário, o selo de **Mensagens** avisa,
+a conversa aparece com **Avaliar troca** na lista e o próprio cartão da troca traz as estrelas e
 **Enviar avaliação**. Veja a [tela da conversa](../frontend/app/mensagens/[username]/page.tsx),
 o [formulário](../frontend/components/trocas/FormAgendarTroca.tsx), o [cartão de
-troca](../frontend/components/trocas/CartaoTroca.tsx), o [aviso de
-avaliação](../frontend/components/avaliacoes/AvisoAvaliacao.tsx) e as decisões
-[8](../DECISIONS.md#8-troca-proposta-no-chat-avaliada-só-depois-do-horário), [17](../DECISIONS.md#17-do-match-à-troca-horário-por-toque-habilidades-do-par-e-meet-pelo-google-agenda) e [28](decisoes/28-troca-so-avalia-o-que-aconteceu.md).
+troca](../frontend/components/trocas/CartaoTroca.tsx), o [formulário de
+avaliação](../frontend/components/avaliacoes/AvaliarTroca.tsx) e as decisões
+[8](../DECISIONS.md#8-troca-proposta-no-chat-avaliada-só-depois-do-horário), [17](../DECISIONS.md#17-do-match-à-troca-horário-por-toque-habilidades-do-par-e-meet-pelo-google-agenda), [28](decisoes/28-troca-so-avalia-o-que-aconteceu.md) e [39](decisoes/39-ranking-por-horas-respiro-e-avaliacao-na-conversa.md).
 
 O seed cria conversas para os oito primeiros pares fixos; os cinco primeiros já têm troca
 confirmada no passado com avaliação dos dois lados, e outro par fica com uma proposta pendente
 ([`_criar_conversas_e_trocas`](../backend/scripts/seed.py)). Para mostrar a avaliação ao
 vivo sem esperar durante a gravação, prepare antes: proponha uma troca nova entre duas contas
 para o horário mais próximo disponível e confirme antes que ele chegue (depois do horário a
-confirmação é recusada, decisão 28). Quando o horário passar, o aviso **Enviar avaliação**
-aparece para as duas pessoas.
+confirmação é recusada, decisão 28). Quando o horário passar, o selo de **Mensagens** acende e o
+cartão da troca na conversa mostra **Enviar avaliação** para as duas pessoas.
 
 ## Roteiro do vídeo (~4 min)
 
