@@ -106,7 +106,7 @@ export function AvisoAvaliacao() {
 
   return (
     <div className={`fixed inset-x-3 bottom-[calc(0.75rem+var(--altura-barra-inferior))] z-50 transition-[opacity,translate] duration-[var(--lento)] ease-saida motion-reduce:transition-none md:inset-x-auto md:right-6 md:bottom-[calc(1.5rem+var(--altura-barra-inferior))] md:w-[22rem] ${visivel ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"}`}>
-      <Cartao role="dialog" aria-labelledby="titulo-avaliacao" className="max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-0">
+      <Cartao role="dialog" aria-labelledby="titulo-avaliacao" className="max-h-[calc(100dvh-1.5rem-var(--altura-barra-inferior))] overflow-y-auto p-0 md:max-h-[calc(100dvh-3rem-var(--altura-barra-inferior))]">
         {sucesso ? (
           <div className="flex items-start gap-3 p-4" aria-live="polite">
             <Icone nome="confirmar" tamanho={22} className="shrink-0 text-sucesso" />
@@ -123,7 +123,7 @@ export function AvisoAvaliacao() {
             <div className="flex items-start gap-3 px-4 pt-4">
               <Avatar nome={nome} url={outraPessoa.avatar_url} />
               <div className="min-w-0 flex-1">
-                <h2 id="titulo-avaliacao" className="font-semibold tracking-[-0.01em] text-texto">Como foi a troca com {primeiroNome}?</h2>
+                <h2 id="titulo-avaliacao" className="wrap-anywhere font-semibold tracking-[-0.01em] text-texto">Como foi a troca com {primeiroNome}?</h2>
                 <p className="mt-1 font-mono text-xs tabular-nums text-texto-2">{formatarDataHora(troca.data_hora)}</p>
               </div>
             </div>
