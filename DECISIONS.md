@@ -752,18 +752,36 @@ Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada de
 
 O índice invertido de `backend/app/core/matches.py` guarda dois mapas habilidade → conjunto de usuários (`sabem` e `querem`) e dois mapas usuário → conjunto de habilidades (`_sei` e `_quero`). Para buscar troca, une os buckets de quem sabe cada habilidade que eu quero e cruza o resultado com a união dos buckets de quem quer cada habilidade que eu sei.
 
-A construção custa O(R), com R registros usuário–habilidade; adicionar ou remover custa O(1) por registro ao salvar habilidades, sob a tranca da [decisão 29](docs/decisoes/29-indice-com-tranca-e-normalizacao-unica.md). A consulta percorre a soma dos tamanhos dos buckets das minhas habilidades, em vez de O(U × h) da varredura de todos os usuários. Como o catálogo é pequeno, os buckets crescem junto com U e a consulta continua linear em U, mas faz uma fração do trabalho; o ganho aumenta quando as habilidades ficam mais espalhadas.
+Custos (operações de `dict` e `set` em média/amortizadas):
 
-`make bench` compara os resultados do índice e da varredura, valida antes da medição que ambos retornam o mesmo conjunto e mede a construção e as consultas. A partir de 1.000 usuários, o índice ficou cerca de 12× mais rápido; construir para 50 mil levou cerca de 0,1 s.
+- **Construção:** O(R), com R registros usuário–habilidade.
+- **Salvar habilidades:** O(1) por registro adicionado ou removido, sob a
+  tranca da [decisão 29](docs/decisoes/29-indice-com-tranca-e-normalizacao-unica.md).
+- **Consulta de troca:** O(h + soma dos buckets das minhas habilidades), com h
+  o número de habilidades da pessoa (no máximo 40, `MAX_HABILIDADES` em
+  `services/users.py`); as h habilidades são percorridas mesmo quando o bucket
+  está vazio. A varredura sem índice olha todos os U usuários e, para cada um,
+  cruza até h habilidades: O(U × h).
+
+Com um catálogo fixo e pequeno, cada bucket cresce junto com U, então a
+consulta continua linear em U: o índice não muda a classe de complexidade, mas
+só visita quem tem alguma habilidade em comum comigo. O ganho cresce quanto
+mais espalhadas as habilidades estiverem.
+
+`make bench` gera dados determinísticos (48 habilidades, 1 a 5 "sei" e 1 a 5
+"quero aprender" por pessoa), confere que índice e varredura devolvem o mesmo
+conjunto de troca antes de medir e mede a construção e a mediana das consultas.
+A partir de 1.000 usuários, o índice ficou de 4 a 5× mais rápido que a
+varredura; construir para 50 mil usuários levou menos de 0,1 s.
 
 ```text
 Mede a construção do índice invertido e o tempo de consulta de matches de troca.
-A varredura percorre todos os usuários; consultas reportadas como mediana por pessoa.
+A varredura percorre todos os usuários e devolve só as trocas, como o índice; consultas em mediana por pessoa.
   usuários   construção do índice (ms)   consulta índice (µs, mediana)    consulta varredura (µs, mediana)   vezes mais rápido   tamanho médio do resultado de troca
-       100                        0.12                            1.21                               12.00                 9.9                                  2.34
-     1,000                        1.06                           10.38                              127.08                12.2                                 29.54
-    10,000                       16.28                          106.35                             1217.60                11.4                                297.13
-    50,000                       91.91                          573.37                             6396.08                11.2                               1647.25
+       100                        0.11                            1.21                                4.83                 4.0                                  2.34
+     1,000                        0.98                           10.62                               55.52                 5.2                                 29.54
+    10,000                       11.60                          100.69                              532.90                 5.3                                297.13
+    50,000                       87.70                          834.75                             3402.73                 4.1                               1647.25
 Nota: para N=50.000, a mediana usa 20 consultas para manter a execução rápida.
 ```
 
