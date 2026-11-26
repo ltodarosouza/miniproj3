@@ -30,27 +30,30 @@ export function ItemNotificacao({ notificacao }: { notificacao: Notificacao }) {
           {!notificacao.lida && <span className="sr-only">Não lida</span>}
         </span>
       </Link>
-      <span className="shrink-0">
-        {notificacao.tipo === "seguidor" && (
+      {notificacao.tipo === "seguidor" && (
+        <span className="shrink-0">
           <BotaoSeguirDeVolta username={notificacao.ator.username} nome={notificacao.ator.name} />
-        )}
-        {notificacao.tipo === "troca_proposta" && (
+        </span>
+      )}
+      {notificacao.tipo === "troca_proposta" && (
+        <span className="shrink-0">
           <BotaoLink href={link} tamanho="sm" variante="secundario">
             Ver proposta
           </BotaoLink>
-        )}
-        {(notificacao.tipo === "curtida" || notificacao.tipo === "comentario") && (
+        </span>
+      )}
+      {(notificacao.tipo === "curtida" || notificacao.tipo === "comentario") && (
+        <span className="hidden shrink-0 sm:block">
           <BotaoLink
             href={link}
             tamanho="sm"
             variante="fantasma"
-            className="hidden sm:inline-flex"
             aria-label={`Ver post: ${notificacao.texto_curto}`}
           >
             Ver post
           </BotaoLink>
-        )}
-      </span>
+        </span>
+      )}
     </div>
   );
 }
