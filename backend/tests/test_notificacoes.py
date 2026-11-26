@@ -348,6 +348,71 @@ def test_cursor_nao_repete_grupo_apos_descurtida(client, pessoa):
     assert segunda["proximo_cursor"] is None
 
 
+def test_reiniciar_com_mesmo_antes_de_nao_esconde_grupo(client, pessoa):
+    ana, bia, caio, duda = (pessoa(n) for n in ("ana", "bia", "caio", "duda"))
+    post_a = client.post("/posts", json={"texto": "A"}, headers=ana).json()["id"]
+    post_b = client.post("/posts", json={"texto": "B"}, headers=ana).json()["id"]
+    for post_id, ator in ((post_a, bia), (post_a, caio), (post_b, duda)):
+        client.post(f"/posts/{post_id}/curtir", headers=ator)
+    with SessionLocal() as db:
+        curtidas = list(db.scalars(select(Curtida)))
+        minutos = {post_a: {"bia": 0, "caio": 5}, post_b: {"duda": 3}}
+        for curtida in curtidas:
+            username = db.get(User, curtida.usuario_id).username
+            curtida.created_at = horario_utc(10, minutos[curtida.post_id][username])
+        db.commit()
+
+    limite = horario_utc(10, 6).isoformat() + "Z"
+    primeira = client.get(f"/notificacoes?antes_de={limite}&limit=1", headers=ana).json()
+    assert [item["post_id"] for item in primeira["items"]] == [post_a]
+    assert client.delete(f"/posts/{post_a}/curtir", headers=caio).status_code == 204
+
+    reiniciada = client.get(f"/notificacoes?antes_de={limite}&limit=1", headers=ana).json()
+    assert [item["post_id"] for item in reiniciada["items"]] == [post_b]
+    seguinte = client.get(
+        f"/notificacoes?limit=1&cursor={reiniciada['proximo_cursor']}", headers=ana
+    ).json()
+    assert [item["post_id"] for item in seguinte["items"]] == [post_a]
+    assert seguinte["proximo_cursor"] is None
+
+
+def test_colisao_parcial_preserva_posicoes(client, pessoa):
+    ana, bia, caio = (pessoa(n) for n in ("ana", "bia", "caio"))
+    posts = {
+        nome: client.post("/posts", json={"texto": nome}, headers=ana).json()["id"]
+        for nome in ("A", "B", "C", "D")
+    }
+    for nome, ator in (("A", bia), ("B", bia), ("C", bia), ("C", caio), ("D", bia)):
+        client.post(f"/posts/{posts[nome]}/curtir", headers=ator)
+    with SessionLocal() as db:
+        curtidas = list(db.scalars(select(Curtida)))
+        minutos = {
+            "A": {"bia": 4}, "B": {"bia": 3},
+            "C": {"bia": 1, "caio": 2}, "D": {"bia": 0},
+        }
+        for curtida in curtidas:
+            nome = next(nome for nome, post_id in posts.items() if post_id == curtida.post_id)
+            username = db.get(User, curtida.usuario_id).username
+            curtida.created_at = horario_utc(10, minutos[nome][username])
+        db.commit()
+
+    primeira = client.get("/notificacoes?limit=1", headers=ana).json()
+    assert [item["post_id"] for item in primeira["items"]] == [posts["A"]]
+    cursor_x = primeira["proximo_cursor"]
+    assert cursor_x
+    segunda = client.get(f"/notificacoes?cursor={cursor_x}&limit=1", headers=ana).json()
+    assert [item["post_id"] for item in segunda["items"]] == [posts["B"]]
+    sobreposta = client.get(f"/notificacoes?cursor={cursor_x}&limit=2", headers=ana).json()
+    assert [item["post_id"] for item in sobreposta["items"]] == [posts["B"], posts["C"]]
+    cursor_y = sobreposta["proximo_cursor"]
+    assert cursor_y
+
+    assert client.delete(f"/posts/{posts['C']}/curtir", headers=caio).status_code == 204
+    final = client.get(f"/notificacoes?cursor={cursor_y}&limit=10", headers=ana).json()
+    assert [item["post_id"] for item in final["items"]] == [posts["D"]]
+    assert final["proximo_cursor"] is None
+
+
 def test_cursor_nao_repete_grupo_apos_descurtida_com_duas_paginas(client, pessoa):
     ana, bia, caio, duda = (pessoa(n) for n in ("ana", "bia", "caio", "duda"))
     posts = {
@@ -513,6 +578,13 @@ def test_cursor_invalido_e_combinado_com_antes_de_dao_422(client, pessoa):
     assert client.get("/notificacoes?cursor=abc", headers=ana).status_code == 422
     incompleto = base64.urlsafe_b64encode(json.dumps({"r": "x"}).encode()).decode().rstrip("=")
     assert client.get(f"/notificacoes?cursor={incompleto}", headers=ana).status_code == 422
+    sequencia_invalida = base64.urlsafe_b64encode(
+        json.dumps(
+            {"r": "2030-01-01T00:00:00", "s": "xyz", "em": "2030-01-01T00:00:00", "t": "seguidor", "a": 1, "k": 0},
+            separators=(",", ":"),
+        ).encode()
+    ).decode().rstrip("=")
+    assert client.get(f"/notificacoes?cursor={sequencia_invalida}", headers=ana).status_code == 422
     for username in ("bia", "caio"):
         client.post("/usuarios/ana/follow", headers=pessoa(username))
     valido = client.get("/notificacoes?limit=1", headers=ana).json()["proximo_cursor"]
