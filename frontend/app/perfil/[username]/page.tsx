@@ -34,7 +34,7 @@ function Numero({ valor, rotulo, href, children }: { valor: ReactNode; rotulo: s
       <span className={`mt-1 block ${ROTULO}`}>{rotulo}</span>
     </>
   );
-  const classe = "block min-w-0 py-3 sm:px-4 sm:first:pl-0";
+  const classe = "block min-w-0 px-2 py-3 sm:px-4 sm:first:pl-0";
   if (href) {
     return (
       <Link href={href} className={`${classe} transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none`}>
@@ -262,7 +262,7 @@ export default function PerfilPage() {
             </p>
           )}
 
-          <div className="grid grid-cols-2 gap-x-4 border-t border-linha bg-superficie px-5 sm:grid-cols-4 sm:gap-x-0 sm:divide-x sm:divide-linha sm:px-6">
+          <div className="grid grid-cols-2 gap-x-4 border-t border-linha bg-superficie px-5 [&>*:nth-child(n+3)]:border-t [&>*:nth-child(n+3)]:border-linha sm:[&>*:nth-child(n+3)]:border-t-0 sm:grid-cols-4 sm:gap-x-0 sm:divide-x sm:divide-linha sm:px-6">
             <Numero
               valor={perfil.seguidores}
               rotulo="seguidores"

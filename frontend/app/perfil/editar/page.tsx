@@ -153,44 +153,44 @@ export default function EditarPerfilPage() {
       </header>
 
       <section aria-labelledby="titulo-sobre" className="space-y-5 border-t border-linha pt-4">
-          <h2 id="titulo-sobre" className="font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3">
-            <span className="text-texto-2 numeros">01</span> · Sobre você
-          </h2>
-          <form onSubmit={enviar} className="space-y-5">
-            <AreaTexto
-              rotulo="Bio"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              maxLength={280}
-              placeholder="Conte um pouco sobre você e o que quer aprender..."
-              dica="Máximo de 280 caracteres"
-            />
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-texto">Foto de perfil</h3>
-              <div className="flex items-center gap-4">
-                <span className="shrink-0 *:size-20! *:text-2xl!">
-                  <Avatar tamanho="lg" nome={perfil.name} url={avatarUrl} />
-                </span>
-                <div className="flex flex-wrap gap-3">
-                  <input ref={inputFoto} type="file" accept="image/*" className="sr-only" onChange={escolherFoto} />
-                  <Botao type="button" variante="secundario" disabled={alterandoFoto} onClick={() => inputFoto.current?.click()}>
-                    {avatarUrl ? "Trocar foto" : "Escolher foto"}
-                  </Botao>
-                  {avatarUrl && <Botao type="button" variante="fantasma" disabled={alterandoFoto} onClick={apagarFoto}>Remover foto</Botao>}
-                </div>
+        <h2 id="titulo-sobre" className="font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3">
+          <span className="text-texto-2 numeros">01</span> · Sobre você
+        </h2>
+        <form onSubmit={enviar} className="space-y-5">
+          <AreaTexto
+            rotulo="Bio"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            maxLength={280}
+            placeholder="Conte um pouco sobre você e o que quer aprender..."
+            dica="Máximo de 280 caracteres"
+          />
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-texto">Foto de perfil</h3>
+            <div className="flex items-center gap-4">
+              <span className="shrink-0 *:size-20! *:text-2xl!">
+                <Avatar tamanho="lg" nome={perfil.name} url={avatarUrl} />
+              </span>
+              <div className="flex flex-wrap gap-3">
+                <input ref={inputFoto} type="file" accept="image/*" className="sr-only" onChange={escolherFoto} />
+                <Botao type="button" variante="secundario" disabled={alterandoFoto} onClick={() => inputFoto.current?.click()}>
+                  {avatarUrl ? "Trocar foto" : "Escolher foto"}
+                </Botao>
+                {avatarUrl && <Botao type="button" variante="fantasma" disabled={alterandoFoto} onClick={apagarFoto}>Remover foto</Botao>}
               </div>
-              <p className="text-sm text-texto-2">JPG, PNG ou WebP. A gente reduz o tamanho automaticamente.</p>
-              {alterandoFoto && <p role="status" className="text-sm text-texto-2">Enviando foto…</p>}
-              {erro && <p role="alert" className="text-sm text-perigo">{erro}</p>}
             </div>
-            {salvo && <p role="status" className="text-sm text-sucesso">Perfil salvo.</p>}
-            <div className="flex flex-wrap gap-3">
-              <Botao type="submit" variante="secundario" carregando={salvando}>Salvar perfil</Botao>
-              <BotaoLink href={`/perfil/${encodeURIComponent(perfil.username)}`} variante="fantasma">
-                Ver meu perfil
-              </BotaoLink>
-            </div>
-          </form>
+            <p className="text-sm text-texto-2">JPG, PNG ou WebP. A gente reduz o tamanho automaticamente.</p>
+            {alterandoFoto && <p role="status" className="text-sm text-texto-2">Enviando foto…</p>}
+            {erro && <p role="alert" className="text-sm text-perigo">{erro}</p>}
+          </div>
+          {salvo && <p role="status" className="text-sm text-sucesso">Perfil salvo.</p>}
+          <div className="flex flex-wrap gap-3">
+            <Botao type="submit" variante="secundario" carregando={salvando}>Salvar perfil</Botao>
+            <BotaoLink href={`/perfil/${encodeURIComponent(perfil.username)}`} variante="fantasma">
+              Ver meu perfil
+            </BotaoLink>
+          </div>
+        </form>
       </section>
 
       <section id="habilidades" aria-labelledby="titulo-habilidades" className="scroll-mt-20 space-y-5 border-t border-linha pt-4">

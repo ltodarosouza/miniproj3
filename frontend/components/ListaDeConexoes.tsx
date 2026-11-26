@@ -142,7 +142,7 @@ export function ListaDeConexoes({ username, tipo }: { username: string; tipo: Ti
                 </div>
               </Link>
               {eu !== undefined && eu !== u.id && (
-                <BotaoSeguir username={u.username} seguindoInicial={u.eu_sigo} tamanho="sm" />
+                <BotaoSeguir username={u.username} seguindoInicial={u.eu_sigo} tamanho="sm" contorno />
               )}
           </li>
         ))}

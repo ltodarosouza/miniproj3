@@ -232,9 +232,7 @@ export function EditorHabilidades({
               onClick={() => alternar(habilidade, tipo)}
               className={`h-8 shrink-0 rounded-controle border px-2 font-mono text-xs transition-colors duration-[var(--rapido)] motion-reduce:transition-none disabled:opacity-40 ${FOCO} ${
                 ligado
-                  ? tipo === "sei"
-                    ? "border-marca bg-marca text-marca-texto"
-                    : "border-texto bg-texto text-fundo"
+                  ? "border-texto bg-texto text-fundo"
                   : "border-linha-forte text-texto-2 hover:border-texto hover:text-texto"
               }`}
             >
