@@ -249,7 +249,7 @@ function Busca() {
           onChange={(evento) => setTermo(evento.target.value)}
           placeholder="Buscar pessoas, posts ou habilidades"
           maxLength={100}
-          className="h-14 w-full rounded-controle border border-linha-forte bg-superficie pl-12 pr-14 text-base text-texto placeholder:text-texto-3 focus:border-marca focus:outline-none focus:ring-2 focus:ring-marca/40 sm:text-lg"
+          className="h-14 w-full rounded-controle border border-linha-forte bg-superficie pl-12 pr-4 text-base sm:pr-14 text-texto placeholder:text-texto-3 focus:border-marca focus:outline-none focus:ring-2 focus:ring-marca/40 sm:text-lg"
         />
         {!termo && <kbd aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 hidden h-6 min-w-6 -translate-y-1/2 items-center justify-center rounded-[2px] border border-linha px-1.5 font-mono text-xs text-texto-3 sm:inline-flex">/</kbd>}
       </div>
@@ -310,7 +310,7 @@ export default function PaginaBusca() {
     <div className="mx-auto w-full max-w-3xl space-y-6">
       <header>
         <h1 className="text-[2rem] font-semibold leading-tight tracking-[-0.025em] text-texto">Buscar</h1>
-        <p className="mt-1 text-sm text-texto-2">Encontre pessoas, publicações e habilidades.</p>
+        <p className="mt-1 text-sm text-texto-2">Encontre pessoas, posts e habilidades.</p>
       </header>
       <Suspense fallback={null}>
         <Busca />
