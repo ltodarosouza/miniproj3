@@ -163,6 +163,13 @@ def responder(db: Session, pessoa: User, troca_id: int, status: str) -> TrocaOut
         raise HTTPException(
             status_code=403, detail="só quem recebeu a proposta pode responder"
         )
+    if troca.status != "proposta":
+        raise HTTPException(status_code=409, detail="esta proposta já foi respondida")
+    if status == "confirmada" and como_utc(troca.data_hora) <= como_utc(agora_utc()):
+        raise HTTPException(
+            status_code=422,
+            detail="o horário desta proposta já passou, proponha outra",
+        )
     alteradas = db.execute(
         update(Troca)
         .where(Troca.id == troca_id, Troca.status == "proposta")

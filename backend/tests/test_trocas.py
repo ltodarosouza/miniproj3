@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from urllib.parse import parse_qs, urlparse
 
 from app.core.tempo import agora_utc
@@ -195,3 +195,30 @@ def test_opcoes_com_mesma_habilidade_em_sei_e_quero(client, pessoa):
 def test_opcoes_comigo_mesmo(client, pessoa):
     ana = pessoa("ana")
     assert client.get("/trocas/opcoes/ana", headers=ana).status_code == 422
+
+
+def test_confirmar_proposta_com_horario_passado_da_422(client, pessoa, monkeypatch):
+    ana = pessoa("ana")
+    bia = pessoa("bia")
+    id_troca = criar(client, ana, proposta(habilidades(client))).json()["id"]
+    monkeypatch.setattr(
+        "app.services.trocas.agora_utc",
+        lambda: datetime(2030, 1, 10, 13, 0, 1),
+    )
+
+    confirmacao = client.post(f"/trocas/{id_troca}/confirmar", headers=bia)
+    assert confirmacao.status_code == 422
+    assert confirmacao.json()["detail"] == "o horário desta proposta já passou, proponha outra"
+    assert client.get("/trocas", headers=ana).json()["items"][0]["status"] == "proposta"
+    avaliacao = client.post(
+        f"/trocas/{id_troca}/avaliar",
+        json={"estrelas": 5, "feedback": "Boa"},
+        headers=ana,
+    )
+    assert avaliacao.status_code == 409
+
+    recusa = client.post(f"/trocas/{id_troca}/recusar", headers=bia)
+    assert recusa.status_code == 200
+    assert recusa.json()["status"] == "recusada"
+    confirmacao_repetida = client.post(f"/trocas/{id_troca}/confirmar", headers=bia)
+    assert confirmacao_repetida.status_code == 409
