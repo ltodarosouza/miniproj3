@@ -97,8 +97,8 @@ def criar(db: Session, dados: UserCreate) -> User:
     )
 
 
-def _buscar_por_username(db: Session, username: str) -> User:
-    usuario = db.scalar(select(User).where(User.username == username))
+def por_username_ou_404(db: Session, username: str) -> User:
+    usuario = db.scalar(select(User).where(User.username == username.lower()))
     if usuario is None:
         raise HTTPException(status_code=404, detail="pessoa não encontrada")
     return usuario
@@ -134,7 +134,7 @@ def _habilidades_do_usuario(db: Session, usuario_id: int) -> list[HabilidadePerf
 
 
 def perfil(db: Session, username: str) -> PerfilOut:
-    usuario = _buscar_por_username(db, username)
+    usuario = por_username_ou_404(db, username)
     contadores = follows.contadores(db, usuario.id)
     media, total = avaliacoes.media_e_total(db, usuario.id)
     return PerfilOut(
@@ -165,7 +165,7 @@ def atualizar_perfil(db: Session, usuario: User, dados: PerfilUpdate) -> PerfilO
 def posts_do_usuario(
     db: Session, eu: User, username: str, offset: int, limit: int
 ) -> PostPage:
-    alvo = _buscar_por_username(db, username)
+    alvo = por_username_ou_404(db, username)
     total = (
         db.scalar(select(func.count()).select_from(Post).where(Post.autor_id == alvo.id))
         or 0

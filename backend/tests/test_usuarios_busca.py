@@ -36,3 +36,16 @@ def test_busca_sem_termo_lista_todos(client, pessoa):
     assert resposta.json()["total"] == 2
     assert [item["username"] for item in resposta.json()["items"]] == ["ada", "bia"]
 
+
+def test_perfil_ignora_maiusculas_no_username(client, pessoa):
+    cabecalho = pessoa("ada", "Ada")
+
+    perfil = client.get("/usuarios/AdA")
+    posts = client.get("/usuarios/AdA/posts", headers=cabecalho)
+    ausente = client.get("/usuarios/ninguem")
+
+    assert perfil.status_code == 200
+    assert perfil.json()["username"] == "ada"
+    assert posts.status_code == 200
+    assert ausente.status_code == 404
+    assert ausente.json()["detail"] == "pessoa não encontrada"
