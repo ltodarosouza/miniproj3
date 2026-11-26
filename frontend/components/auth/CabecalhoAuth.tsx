@@ -4,7 +4,7 @@ import { Logo } from "@/components/ui/Logo";
 import { NOME_REDE } from "@/lib/marca";
 
 // Tela dividida da entrada: painel grafite à esquerda no computador e o
-// formulário à direita. No celular fica só o formulário, com o logo no topo.
+// formulário à direita. No celular fica só o formulário; o logo vem do cabeçalho do site.
 export function TelaAuth({ children }: { children: ReactNode }) {
   return (
     <div className="mx-auto grid w-full max-w-5xl overflow-hidden lg:min-h-[36rem] lg:rounded-cartao lg:border lg:border-linha lg:bg-superficie lg:grid-cols-[1fr_1.1fr]">

@@ -118,101 +118,101 @@ export default function CadastroPage() {
 
   return (
     <TelaAuth>
-        <CabecalhoAuth
-          titulo="Criar conta"
-          descricao="Leva um minuto. Depois você conta o que sabe e o que quer aprender."
+      <CabecalhoAuth
+        titulo="Criar conta"
+        descricao="Leva um minuto. Depois você conta o que sabe e o que quer aprender."
+      />
+
+      <form onSubmit={enviar} noValidate className="space-y-4">
+        <Campo
+          rotulo="Nome"
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            limparErro("name");
+          }}
+          erro={erros.name}
+          dica="Como você quer aparecer no perfil (pode usar acento e espaço)"
+          autoComplete="name"
+          maxLength={80}
+          placeholder="Ana Maria"
         />
 
-        <form onSubmit={enviar} noValidate className="space-y-4">
-          <Campo
-            rotulo="Nome"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              limparErro("name");
-            }}
-            erro={erros.name}
-            dica="Como você quer aparecer no perfil (pode usar acento e espaço)"
-            autoComplete="name"
-            maxLength={80}
-            placeholder="Ana Maria"
-          />
+        <Campo
+          rotulo="Nome de usuário"
+          value={username}
+          onChange={(e) => aoMudarUsername(e.target.value)}
+          erro={erros.username}
+          dica={
+            usernameValido && !erros.username
+              ? undefined
+              : "De 3 a 30 caracteres: letras sem acento, números e _"
+          }
+          autoComplete="username"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          maxLength={30}
+          placeholder="ana_dev"
+          acao={
+            usernameValido && !erros.username ? (
+              <span aria-label="formato válido" className="text-sucesso">
+                <svg viewBox="0 0 20 20" fill="currentColor" className="size-5">
+                  <path
+                    fillRule="evenodd"
+                    d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
+            ) : undefined
+          }
+        />
 
-          <Campo
-            rotulo="Nome de usuário"
-            value={username}
-            onChange={(e) => aoMudarUsername(e.target.value)}
-            erro={erros.username}
-            dica={
-              usernameValido && !erros.username
-                ? undefined
-                : "De 3 a 30 caracteres: letras sem acento, números e _"
-            }
-            autoComplete="username"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            maxLength={30}
-            placeholder="ana_dev"
-            acao={
-              usernameValido && !erros.username ? (
-                <span aria-label="formato válido" className="text-sucesso">
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="size-5">
-                    <path
-                      fillRule="evenodd"
-                      d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </span>
-              ) : undefined
-            }
-          />
+        <CampoDeSenha
+          value={password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            limparErro("password");
+          }}
+          erro={erros.password}
+          dica="De 8 a 32 caracteres"
+          autoComplete="new-password"
+          maxLength={32}
+        />
 
-          <CampoDeSenha
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              limparErro("password");
-            }}
-            erro={erros.password}
-            dica="De 8 a 32 caracteres"
-            autoComplete="new-password"
-            maxLength={32}
-          />
+        <CampoDeSenha
+          rotulo="Confirmar senha"
+          value={confirmacao}
+          onChange={(e) => {
+            setConfirmacao(e.target.value);
+            limparErro("confirmacao");
+          }}
+          erro={erros.confirmacao}
+          autoComplete="new-password"
+          maxLength={32}
+        />
 
-          <CampoDeSenha
-            rotulo="Confirmar senha"
-            value={confirmacao}
-            onChange={(e) => {
-              setConfirmacao(e.target.value);
-              limparErro("confirmacao");
-            }}
-            erro={erros.confirmacao}
-            autoComplete="new-password"
-            maxLength={32}
-          />
+        {erroGeral && (
+          <p
+            role="alert"
+            className="border-l-2 border-perigo pl-3 text-sm text-perigo"
+          >
+            {erroGeral}
+          </p>
+        )}
 
-          {erroGeral && (
-            <p
-              role="alert"
-              className="border-l-2 border-perigo pl-3 text-sm text-perigo"
-            >
-              {erroGeral}
-            </p>
-          )}
+        <Botao type="submit" carregando={carregando} className="w-full">
+          Criar conta
+        </Botao>
+      </form>
 
-          <Botao type="submit" carregando={carregando} className="w-full">
-            Criar conta
-          </Botao>
-        </form>
-
-        <p className="mt-6 border-t border-linha pt-5 text-sm text-texto-2">
-          Já tem conta?{" "}
-          <Link href="/login" className="font-medium text-texto underline decoration-linha-forte underline-offset-4 hover:decoration-texto">
-            Entrar
-          </Link>
-        </p>
+      <p className="mt-6 border-t border-linha pt-5 text-sm text-texto-2">
+        Já tem conta?{" "}
+        <Link href="/login" className="font-medium text-texto underline decoration-linha-forte underline-offset-4 hover:decoration-texto">
+          Entrar
+        </Link>
+      </p>
     </TelaAuth>
   );
 }

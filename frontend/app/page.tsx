@@ -58,17 +58,17 @@ function TickerDePares() {
         ))}
       </ul>
       <div className="min-w-0 flex-1 overflow-hidden py-3">
-      <div aria-hidden="true" className="ticker-pares-faixa flex w-max">
-        {[0, 1].map((copia) => (
-          <div key={copia} className="flex shrink-0">
-            {itens.map((item) => (
-              <span key={item} className="whitespace-nowrap px-6 font-mono text-sm text-texto-2 numeros">
-                {item}
-              </span>
-            ))}
-          </div>
-        ))}
-      </div>
+        <div aria-hidden="true" className="ticker-pares-faixa flex w-max">
+          {[0, 1].map((copia) => (
+            <div key={copia} className="flex shrink-0">
+              {itens.map((item) => (
+                <span key={item} className="whitespace-nowrap px-6 font-mono text-sm text-texto-2 numeros">
+                  {item}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
       <button
         type="button"

@@ -49,59 +49,59 @@ export default function LoginPage() {
 
   return (
     <TelaAuth>
-        <CabecalhoAuth
-          titulo="Entrar"
-          descricao="Use seu nome de usuário e senha."
+      <CabecalhoAuth
+        titulo="Entrar"
+        descricao="Use seu nome de usuário e senha."
+      />
+
+      <form onSubmit={enviar} noValidate className="space-y-4">
+        <Campo
+          rotulo="Nome de usuário"
+          value={username}
+          onChange={(e) => {
+            setUsername(e.target.value.toLowerCase());
+            setCampos((atual) => ({ ...atual, username: "" }));
+          }}
+          erro={campos.username || undefined}
+          autoComplete="username"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          maxLength={30}
+          placeholder="ana_dev"
         />
 
-        <form onSubmit={enviar} noValidate className="space-y-4">
-          <Campo
-            rotulo="Nome de usuário"
-            value={username}
-            onChange={(e) => {
-              setUsername(e.target.value.toLowerCase());
-              setCampos((atual) => ({ ...atual, username: "" }));
-            }}
-            erro={campos.username || undefined}
-            autoComplete="username"
-            autoCapitalize="none"
-            autoCorrect="off"
-            spellCheck={false}
-            maxLength={30}
-            placeholder="ana_dev"
-          />
+        <CampoDeSenha
+          value={password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setCampos((atual) => ({ ...atual, password: "" }));
+          }}
+          erro={campos.password || undefined}
+          autoComplete="current-password"
+          maxLength={32}
+        />
 
-          <CampoDeSenha
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setCampos((atual) => ({ ...atual, password: "" }));
-            }}
-            erro={campos.password || undefined}
-            autoComplete="current-password"
-            maxLength={32}
-          />
+        {erro && (
+          <p
+            role="alert"
+            className="border-l-2 border-perigo pl-3 text-sm text-perigo"
+          >
+            {erro}
+          </p>
+        )}
 
-          {erro && (
-            <p
-              role="alert"
-              className="border-l-2 border-perigo pl-3 text-sm text-perigo"
-            >
-              {erro}
-            </p>
-          )}
+        <Botao type="submit" carregando={carregando} className="w-full">
+          Entrar
+        </Botao>
+      </form>
 
-          <Botao type="submit" carregando={carregando} className="w-full">
-            Entrar
-          </Botao>
-        </form>
-
-        <p className="mt-6 border-t border-linha pt-5 text-sm text-texto-2">
-          Ainda não tem conta?{" "}
-          <Link href="/cadastro" className="font-medium text-texto underline decoration-linha-forte underline-offset-4 hover:decoration-texto">
-            Criar conta
-          </Link>
-        </p>
+      <p className="mt-6 border-t border-linha pt-5 text-sm text-texto-2">
+        Ainda não tem conta?{" "}
+        <Link href="/cadastro" className="font-medium text-texto underline decoration-linha-forte underline-offset-4 hover:decoration-texto">
+          Criar conta
+        </Link>
+      </p>
     </TelaAuth>
   );
 }
