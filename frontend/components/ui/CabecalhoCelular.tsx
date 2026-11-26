@@ -46,7 +46,8 @@ export function CabecalhoCelular({
     <header className="sticky top-0 z-40 lg:hidden border-b border-linha bg-superficie pt-[env(safe-area-inset-top)]">
       <div className="flex h-14 items-center justify-between gap-2 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(0.375rem,env(safe-area-inset-right))]">
         <Link href="/feed" aria-label={nomeRede} className="inline-flex min-w-0 items-center rounded-controle text-texto">
-          <Logo variante="completo" tamanho="sm" />
+          <span className="min-[360px]:hidden"><Logo variante="simbolo" tamanho="sm" /></span>
+          <span className="hidden min-[360px]:block"><Logo variante="completo" tamanho="sm" /></span>
         </Link>
 
         <div className="flex items-center">
