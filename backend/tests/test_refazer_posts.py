@@ -47,8 +47,8 @@ def test_refazer_e_restaurar_preserva_dados_de_outros(client, logar, tmp_path):
     backup = tmp_path / "b.json"
     with SessionLocal() as db:
         posts_antes = [(p.id, p.autor_id, p.texto, p.imagem_url) for p in db.scalars(select(Post).order_by(Post.id))]
-        likes_antes = sorted((x.usuario_id, x.post_id, x.created_at) for x in db.scalars(select(Curtida)))
-        comentarios_antes = sorted((x.post_id, x.autor_id, x.texto, x.created_at) for x in db.scalars(select(Comentario)))
+        likes_antes = sorted((x.id, x.usuario_id, x.post_id, x.created_at) for x in db.scalars(select(Curtida)))
+        comentarios_antes = sorted((x.id, x.post_id, x.autor_id, x.texto, x.created_at) for x in db.scalars(select(Comentario)))
         resultado = refazer_posts.refazer(db, "bots", backup)
         assert backup.exists()
         assert db.get(Post, post_real) is not None
@@ -62,8 +62,8 @@ def test_refazer_e_restaurar_preserva_dados_de_outros(client, logar, tmp_path):
         assert any("post_id" in x for x in backup_json["tabelas"]["likes"])
         refazer_posts.restaurar(db, backup)
         assert [(p.id, p.autor_id, p.texto, p.imagem_url) for p in db.scalars(select(Post).order_by(Post.id))] == posts_antes
-        assert sorted((x.usuario_id, x.post_id, x.created_at) for x in db.scalars(select(Curtida))) == likes_antes
-        assert sorted((x.post_id, x.autor_id, x.texto, x.created_at) for x in db.scalars(select(Comentario))) == comentarios_antes
+        assert sorted((x.id, x.usuario_id, x.post_id, x.created_at) for x in db.scalars(select(Curtida))) == likes_antes
+        assert sorted((x.id, x.post_id, x.autor_id, x.texto, x.created_at) for x in db.scalars(select(Comentario))) == comentarios_antes
 
 
 def test_refazer_todos_remove_posts_reais_sem_criar_para_real(client, logar, tmp_path):
@@ -209,7 +209,7 @@ def test_backup_existente_nao_e_sobrescrito(client, tmp_path):
         assert list(db.scalars(select(Post.id).order_by(Post.id))) == posts
 
 
-def test_travar_tabelas_sqlite_nao_faz_nada(client):
+def test_travar_tabelas_sqlite_roda_sem_erro(client):
     with SessionLocal() as db:
         refazer_posts._travar_tabelas(db)
 

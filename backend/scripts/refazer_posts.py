@@ -107,7 +107,7 @@ def _linhas(db: Session, modelo, post_ids: list[int]) -> list[dict]:
         select(modelo).where(modelo.id.in_(post_ids))
         if modelo is Post
         else select(modelo).where(modelo.post_id.in_(post_ids))
-    )
+    ).order_by(*modelo.__table__.primary_key.columns)
     resultado = []
     for objeto in db.scalars(consulta):
         linha = {}
@@ -285,19 +285,27 @@ def restaurar(db: Session, caminho: Path) -> dict:
         for nome in ("posts", "likes", "comentarios", "imagens_post", "notificacoes_entregues"):
             modelo = MODELOS[nome]
             colunas = {c.name: c for c in modelo.__table__.columns}
-            objetos = []
-            for linha in arquivo["tabelas"][nome]:
+            linhas = arquivo["tabelas"][nome]
+            # Dependentes mantêm o id original quando ele está livre; só um id que o SQLite
+            # reaproveitou depois do aplicar ganha id novo (gravado depois dos que mantêm o id).
+            ocupados: set = set()
+            if nome in ("likes", "comentarios", "notificacoes_entregues") and linhas:
+                ocupados = set(db.scalars(select(modelo.id).where(modelo.id.in_([linha["id"] for linha in linhas]))))
+            objetos, renumerados = [], []
+            for linha in linhas:
                 dados = {}
                 for chave, valor in linha.items():
-                    if nome in ("likes", "comentarios", "notificacoes_entregues") and chave == "id":
+                    if chave == "id" and valor in ocupados:
                         continue
                     if modelo is ImagemPost and chave == "conteudo":
                         valor = base64.b64decode(valor)
                     elif isinstance(valor, str) and colunas[chave].type.python_type in (datetime, date):
                         valor = colunas[chave].type.python_type.fromisoformat(valor)
                     dados[chave] = valor
-                objetos.append(modelo(**dados))
+                (renumerados if linha.get("id") in ocupados else objetos).append(modelo(**dados))
             db.add_all(objetos)
+            db.flush()
+            db.add_all(renumerados)
             db.flush()
         if db.bind.dialect.name == "postgresql":
             for tabela in ("posts", "likes", "comentarios", "notificacoes_entregues"):
