@@ -271,7 +271,7 @@ export default function PaginaConversa() {
   }
 
   if (sessaoEncerrada) {
-    return <div className="flex h-full flex-col justify-center px-6"><div className="max-w-sm"><p className="text-texto">Sessão encerrada. Entre de novo.</p><Link className="mt-3 inline-block text-sm font-medium text-marca-forte" href="/login">Entrar</Link></div></div>;
+    return <div className="flex h-full flex-col justify-center px-6"><div className="max-w-sm" role="alert"><p className="text-texto">Sessão encerrada. Entre de novo.</p><Link className="mt-3 inline-block text-sm font-medium text-marca-forte" href="/login">Entrar</Link></div></div>;
   }
 
   if (naoEncontrado) {
