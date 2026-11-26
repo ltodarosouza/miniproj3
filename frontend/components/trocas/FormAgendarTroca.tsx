@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 
 import { AutocompleteHabilidade } from "@/components/perfil/AutocompleteHabilidade";
 import { SeletorDeHorario } from "@/components/trocas/SeletorDeHorario";
@@ -14,43 +14,57 @@ import {
   type Troca,
 } from "@/lib/api";
 import { localParaIsoUtc } from "@/lib/datas";
-import { enviarPropostaDeTroca, obterOpcoesTroca, type OpcoesTroca } from "@/lib/trocas";
+import { dataDaOrdem, enviarPropostaDeTroca, obterOpcoesTroca, type OpcoesTroca } from "@/lib/trocas";
 
 type Lado = "ensino" | "aprendo";
 type Opcao = { id: number; nome: string; nivel?: number };
 type ErrosCampos = Partial<Record<"horario" | "habilidades", string>>;
+
+function RotuloDoBloco({ numero, texto, detalhe }: { numero: string; texto: string; detalhe?: string }) {
+  return (
+    <span className="flex items-baseline gap-2">
+      <span className="font-mono text-xs text-texto-3">{numero} ·</span>
+      <span className="text-sm font-medium text-texto">{texto}</span>
+      {detalhe && <span className="text-xs text-texto-2">{detalhe}</span>}
+    </span>
+  );
+}
 
 function ChipsDeHabilidade({
   rotulo,
   opcoes,
   escolhida,
   aoEscolher,
+  children,
 }: {
-  rotulo: string;
+  rotulo: ReactNode;
   opcoes: Opcao[];
   escolhida: number | null;
   aoEscolher: (id: number | null) => void;
+  children?: ReactNode;
 }) {
-  if (opcoes.length === 0) return null;
   return (
     <fieldset className="min-w-0 space-y-2">
-      <legend className="mb-2 text-sm font-medium text-texto">{rotulo}</legend>
-      <div className="flex flex-wrap gap-2">
-        {opcoes.map((opcao) => {
-          const ativa = opcao.id === escolhida;
-          return (
-            <button
-              key={opcao.id}
-              type="button"
-              aria-pressed={ativa}
-              onClick={() => aoEscolher(ativa ? null : opcao.id)}
-              className="rounded-full transition-[scale] duration-[var(--rapido)] active:scale-[0.96] motion-reduce:transition-none"
-            >
-              <TagHabilidade nome={opcao.nome} tipo={ativa ? "sei" : "neutra"} nivel={opcao.nivel} destaque={ativa} />
-            </button>
-          );
-        })}
-      </div>
+      <legend className="mb-2">{rotulo}</legend>
+      {opcoes.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {opcoes.map((opcao) => {
+            const ativa = opcao.id === escolhida;
+            return (
+              <button
+                key={opcao.id}
+                type="button"
+                aria-pressed={ativa}
+                onClick={() => aoEscolher(ativa ? null : opcao.id)}
+                className="rounded-full transition-[scale] duration-[var(--rapido)] active:scale-[0.96] motion-reduce:transition-none"
+              >
+                <TagHabilidade nome={opcao.nome} tipo={ativa ? "sei" : "neutra"} nivel={opcao.nivel} destaque={ativa} />
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {children}
     </fieldset>
   );
 }
@@ -178,6 +192,8 @@ export function FormAgendarTroca({
   const opcoesEnsino = [...comoOpcoes(opcoes?.eu_ensino ?? []), ...extras.ensino];
   const opcoesAprendo = [...comoOpcoes(opcoes?.eu_aprendo ?? []), ...extras.aprendo];
   const nadaEmComum = opcoes !== null && !erroOpcoes && opcoesEnsino.length === 0 && opcoesAprendo.length === 0;
+  const nomeEnsino = opcoesEnsino.find((opcao) => opcao.id === ensino)?.nome ?? "—";
+  const nomeAprendo = opcoesAprendo.find((opcao) => opcao.id === aprendo)?.nome ?? "—";
 
   return (
     <dialog
@@ -203,8 +219,6 @@ export function FormAgendarTroca({
         </header>
 
         <div className="space-y-5 overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable]">
-          <SeletorDeHorario key={abertura} data={data} hora={hora} aoMudarData={setData} aoMudarHora={setHora} erro={erros.horario} />
-
           <div className="space-y-4">
             {opcoes === null && <p className="text-sm text-texto-3" role="status">Carregando habilidades em comum…</p>}
             {erroOpcoes && (
@@ -213,42 +227,67 @@ export function FormAgendarTroca({
             {nadaEmComum && (
               <p className="text-sm text-texto-2">Vocês ainda não têm habilidades em comum no perfil. Escolha uma do catálogo.</p>
             )}
-            <ChipsDeHabilidade rotulo="Você ensina" opcoes={opcoesEnsino} escolhida={ensino} aoEscolher={setEnsino} />
-            <ChipsDeHabilidade rotulo={`${primeiroNome} te ensina`} opcoes={opcoesAprendo} escolhida={aprendo} aoEscolher={setAprendo} />
-
-            {outra ? (
-              <div className="space-y-2">
-                <AutocompleteHabilidade
-                  rotulo={outra === "ensino" ? "Outra habilidade que você ensina" : `Outra habilidade que ${primeiroNome} te ensina`}
-                  value={busca}
-                  onChange={setBusca}
-                  onSelect={adicionarOutra}
-                  buscarSugestoes={buscarAutocomplete}
-                  mapearTexto={mapearHabilidade}
-                  habilidadesExistentes={(outra === "ensino" ? opcoesEnsino : opcoesAprendo).map((h) => h.id)}
-                />
-                <button type="button" onClick={() => setOutra(null)} className="text-sm text-texto-2 underline underline-offset-2">
-                  Cancelar
-                </button>
-              </div>
-            ) : (
-              opcoes !== null && (
-                <p className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-texto-2">
-                  <span>Outra habilidade:</span>
-                  <button type="button" onClick={() => setOutra("ensino")} className="font-medium text-marca-forte underline underline-offset-2">
-                    que eu ensino
-                  </button>
-                  <button type="button" onClick={() => setOutra("aprendo")} className="font-medium text-marca-forte underline underline-offset-2">
-                    que eu aprendo
-                  </button>
-                </p>
-              )
-            )}
+            <ChipsDeHabilidade
+              rotulo={<RotuloDoBloco numero="01" texto="Você ensina" />}
+              opcoes={opcoesEnsino}
+              escolhida={ensino}
+              aoEscolher={setEnsino}
+            >
+              {outra === "ensino" ? (
+                <div className="space-y-2">
+                  <AutocompleteHabilidade
+                    rotulo="Outra habilidade que você ensina"
+                    value={busca}
+                    onChange={setBusca}
+                    onSelect={adicionarOutra}
+                    buscarSugestoes={buscarAutocomplete}
+                    mapearTexto={mapearHabilidade}
+                    habilidadesExistentes={opcoesEnsino.map((h) => h.id)}
+                  />
+                  <button type="button" onClick={() => setOutra(null)} className="text-sm text-texto-2 underline underline-offset-2">Cancelar</button>
+                </div>
+              ) : opcoes !== null ? (
+                <button type="button" onClick={() => setOutra("ensino")} className="text-sm font-medium text-marca-forte underline underline-offset-2">Outra que eu ensino</button>
+              ) : null}
+            </ChipsDeHabilidade>
+            <ChipsDeHabilidade
+              rotulo={<RotuloDoBloco numero="02" texto="Você aprende" detalhe={`com ${primeiroNome}`} />}
+              opcoes={opcoesAprendo}
+              escolhida={aprendo}
+              aoEscolher={setAprendo}
+            >
+              {outra === "aprendo" ? (
+                <div className="space-y-2">
+                  <AutocompleteHabilidade
+                    rotulo={`Outra habilidade que ${primeiroNome} te ensina`}
+                    value={busca}
+                    onChange={setBusca}
+                    onSelect={adicionarOutra}
+                    buscarSugestoes={buscarAutocomplete}
+                    mapearTexto={mapearHabilidade}
+                    habilidadesExistentes={opcoesAprendo.map((h) => h.id)}
+                  />
+                  <button type="button" onClick={() => setOutra(null)} className="text-sm text-texto-2 underline underline-offset-2">Cancelar</button>
+                </div>
+              ) : opcoes !== null ? (
+                <button type="button" onClick={() => setOutra("aprendo")} className="text-sm font-medium text-marca-forte underline underline-offset-2">Outra que eu aprendo</button>
+              ) : null}
+            </ChipsDeHabilidade>
             {erros.habilidades && <p role="alert" className="text-sm text-perigo">{erros.habilidades}</p>}
           </div>
+          <SeletorDeHorario key={abertura} rotulo={<RotuloDoBloco numero="03" texto="Quando" />} data={data} hora={hora} aoMudarData={setData} aoMudarHora={setHora} erro={erros.horario} />
         </div>
 
-        {erroApi ? <p role="alert" className="text-sm text-perigo">{erroApi}</p> : null}
+        <section aria-label="Resumo da ordem" className="min-w-0 rounded-controle border border-linha bg-superficie-2 px-3 py-2.5 text-sm">
+          <p className="font-mono text-xs uppercase tracking-wide text-texto-3">Resumo da ordem</p>
+          <p className="flex min-w-0 gap-1"><span className="shrink-0">Você ensina <span aria-hidden="true">→</span></span><span className="min-w-0 truncate">{nomeEnsino}</span></p>
+          <p className="flex min-w-0 gap-1"><span className="shrink-0">{primeiroNome} ensina <span aria-hidden="true">→</span></span><span className="min-w-0 truncate">{nomeAprendo}</span></p>
+          <p className={`font-mono numeros ${data && hora ? "" : "text-texto-3"}`}>
+            {data && hora ? dataDaOrdem(localParaIsoUtc(data, hora)) : "escolha o dia e o horário"}
+          </p>
+        </section>
+
+        {erroApi ? <p role="alert" className="text-sm text-perigo">{erroApi.charAt(0).toLocaleUpperCase("pt-BR") + erroApi.slice(1)}</p> : null}
 
         <footer className="flex justify-end gap-2 max-sm:flex-col-reverse">
           <Botao type="button" variante="fantasma" className="max-sm:w-full" onClick={aoFechar}>Cancelar</Botao>
