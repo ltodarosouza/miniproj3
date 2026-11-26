@@ -49,10 +49,24 @@ def usernames_do_seed() -> frozenset[str]:
         motor.dispose()
 
 
+def bios_do_seed() -> set[str]:
+    return set(seed.BIOS) | {bio for _, _, bio, _ in seed.CONTAS_FIXAS}
+
+
 def encontrar_bots(db: Session) -> list[User]:
     nomes = usernames_do_seed()
-    return [u for u in db.scalars(select(User).where(User.username.in_(nomes)).order_by(User.id))
-            if bcrypt.checkpw(seed.SENHA_SEED.encode(), u.password_hash.encode())]
+    bios = bios_do_seed()
+    candidatos = db.scalars(
+        select(User)
+        .where((User.username.in_(nomes)) | (User.bio.in_(bios)))
+        .order_by(User.id)
+    )
+    bots = []
+    for usuario in candidatos:
+        if not bcrypt.checkpw(seed.SENHA_SEED.encode(), usuario.password_hash.encode()):
+            continue
+        bots.append(usuario)
+    return bots
 
 
 def posts_do_escopo(
@@ -284,11 +298,16 @@ def main(argv=None) -> None:
                 print(restaurar(db, args.restaurar))
         else:
             nomes = usernames_do_seed()
-            todos = list(db.scalars(select(User).where(User.username.in_(nomes)).order_by(User.id)))
+            bios = bios_do_seed()
+            candidatos = list(db.scalars(
+                select(User)
+                .where((User.username.in_(nomes)) | (User.bio.in_(bios)))
+                .order_by(User.id)
+            ))
             ids_bots = {u.id for u in bots}
-            suspeitos = [u.username for u in todos if u.id not in ids_bots]
+            suspeitos = [u.username for u in candidatos if u.id not in ids_bots]
             if suspeitos:
-                print(f"Mesmo username do seed, senha diferente (ignorados): {', '.join(suspeitos)}")
+                print(f"Correspondência de username/bio do seed com senha diferente (ignorados): {', '.join(suspeitos)}")
             resultado = plano(db, args.escopo, args.posts_reais, bots)
             if args.aplicar:
                 print(refazer(db, args.escopo, args.backup, args.posts_reais, bots))

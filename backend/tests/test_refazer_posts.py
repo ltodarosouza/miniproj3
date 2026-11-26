@@ -127,3 +127,39 @@ def test_listar_reais_devolve_somente_posts_de_nao_bots(client, logar):
         assert posts
         assert real in {post["id"] for post in posts}
         assert all(post["username"] not in usernames_bots for post in posts)
+
+
+def test_username_fora_do_seed_bio_seed_e_senha_seed_e_bot(client):
+    with SessionLocal() as db:
+        seed.seed_fake(db)
+        db.add(User(
+            username="bot_bio_antigo", name="Bot Bio", bio="monitor nas horas vagas",
+            password_hash=bcrypt.hashpw(seed.SENHA_SEED.encode(), bcrypt.gensalt()).decode(),
+        ))
+        db.commit()
+        assert "bot_bio_antigo" in {u.username for u in refazer_posts.encontrar_bots(db)}
+
+
+def test_bio_vazia_e_senha_seed_nao_e_bot(client):
+    with SessionLocal() as db:
+        seed.seed_fake(db)
+    resposta = client.post(
+        "/auth/registro",
+        json={"username": "real_sem_bio", "name": "Real Sem Bio", "password": seed.SENHA_SEED},
+    )
+    assert resposta.status_code == 201
+    with SessionLocal() as db:
+        usuario = db.scalar(select(User).where(User.username == "real_sem_bio"))
+        assert usuario.bio in (None, "")
+        assert "real_sem_bio" not in {u.username for u in refazer_posts.encontrar_bots(db)}
+
+
+def test_bio_seed_com_outra_senha_nao_e_bot(client):
+    with SessionLocal() as db:
+        seed.seed_fake(db)
+        db.add(User(
+            username="real_bio_conhecida", name="Real", bio="monitor nas horas vagas",
+            password_hash=bcrypt.hashpw(b"outra-senha-456", bcrypt.gensalt()).decode(),
+        ))
+        db.commit()
+        assert "real_bio_conhecida" not in {u.username for u in refazer_posts.encontrar_bots(db)}
