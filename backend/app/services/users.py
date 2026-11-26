@@ -12,7 +12,7 @@ from app.models.habilidade import Habilidade
 from app.models.post import Post
 from app.models.user import User
 from app.models.user_habilidade import UserHabilidade
-from app.schemas.post import PostOut, PostPage
+from app.schemas.post import PostPage
 from app.schemas.user import (
     HabilidadeItem,
     HabilidadePerfilOut,
@@ -193,7 +193,9 @@ def salvar_habilidades(
     db: Session, usuario: User, itens: list[HabilidadeItem]
 ) -> list[HabilidadePerfilOut]:
     if len(itens) > MAX_HABILIDADES:
-        raise HTTPException(status_code=422, detail="no máximo 40 habilidades")
+        raise HTTPException(
+            status_code=422, detail=f"no máximo {MAX_HABILIDADES} habilidades"
+        )
     vistos: set[tuple[int, str]] = set()
     for item in itens:
         chave = (item.habilidade_id, item.tipo)
