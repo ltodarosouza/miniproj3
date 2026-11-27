@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { EditorHabilidades } from "@/components/perfil/EditorHabilidades";
+import { RecortarFoto, type EstadoRecorte } from "@/components/posts/RecortarFoto";
 import { Botao, BotaoLink } from "@/components/ui/Botao";
 import { Avatar } from "@/components/ui/Avatar";
 import { AreaTexto } from "@/components/ui/Campo";
 import { ErroApi, eu } from "@/lib/api";
 import { atualizarPerfil, buscarPerfil, enviarAvatar, removerAvatar, type Perfil } from "@/lib/perfil";
-import { LADO_MAXIMO_AVATAR, prepararImagem } from "@/lib/imagens";
+import { prepararImagem } from "@/lib/imagens";
 import { prefereMenosMovimento } from "@/lib/movimento";
 import { temToken } from "@/lib/sessao";
 
@@ -24,6 +25,11 @@ export default function EditarPerfilPage() {
   const inputFoto = useRef<HTMLInputElement>(null);
   const avatarUrlAtual = useRef(avatarUrl);
   const operacaoFoto = useRef(0);
+  // Foto escolhida antes do ajuste: "Ajustar foto" reabre o editor a partir dela (decisão 45).
+  const [original, setOriginal] = useState<File | null>(null);
+  const [estadoRecorte, setEstadoRecorte] = useState<EstadoRecorte | null>(null);
+  const [paraRecortar, setParaRecortar] = useState<File | null>(null);
+  const [preparandoFoto, setPreparandoFoto] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [salvo, setSalvo] = useState(false);
 
@@ -85,21 +91,38 @@ export default function EditarPerfilPage() {
 
   async function escolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const arquivo = e.target.files?.[0];
+    e.target.value = "";
     if (!arquivo) return;
+    setErro(null);
+    setPreparandoFoto(true);
+    try {
+      // Prepara em 1600 px para o zoom do editor não borrar; o recorte sai com 512 px.
+      const preparada = await prepararImagem(arquivo);
+      setParaRecortar(preparada);
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : "Não consegui preparar essa foto.");
+    } finally {
+      setPreparandoFoto(false);
+    }
+  }
+
+  async function usarFotoAjustada(recortada: File, estado: EstadoRecorte) {
+    const escolhida = paraRecortar;
+    setParaRecortar(null);
     const operacao = ++operacaoFoto.current;
     setErro(null);
     setAlterandoFoto(true);
     try {
-      const preparada = await prepararImagem(arquivo, { ladoMaximo: LADO_MAXIMO_AVATAR });
-      const url = await enviarAvatar(preparada);
+      const url = await enviarAvatar(recortada);
       if (operacao === operacaoFoto.current) {
         avatarUrlAtual.current = url;
         setAvatarUrl(url);
+        setOriginal(escolhida);
+        setEstadoRecorte(estado);
       }
     } catch (err) {
       setErro(err instanceof ErroApi ? err.message : err instanceof Error ? err.message : "Não consegui enviar a foto.");
     } finally {
-      e.target.value = "";
       setAlterandoFoto(false);
     }
   }
@@ -113,6 +136,8 @@ export default function EditarPerfilPage() {
       if (operacao === operacaoFoto.current) {
         avatarUrlAtual.current = "";
         setAvatarUrl("");
+        setOriginal(null);
+        setEstadoRecorte(null);
       }
     } catch (err) {
       setErro(err instanceof ErroApi ? err.message : err instanceof Error ? err.message : "Não consegui remover a foto.");
@@ -173,13 +198,25 @@ export default function EditarPerfilPage() {
               </span>
               <div className="flex flex-wrap gap-3">
                 <input ref={inputFoto} type="file" accept="image/*" className="sr-only" onChange={escolherFoto} />
-                <Botao type="button" variante="secundario" disabled={alterandoFoto} onClick={() => inputFoto.current?.click()}>
-                  {avatarUrl ? "Trocar foto" : "Escolher foto"}
+                <Botao type="button" variante="secundario" disabled={alterandoFoto || preparandoFoto} onClick={() => inputFoto.current?.click()}>
+                  {preparandoFoto ? "Preparando foto…" : avatarUrl ? "Trocar foto" : "Escolher foto"}
                 </Botao>
-                {avatarUrl && <Botao type="button" variante="fantasma" disabled={alterandoFoto} onClick={apagarFoto}>Remover foto</Botao>}
+                {avatarUrl && original && (
+                  <Botao type="button" variante="fantasma" disabled={alterandoFoto || preparandoFoto} onClick={() => setParaRecortar(original)}>
+                    Ajustar foto
+                  </Botao>
+                )}
+                {avatarUrl && <Botao type="button" variante="fantasma" disabled={alterandoFoto || preparandoFoto} onClick={apagarFoto}>Remover foto</Botao>}
+                <RecortarFoto
+                  modo="perfil"
+                  arquivo={paraRecortar}
+                  inicial={paraRecortar && paraRecortar === original ? estadoRecorte : null}
+                  aoConfirmar={usarFotoAjustada}
+                  aoCancelar={() => setParaRecortar(null)}
+                />
               </div>
             </div>
-            <p className="text-sm text-texto-2">JPG, PNG ou WebP. A gente reduz o tamanho automaticamente.</p>
+            <p className="text-sm text-texto-2">JPG, PNG ou WebP. Depois de escolher, você ajusta o enquadramento.</p>
             {alterandoFoto && <p role="status" className="text-sm text-texto-2">Enviando foto…</p>}
             {erro && <p role="alert" className="text-sm text-perigo">{erro}</p>}
           </div>

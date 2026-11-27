@@ -4,13 +4,15 @@ import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type 
 
 import { Botao } from "@/components/ui/Botao";
 import { Icone } from "@/components/ui/Icone";
-import { recortarImagem, type AreaRecorte } from "@/lib/imagens";
+import { LADO_MAXIMO_AVATAR, recortarImagem, type AreaRecorte } from "@/lib/imagens";
 import { travarRolagem } from "@/lib/rolagem";
 
 // Editor de recorte da foto do post (decisão 44), no jeito das outras redes:
 // a moldura fica parada e a foto anda por baixo dela. Arrasta para posicionar,
 // aproxima com o controle, a roda do mouse ou a pinça; as setas e +/− fazem o mesmo pelo teclado.
 // Sem biblioteca: o recorte final sai do canvas em `recortarImagem`.
+// No modo "perfil" (decisão 45) a foto é sempre quadrada, com máscara no hexágono
+// do avatar (mesmo polígono de `components/ui/Avatar.tsx`), e sai com 512 px.
 
 export type Proporcao = "original" | "1:1" | "4:5" | "16:9";
 
@@ -25,6 +27,8 @@ const PROPORCOES: { valor: Proporcao; rotulo: string }[] = [
 ];
 
 const ZOOM_MAXIMO = 4;
+// Mesmo polígono do clip-path de `components/ui/Avatar.tsx`, em coordenadas de 0 a 100.
+const HEXAGONO = "50 0 L93.3 25 L93.3 75 L50 100 L6.7 75 L6.7 25";
 
 function razao(proporcao: Proporcao, largura: number, altura: number): number {
   if (proporcao === "1:1") return 1;
@@ -40,11 +44,13 @@ function limitar(valor: number, minimo: number, maximo: number): number {
 export function RecortarFoto({
   arquivo,
   inicial,
+  modo = "post",
   aoConfirmar,
   aoCancelar,
 }: {
   /** Foto já preparada; com arquivo, o editor abre. */
   arquivo: File | null;
+  modo?: "post" | "perfil";
   inicial?: EstadoRecorte | null;
   aoConfirmar: (recortada: File, estado: EstadoRecorte) => void;
   aoCancelar: () => void;
@@ -63,6 +69,7 @@ export function RecortarFoto({
   const [arrastando, setArrastando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
+  const perfil = modo === "perfil";
   const aoCancelarAtual = useRef(aoCancelar);
   aoCancelarAtual.current = aoCancelar;
 
@@ -76,7 +83,7 @@ export function RecortarFoto({
       setNatural(null);
       setErro("");
       setSalvando(false);
-      setProporcao(inicial?.proporcao ?? "original");
+      setProporcao(perfil ? "1:1" : inicial?.proporcao ?? "original");
       setZoom(inicial?.zoom ?? 1);
       setCentro(inicial ? { x: inicial.centroX, y: inicial.centroY } : { x: 0, y: 0 });
       if (!elemento.open) {
@@ -213,7 +220,7 @@ export function RecortarFoto({
       altura: recorteA,
     };
     try {
-      const recortada = await recortarImagem(arquivo, recorte);
+      const recortada = await recortarImagem(arquivo, recorte, perfil ? LADO_MAXIMO_AVATAR : undefined);
       aoConfirmar(recortada, { proporcao, zoom, centroX: centroPreso.x, centroY: centroPreso.y });
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : "Não consegui recortar essa foto.");
@@ -224,7 +231,7 @@ export function RecortarFoto({
   return (
     <dialog
       ref={dialogo}
-      aria-label="Recortar foto"
+      aria-label={perfil ? "Ajustar foto de perfil" : "Recortar foto"}
       onKeyDown={(evento) => {
         // Não deixa o Esc chegar ao formulário de fora (o editor de post fecha com Esc).
         if (evento.key === "Escape") evento.stopPropagation();
@@ -237,7 +244,7 @@ export function RecortarFoto({
     >
       <div className="lupa-foto flex h-full max-h-[44rem] w-full max-w-2xl flex-col overflow-hidden rounded-cartao border border-linha bg-superficie text-texto shadow-alta">
         <header className="flex min-h-14 items-center gap-2 border-b border-linha py-1.5 pl-4 pr-1.5">
-          <h2 className="flex-1 text-[0.9375rem] font-semibold">Recortar foto</h2>
+          <h2 className="flex-1 text-[0.9375rem] font-semibold">{perfil ? "Ajustar foto de perfil" : "Recortar foto"}</h2>
           <button
             type="button"
             aria-label="Cancelar recorte"
@@ -295,12 +302,23 @@ export function RecortarFoto({
                     "linear-gradient(to right, transparent calc(33.333% - 0.5px), rgb(255 255 255 / 0.6) calc(33.333% - 0.5px), rgb(255 255 255 / 0.6) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px), transparent calc(66.666% - 0.5px), rgb(255 255 255 / 0.6) calc(66.666% - 0.5px), rgb(255 255 255 / 0.6) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px)), linear-gradient(to bottom, transparent calc(33.333% - 0.5px), rgb(255 255 255 / 0.6) calc(33.333% - 0.5px), rgb(255 255 255 / 0.6) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px), transparent calc(66.666% - 0.5px), rgb(255 255 255 / 0.6) calc(66.666% - 0.5px), rgb(255 255 255 / 0.6) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px))",
                 }}
               />
-              <div aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-controle ring-1 ring-inset ring-white/70" />
+              {perfil ? (
+                // Fora do hexágono escurece: é o que some no avatar.
+                <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 size-full">
+                  <path fillRule="evenodd" fill="rgb(0 0 0 / 0.55)" d={`M0 0H100V100H0Z M${HEXAGONO}Z`} />
+                  <path fill="none" stroke="rgb(255 255 255 / 0.85)" strokeWidth={1.5} vectorEffect="non-scaling-stroke" d={`M${HEXAGONO}Z`} />
+                </svg>
+              ) : (
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-controle ring-1 ring-inset ring-white/70" />
+              )}
             </div>
           )}
         </div>
 
         <div className="space-y-3 border-t border-linha px-4 py-3">
+          {perfil ? (
+            <p className="text-sm text-texto-2">Arraste para centralizar o rosto no hexágono.</p>
+          ) : (
           <div role="radiogroup" aria-label="Proporção" className="flex flex-wrap gap-1.5">
             {PROPORCOES.map((opcao) => (
               <button
@@ -316,6 +334,7 @@ export function RecortarFoto({
               </button>
             ))}
           </div>
+          )}
           <label className="flex items-center gap-3 text-sm text-texto-2">
             <span className="shrink-0">Zoom</span>
             <input
