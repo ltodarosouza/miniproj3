@@ -285,4 +285,5 @@ O índice fica na memória de um processo (um worker no Render) e é reconstruí
   organização final, Claude Code (coordenador) e agentes Claude Haiku separaram
   as decisões em `docs/decisoes/`, juntaram o material da disciplina em
   `docs/disciplina/`, tiraram código sem chamador do frontend e conferiram os
-  links; um agente revisor aprovou o PR antes do merge.
+  links. O bot revisor de PR leu o PR #113 em rodadas e pediu ajustes (alternativa
+  em texto da demo, exemplos do `.env`, trechos do DESIGN.md) antes da aprovação.

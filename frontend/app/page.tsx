@@ -46,7 +46,7 @@ const CENAS_DA_DEMO = [
   "Google Agenda: a Ana confirma; o cartão da troca mostra Agendar no Google Agenda, que abre o evento já preenchido com título, dia, 19:00–20:00 e quem ensina o quê. Ao salvar, o Google adiciona o Meet se a conta tiver o Meet automático ativado.",
   "Avaliação: numa troca que já aconteceu com o Linus, a Ada dá 5 estrelas, escreve um recado e envia.",
   "Notificações: confirmação da troca, curtidas, comentários e novos seguidores.",
-  "Fechamento: “Aprenda junto.” e o endereço do deploy.",
+  "Fechamento: “Aprenda junto.” e o endereço do deploy, miniproj3.vercel.app.",
 ] as const;
 
 function TickerDePares() {
