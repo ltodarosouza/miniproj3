@@ -52,6 +52,8 @@ def ready(page):
     page.wait_for_function("Array.from(document.images).filter(i=>{const r=i.getBoundingClientRect();return r.width&&r.height&&r.bottom>0&&r.right>0&&r.top<innerHeight&&r.left<innerWidth}).every(i=>i.complete&&i.naturalWidth>0)", timeout=30000)
     page.evaluate("document.fonts.ready")
     page.mouse.move(0, 0)
+    # Sem anel de foco perdido na captura (o destaque é da animação).
+    page.evaluate("document.activeElement && document.activeElement.blur()")
     page.add_style_tag(content="*{caret-color:transparent!important}")
     page.wait_for_timeout(900)
 
@@ -108,6 +110,11 @@ with sync_playwright() as pw:
         filled={**form_specs,"foto_botao":"img[alt='Prévia da foto']"}
         capture(page,"03-registrar-preenchido","/feed",filled)
         page.locator("form button[type=submit]").click()
+        page.get_by_text("Revisei flexbox e grid. Agora o layout da página fecha!",exact=True).wait_for(timeout=20000)
+        # A foto sobe depois do post: espere ela aparecer antes de recarregar.
+        page.locator("article:has-text('Revisei flexbox e grid. Agora o layout da página fecha!') img[alt='Foto do post']").first.wait_for(timeout=30000)
+        # "Mais estudadas" só se atualiza ao recarregar o feed; recarrega para mostrar o post já contado.
+        page.reload()
         page.get_by_text("Revisei flexbox e grid. Agora o layout da página fecha!",exact=True).wait_for(timeout=20000)
         capture(page,"04-feed-publicado","/feed",{"post_novo":"article:has-text('Revisei flexbox e grid. Agora o layout da página fecha!')","foto_nova":"article:has-text('Revisei flexbox e grid. Agora o layout da página fecha!') img[alt='Foto do post']","sua_semana":"aside[aria-label='Sua semana e descobertas'] section:has(h2:has-text('Sua semana'))","sua_semana_horas":"aside[aria-label='Sua semana e descobertas'] section:has(h2:has-text('Sua semana')) p.font-mono","mais_estudadas":"aside[aria-label='Sua semana e descobertas'] section:has(h2:has-text('Mais estudadas'))","nav_matches":nav("matches")})
 
@@ -181,5 +188,8 @@ with sync_playwright() as pw:
     browser.close()
 
 payload={"viewport":VIEWPORT,"usuario":"ada","telas":records}
-(OUT/"telas.json").write_text(json.dumps(payload,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+texto=json.dumps(payload,ensure_ascii=False,indent=2)
+(OUT/"telas.json").write_text(texto+"\n",encoding="utf-8")
+# Mesmo conteúdo como script: a demo abre direto do disco (file://), onde fetch não funciona.
+(OUT/"telas.js").write_text("window.TELAS = "+texto+";\n",encoding="utf-8")
 print(f"Capturadas {len(records)} telas em {OUT}")
