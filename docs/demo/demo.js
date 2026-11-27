@@ -64,8 +64,13 @@
   };
 
   // ---------- roteiro (dados) ----------
-  // Telas: quando cada captura entra e como (fade, revela dentro de um retângulo, lupa).
+  // Telas: quando cada captura entra e como (fade ou revela dentro de um retângulo).
   let TELA_EVENTOS, CAMERA, CURSOR, CLIQUES, DESTAQUES, LEGENDAS;
+
+  // Painel do Google Agenda da pessoa: o evento que o link real do botão "Agendar no Google Agenda" abre.
+  // Os textos saem do próprio link capturado (telas.json → 09b-confirmada.link_google_agenda).
+  // Ao salvar, o Google adiciona a videoconferência do Meet (não há link de sala inventado).
+  const AGENDA = { entra: 33.47, sai: 36.65, campos: 33.75, salvo: 35.07, meet: [35.35, 36.6], alvoSalvar: [0, 0] };
 
   function montarRoteiro() {
     const form = ret("03-registrar-preenchido", "form");
@@ -76,19 +81,19 @@
       // O formulário cresce e empurra o feed: revela a coluna inteira, do topo do formulário até a borda.
       { t: 9.3, id: "03-registrar-preenchido", tipo: "revela", direcao: "baixo", area: colunaDoFeed, dur: 1.3 },
       { t: 11.92, id: "04-feed-publicado", dur: 0.3 },
-      { t: 19.52, id: "05-matches", dur: 0.3 },
-      { t: 23.62, id: "06-conversa", dur: 0.3 },
-      { t: 25.62, id: "07-perfil", dur: 0.3 },
-      { t: 27.55, id: "06-conversa", dur: 0.35 },
-      { t: 28.72, id: "08-agendar", dur: 0.45 },
-      { t: 29.85, id: "08b-agendar-horario", dur: 0.2 },
-      { t: 31.22, id: "09-proposta", dur: 0.45 },
-      { t: 32.5, id: "10-avaliar", dur: 0.4 },
-      { t: 34.05, id: "11-avaliar-preenchido", tipo: "revela", area: ret("11-avaliar-preenchido", "cartao"), dur: 1.0 },
-      { t: 36.22, id: "12-avaliado", dur: 0.35 },
-      { t: 38.52, id: "13-notificacoes", dur: 0.3 },
-      { t: 41.5, id: "14-feed-foto", dur: 0.4 },
-      { t: 42.72, id: "15-lupa", tipo: "lupa", de: ret("14-feed-foto", "foto"), para: ret("15-lupa", "lupa"), dur: 0.7 },
+      { t: 18.92, id: "05-matches", dur: 0.3 },
+      { t: 23.02, id: "06-conversa", dur: 0.3 },
+      { t: 25.02, id: "07-perfil", dur: 0.3 },
+      { t: 26.95, id: "06-conversa", dur: 0.35 },
+      { t: 28.12, id: "08-agendar", dur: 0.45 },
+      { t: 29.25, id: "08b-agendar-horario", dur: 0.2 },
+      { t: 30.62, id: "09-proposta", dur: 0.45 },
+      // A Ana confirma: o cartão ganha o botão "Agendar no Google Agenda" (o evento abre no painel AGENDA).
+      { t: 31.85, id: "09b-confirmada", dur: 0.4 },
+      { t: 37.04, id: "10-avaliar", dur: 0.3 },
+      { t: 38.21, id: "11-avaliar-preenchido", tipo: "revela", area: ret("11-avaliar-preenchido", "cartao"), dur: 0.76 },
+      { t: 39.86, id: "12-avaliado", dur: 0.27 },
+      { t: 41.6, id: "13-notificacoes", dur: 0.25 },
     ];
 
     // Câmera: a partir de t, vai em dur segundos para o zoom s centrado no ponto foco.
@@ -101,19 +106,20 @@
       { t: 9.2, dur: 1.0, s: 1.16, foco: centro(ret("03-registrar-preenchido", "form")) },
       { t: 11.95, dur: 1.0, s: 1.06, foco: centro(ret("04-feed-publicado", "post_novo")) },
       { t: 14.0, dur: 1.1, s: 1.55, foco: centro(uniao(ret("04-feed-publicado", "sua_semana"), ret("04-feed-publicado", "mais_estudadas"))) },
-      { t: 18.25, dur: 0.9, s: 1, foco: meio },
-      { t: 20.2, dur: 1.0, s: 1.3, foco: centro(uniao(ret("05-matches", "secao_troca"), ret("05-matches", "secao_ensinar"))) },
-      { t: 23.45, dur: 0.85, s: 1, foco: meio },
-      { t: 32.5, dur: 1.0, s: 1.3, foco: centro(ret("10-avaliar", "cartao")) },
-      { t: 37.15, dur: 0.9, s: 1, foco: meio },
-      { t: 43.0, dur: 1.2, s: 1.05, foco: centro(ret("15-lupa", "lupa")) },
+      { t: 17.65, dur: 0.9, s: 1, foco: meio },
+      { t: 19.6, dur: 1.0, s: 1.3, foco: centro(uniao(ret("05-matches", "secao_troca"), ret("05-matches", "secao_ensinar"))) },
+      { t: 22.85, dur: 0.85, s: 1, foco: meio },
+      { t: 31.9, dur: 0.8, s: 1.25, foco: centro(ret("09b-confirmada", "cartao")) },
+      { t: 33.5, dur: 0.5, s: 1, foco: meio },
+      { t: 37.04, dur: 0.76, s: 1.3, foco: centro(ret("10-avaliar", "cartao")) },
+      { t: 40.56, dur: 0.68, s: 1, foco: meio },
     ];
 
     // Cursor: trajetos (de → ate) até um ponto do palco, em coordenadas da tela (antes da câmera).
     CURSOR = {
       inicio: [1780, 1000],
       aparece: 2.9,
-      some: 44.0,
+      some: 43.95,
       trechos: [
         { de: 3.1, ate: 4.2, para: A("01-feed", "foto", 40, 10) },
         { de: 4.7, ate: 5.9, para: A("01-feed", "foto", 150, -40) },
@@ -123,54 +129,59 @@
         { de: 12.4, ate: 13.2, para: A("04-feed-publicado", "post_novo", 200, -140) },
         { de: 14.3, ate: 15.0, para: A("04-feed-publicado", "sua_semana_horas", 70, 2) },
         { de: 16.55, ate: 17.2, para: [ret("04-feed-publicado", "mais_estudadas").x + 150, ret("04-feed-publicado", "mais_estudadas").y + 110] },
-        { de: 18.4, ate: 19.15, para: A("04-feed-publicado", "nav_matches", -40, 0) },
-        { de: 19.9, ate: 20.7, para: A("05-matches", "par_troca", -150, 4) },
-        { de: 22.45, ate: 23.25, para: A("05-matches", "conversar_par") },
-        { de: 24.5, ate: 25.25, para: A("06-conversa", "cabecalho_perfil", -20, 0) },
-        { de: 25.95, ate: 26.7, para: A("07-perfil", "habilidades", 60, 10) },
-        { de: 27.7, ate: 28.4, para: A("06-conversa", "agendar") },
-        { de: 29.0, ate: 29.55, para: A("08-agendar", "horario") },
-        { de: 30.25, ate: 30.9, para: A("08b-agendar-horario", "propor") },
-        { de: 31.6, ate: 32.3, para: A("09-proposta", "cartao", 120, 60) },
-        { de: 33.0, ate: 33.7, para: A("10-avaliar", "estrela5") },
-        { de: 35.15, ate: 35.85, para: A("11-avaliar-preenchido", "enviar") },
-        { de: 37.35, ate: 38.2, para: A("13-notificacoes", "nav_notificacoes", -40, 0) },
-        { de: 38.9, ate: 39.6, para: A("13-notificacoes", "item1", 250, 8) },
-        { de: 39.75, ate: 41.15, para: A("13-notificacoes", "item3", 250, 8) },
-        { de: 41.6, ate: 42.35, para: A("14-feed-foto", "foto", 30, 20) },
+        { de: 17.8, ate: 18.55, para: A("04-feed-publicado", "nav_matches", -40, 0) },
+        { de: 19.3, ate: 20.1, para: A("05-matches", "par_troca", -150, 4) },
+        { de: 21.85, ate: 22.65, para: A("05-matches", "conversar_par") },
+        { de: 23.9, ate: 24.65, para: A("06-conversa", "cabecalho_perfil", -20, 0) },
+        { de: 25.35, ate: 26.1, para: A("07-perfil", "habilidades", 60, 10) },
+        { de: 27.1, ate: 27.8, para: A("06-conversa", "agendar") },
+        { de: 28.4, ate: 28.95, para: A("08-agendar", "horario") },
+        { de: 29.65, ate: 30.3, para: A("08b-agendar-horario", "propor") },
+        { de: 31.0, ate: 31.7, para: A("09-proposta", "cartao", 120, 60) },
+        { de: 32.35, ate: 33.05, para: A("09b-confirmada", "agenda") },
+        // No painel o palco está sem zoom: coordenadas da tela = coordenadas do painel.
+        { de: 34.25, ate: 34.85, para: AGENDA.alvoSalvar },
+        { de: 37.42, ate: 37.95, para: A("10-avaliar", "estrela5") },
+        { de: 39.05, ate: 39.58, para: A("11-avaliar-preenchido", "enviar") },
+        { de: 40.71, ate: 41.36, para: A("13-notificacoes", "nav_notificacoes", -40, 0) },
+        { de: 41.92, ate: 42.51, para: A("13-notificacoes", "item1", 250, 8) },
+        { de: 42.63, ate: 43.81, para: A("13-notificacoes", "item3", 250, 8) },
       ],
     };
     // Cliques: o anel sai no ponto em que o cursor está; a tela troca ~0,12 s depois.
-    CLIQUES = [7.95, 9.15, 11.8, 19.4, 23.5, 25.5, 28.6, 29.75, 31.1, 33.9, 36.1, 38.4, 42.6];
+    CLIQUES = [7.95, 9.15, 11.8, 18.8, 22.9, 24.9, 28.0, 29.15, 30.5, 33.35, 34.95, 38.1, 39.77, 41.51];
 
     // Destaques: um por vez, retângulo do alvo (+ folga).
     DESTAQUES = [
       { de: 4.4, ate: 6.8, r: ret("01-feed", "post_foto") },
       { de: 12.3, ate: 13.95, r: ret("04-feed-publicado", "post_novo") },
       { de: 15.1, ate: 16.5, r: ret("04-feed-publicado", "sua_semana") },
-      { de: 16.6, ate: 18.15, r: ret("04-feed-publicado", "mais_estudadas") },
-      { de: 19.95, ate: 22.3, r: ret("05-matches", "par_troca") },
-      { de: 24.0, ate: 25.35, r: ret("06-conversa", "mensagem") },
-      { de: 26.0, ate: 27.45, r: ret("07-perfil", "habilidades") },
-      { de: 30.0, ate: 30.95, r: ret("08b-agendar-horario", "resumo") },
-      { de: 31.55, ate: 32.45, r: ret("09-proposta", "cartao") },
-      { de: 36.6, ate: 37.4, r: ret("12-avaliado", "cartao") },
-      { de: 38.95, ate: 39.75, r: ret("13-notificacoes", "item1") },
-      { de: 39.8, ate: 40.5, r: ret("13-notificacoes", "item2") },
-      { de: 40.55, ate: 41.3, r: ret("13-notificacoes", "item3") },
+      { de: 16.6, ate: 17.58, r: ret("04-feed-publicado", "mais_estudadas") },
+      { de: 19.35, ate: 21.7, r: ret("05-matches", "par_troca") },
+      { de: 23.4, ate: 24.75, r: ret("06-conversa", "mensagem") },
+      { de: 25.4, ate: 26.85, r: ret("07-perfil", "habilidades") },
+      { de: 29.4, ate: 30.35, r: ret("08b-agendar-horario", "resumo") },
+      { de: 30.95, ate: 31.85, r: ret("09-proposta", "cartao") },
+      { de: 32.15, ate: 32.75, r: ret("09b-confirmada", "cartao") },
+      { de: 32.8, ate: 33.45, r: ret("09b-confirmada", "agenda") },
+      { de: 40.14, ate: 40.75, r: ret("12-avaliado", "cartao") },
+      { de: 41.96, ate: 42.63, r: ret("13-notificacoes", "item1") },
+      { de: 42.67, ate: 43.26, r: ret("13-notificacoes", "item2") },
+      { de: 43.3, ate: 43.93, r: ret("13-notificacoes", "item3") },
     ];
 
     LEGENDAS = [
       { de: 3.0, ate: 7.1, texto: "Feed: a rotina de estudo da sua rede" },
       { de: 7.6, ate: 13.95, texto: "Registre o que estudou hoje, com foto" },
-      { de: 14.35, ate: 18.2, texto: "Sua semana e as habilidades mais estudadas" },
-      { de: 19.6, ate: 23.85, texto: "Matches: troca recíproca e quem pode te ensinar" },
-      { de: 24.05, ate: 25.6, texto: "Converse com quem combina com você" },
-      { de: 25.85, ate: 27.5, texto: "Perfis mostram o que cada um sabe" },
-      { de: 27.8, ate: 32.35, texto: "Agende a troca direto na conversa" },
-      { de: 32.75, ate: 37.35, texto: "Depois da troca, avalie como foi" },
-      { de: 38.6, ate: 41.35, texto: "Notificações de curtidas, seguidores e trocas" },
-      { de: 41.75, ate: 44.0, texto: "Toque na foto para ver de perto" },
+      { de: 14.35, ate: 17.6, texto: "Sua semana e as habilidades mais estudadas" },
+      { de: 19.0, ate: 23.25, texto: "Matches: troca recíproca e quem pode te ensinar" },
+      { de: 23.45, ate: 25.0, texto: "Converse com quem combina com você" },
+      { de: 25.25, ate: 26.9, texto: "Perfis mostram o que cada um sabe" },
+      { de: 27.2, ate: 31.75, texto: "Agende a troca direto na conversa" },
+      { de: 32.0, ate: 34.85, texto: "Um clique abre o seu Google Agenda com a troca preenchida" },
+      { de: 35.0, ate: 36.7, texto: "Salve e o Google Meet já vem no evento" },
+      { de: 37.23, ate: 40.71, texto: "Depois da troca, avalie como foi" },
+      { de: 41.67, ate: 43.97, texto: "Notificações de curtidas, seguidores e trocas" },
     ];
   }
 
@@ -242,14 +253,6 @@
       estilo.clip = ev.direcao === "baixo"
         ? inset({ x: a.x, y: a.y, w: a.w, h: a.h * e })
         : inset({ x: a.x, y: a.y, w: a.w * e, h: a.h });
-    } else if (ev.tipo === "lupa") {
-      // A foto da lupa nasce exatamente sobre a foto do post e cresce até o lugar dela.
-      const e = saida(p), L = ev.para, F = ev.de;
-      const k = lerp(F.w / L.w, 1, e);
-      const px = lerp(F.x, L.x, e), py = lerp(F.y, L.y, e);
-      estilo.transform = `translate(${px - L.x * k}px, ${py - L.y * k}px) scale(${k})`;
-      const c = saida(clamp((p - 0.15) / 0.85));
-      estilo.clip = inset({ x: lerp(L.x, 0, c), y: lerp(L.y, 0, c), w: lerp(L.w, W, c), h: lerp(L.h, H, c) });
     } else {
       estilo.opacity = suave(p); // simétrico: sem "estalo" nos primeiros quadros
     }
@@ -308,11 +311,63 @@
     raiz.style.transform = `scale(${1 + fora * 0.04})`;
   }
 
+  function desenharAgenda(t) {
+    if (t < AGENDA.entra || t > AGENDA.sai + 0.4) {
+      el.agenda.style.display = "none";
+      return;
+    }
+    el.agenda.style.display = "block";
+    const entra = saida(prog(t, AGENDA.entra, 0.45));
+    const fora = suave(prog(t, AGENDA.sai, 0.35));
+    el.agenda.style.opacity = String(Math.min(suave(prog(t, AGENDA.entra, 0.3)), 1 - fora));
+    el.janela.style.transform = `translateY(${(1 - entra) * 40}px) scale(${0.97 + 0.03 * entra})`;
+    el.camposAgenda.forEach((c, i) => {
+      const q = saida(prog(t, AGENDA.campos + i * 0.15, 0.45));
+      c.style.opacity = String(q);
+      c.style.transform = `translateY(${(1 - q) * 12}px)`;
+    });
+    const salvo = saida(prog(t, AGENDA.salvo, 0.45));
+    el.meet.style.opacity = String(salvo);
+    el.meet.style.transform = `translateY(${(1 - salvo) * 14}px)`;
+    // Um texto sai antes de o outro entrar: nunca os dois sobrepostos.
+    el.seloAntes.style.opacity = String(1 - suave(prog(t, AGENDA.salvo, 0.18)));
+    el.seloDepois.style.opacity = String(suave(prog(t, AGENDA.salvo + 0.18, 0.22)));
+    const [m0, m1] = AGENDA.meet;
+    el.meet.style.setProperty("--brilho-meet", String(opacidadeJanela(t, m0, m1)));
+  }
+
+  function lerLinkAgenda() {
+    const tela = TELAS["09b-confirmada"];
+    if (!tela || !tela.link_google_agenda) throw new Error("telas.json sem 09b-confirmada.link_google_agenda");
+    const url = new URL(tela.link_google_agenda);
+    const q = url.searchParams;
+    const [ini, fim] = q.get("dates").split("/").map((d) => new Date(d.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z/, "$1-$2-$3T$4:$5:$6Z")));
+    const fuso = { timeZone: "America/Sao_Paulo" };
+    const dia = new Intl.DateTimeFormat("pt-BR", { ...fuso, weekday: "long", day: "numeric", month: "long" }).format(ini);
+    const hora = (d) => new Intl.DateTimeFormat("pt-BR", { ...fuso, hour: "2-digit", minute: "2-digit" }).format(d);
+    $("agenda-url").textContent = url.host + url.pathname + url.search;
+    $("agenda-titulo").textContent = q.get("text");
+    $("agenda-quando").textContent = `${dia.charAt(0).toLocaleUpperCase("pt-BR") + dia.slice(1)} · ${hora(ini)} – ${hora(fim)}`;
+    $("agenda-descricao").replaceChildren(...q.get("details").split("\n").map((linha) => {
+      const p = document.createElement("span");
+      p.textContent = linha;
+      return p;
+    }));
+  }
+
+  // Posição no palco (sem transform) do centro de um elemento do painel.
+  function centroNoPalco(no) {
+    let x = no.offsetWidth / 2, y = no.offsetHeight / 2;
+    for (let n = no; n && n !== el.palco; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }
+    return [x, y];
+  }
+
   function desenhar(t) {
     t = clamp(t, 0, DURACAO);
     const cam = camera(t);
     el.camera.style.transform = `translate(${cam.tx}px, ${cam.ty}px) scale(${cam.s})`;
     desenharTelas(t);
+    desenharAgenda(t);
 
     // Abertura (0–2,6 s): fundo mel suave clareando até o fundo do app.
     if (t < 2.75) {
@@ -389,7 +444,12 @@
   ];
 
   function montar() {
-    for (const id of ["camera", "destaque", "anel", "cursor", "legenda", "abertura", "fecho"]) el[id] = $(id);
+    for (const id of ["palco", "camera", "destaque", "anel", "cursor", "legenda", "abertura", "fecho", "agenda"]) el[id] = $(id);
+    el.janela = el.agenda.querySelector(".janela");
+    el.camposAgenda = el.agenda.querySelectorAll(".campo");
+    el.meet = $("agenda-meet");
+    el.seloAntes = $("selo-antes");
+    el.seloDepois = $("selo-depois");
     el.legendaTexto = el.legenda.querySelector("span");
     for (const svg of document.querySelectorAll(".logo svg")) {
       svg.innerHTML = CELULAS.map((d, i) => `<path d="${d}" fill="${i === 0 ? "#1B1A17" : "#F2A900"}"/>`).join("");
@@ -403,6 +463,11 @@
       el.camera.appendChild(img);
       imagens[tela.id] = img;
     }
+    lerLinkAgenda();
+    // O cursor clica no "Salvar", à direita do texto para não cobri-lo.
+    el.agenda.style.display = "block"; // medir exige o painel no layout; desenhar() decide se aparece
+    const [sx, sy] = centroNoPalco($("agenda-salvar"));
+    AGENDA.alvoSalvar = [sx + 44, sy + 2];
     montarRoteiro();
   }
 
