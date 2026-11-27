@@ -61,21 +61,21 @@ com números tabulares. Ver [decisão 32](docs/decisoes/32-identidade-colmatch-b
 
 | Papel | Classes |
 |---|---|
-| Título de página | `font-display text-[2rem] font-bold tracking-[-0.025em] leading-tight` |
+| Título de página | `font-display text-[2rem] tracking-[-0.025em] leading-tight`, com `font-bold` ou `font-semibold` (ex.: Pares e Busca) |
 | Título de seção | `text-lg font-semibold tracking-tight` |
 | Texto de post | `font-conteudo text-base leading-relaxed max-w-[65ch]` |
 | Secundário | `text-sm text-texto-2` |
 | Números | `numeros` (algarismos de mesma largura) e, para tempo, `font-mono` |
 
-Pesos: 400, 500 e 600; títulos de página usam 700. Nada de itálico decorativo.
+Pesos: 400, 500 e 600; alguns títulos de página usam 700. Nada de itálico decorativo.
 
 ## Forma e espaço
 
 - Raio: `rounded-cartao` (6px) para cartões e painéis, `rounded-controle`
   (4px) para botões e campos. Tags usam `rounded-[2px]`; avatares são
   hexágonos (`clip-path`), como o nó de match.
-- Sombra: nenhuma em cartões (`--sombra` é `none`). `shadow-alta` só em
-  popover, menu e toast.
+- Sombra: nenhuma em cartões (`--sombra` é `none`). `shadow-alta` só no que flutua:
+  popover, menu, toast e modal (ex.: Agendar troca).
 - Cada página escolhe a própria largura. Feed e textos longos podem usar
   `max-w-2xl`.
 - Espaço: grupos apertados (`gap-2`/`gap-3`), seções bem separadas (`gap-8`
