@@ -27,7 +27,7 @@ function Bloco({ numero, titulo, acao, children }: { numero: string; titulo: str
   );
 }
 
-export function CampoBusca() {
+function CampoBusca() {
   const roteador = useRouter();
   const [termo, setTermo] = useState("");
   function enviar(evento: FormEvent<HTMLFormElement>) {

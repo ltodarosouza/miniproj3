@@ -11,7 +11,7 @@ export type HabilidadePerfil = {
   nivel: number;
 };
 
-export type ItemHabilidade = {
+type ItemHabilidade = {
   habilidade_id: number;
   tipo: TipoHabilidade;
   nivel: number;
@@ -28,7 +28,7 @@ export type Perfil = User & {
   habilidades: HabilidadePerfil[];
 };
 
-export type PerfilUpdate = {
+type PerfilUpdate = {
   bio?: string;
   avatar_url?: string;
 };

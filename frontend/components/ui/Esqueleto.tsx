@@ -1,4 +1,4 @@
-export function Esqueleto({ className }: { className?: string }) {
+function Esqueleto({ className }: { className?: string }) {
   return (
     <span
       aria-hidden="true"
