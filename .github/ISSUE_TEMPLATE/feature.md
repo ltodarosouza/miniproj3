@@ -5,7 +5,7 @@ title: "[feature] "
 labels: feature
 ---
 
-**Feature:** <!-- nome da feature; pode ser do CATALOGO.md ou ideia do time -->
+**Feature:** <!-- nome da feature; pode ser do docs/disciplina/CATALOGO.md ou ideia do time -->
 **Dono:** <!-- @username, o mesmo do DECISIONS.md -->
 **Por que ela entra no produto:** <!-- uma frase -->
 

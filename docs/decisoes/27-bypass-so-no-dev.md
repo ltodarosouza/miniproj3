@@ -4,7 +4,7 @@
   `DEBUG=true` nasceu na Fase 0 para testar rotas antes da auth existir, e a
   decisão 10 o manteve para o dev (fixtures do `conftest.py` e fallback do
   `lib/api.ts`). A única proteção em produção era a frase "nunca liguem DEBUG"
-  em `docs/guias/08-deploy.md`. Se alguém ligasse `DEBUG=true` no painel do
+  em `docs/disciplina/guias/08-deploy.md`. Se alguém ligasse `DEBUG=true` no painel do
   Render, ou commitasse um `.env` com isso (o `main.py` carrega `.env` no boot),
   qualquer pessoa na URL pública viraria qualquer usuário com um header. A
   auditoria reproduziu: com `DEBUG=true`, `GET /auth/eu` só com `X-User-Id: 1`
