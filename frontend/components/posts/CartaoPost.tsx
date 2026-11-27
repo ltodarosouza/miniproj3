@@ -221,6 +221,14 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApaga
                             <span aria-hidden="true">·</span>
                             <time className="shrink-0" dateTime={post.created_at}>{horaDoDiario(post.created_at)}</time>
                           </span>
+                          {/* Abaixo de 400 px a habilidade desce para uma linha própria em vez de sumir. */}
+                          {post.habilidade && (
+                            <span className="mt-1 flex min-[400px]:hidden">
+                              <span className="truncate rounded-controle border border-linha px-1.5 py-px font-mono text-xs leading-5 text-texto">
+                                {post.habilidade.nome}
+                              </span>
+                            </span>
+                          )}
                         </span>
                         {post.habilidade && (
                           <span className="hidden shrink-0 rounded-controle border border-linha px-1.5 py-0.5 font-mono text-xs text-texto min-[400px]:inline">

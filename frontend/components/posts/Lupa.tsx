@@ -164,7 +164,7 @@ export function Lupa({
             src={src}
             alt={alt}
             style={zoom ? { transform: "scale(2)", transformOrigin: `${zoom.x}% ${zoom.y}%` } : undefined}
-            className="block max-h-[calc(100dvh-2*var(--respiro)-4.875rem)] max-w-[calc(100vw-2*var(--respiro)-1.125rem)] object-contain transition-transform duration-[var(--medio)] ease-saida motion-reduce:transition-none"
+            className="block max-h-[calc(100dvh-2*var(--respiro)-4.875rem)] max-[399px]:max-h-[calc(100dvh-2*var(--respiro)-6.625rem)] max-w-[calc(100vw-2*var(--respiro)-1.125rem)] object-contain transition-transform duration-[var(--medio)] ease-saida motion-reduce:transition-none"
           />
         </button>
       </figure>
