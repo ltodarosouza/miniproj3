@@ -129,9 +129,11 @@ export function Lupa({
         evento.preventDefault();
         aoFecharAtual.current();
       }}
-      onClose={() => {
+      onClose={(evento) => {
         // O navegador pode fechar sozinho (Esc repetido no Chrome): limpa e avisa o cartão.
-        if (!liberar.current) return;
+        // O evento close chega depois, numa tarefa à parte: se a lupa já foi reaberta,
+        // ele é de um fechamento anterior e não pode derrubar a abertura nova.
+        if (evento.currentTarget.open || !liberar.current) return;
         encerrar();
         aoFecharAtual.current();
       }}
