@@ -49,7 +49,8 @@ Regras:
   diz que é uma troca. Use `Botao variante="troca"` (ex.: "Propor troca") e o
   destaque de match só onde a tela trata uma troca. Mel ocupa no máximo 5% da
   tela.
-- O tema segue o sistema. Os dois temas têm contraste AA.
+- O tema segue o sistema. A meta é contraste AA (4,5:1 no texto pequeno) nos dois
+  temas; confira cada combinação nova, porque nem todas foram medidas.
 
 ## Tipografia
 
@@ -192,9 +193,11 @@ escuro. Campos têm 16 px no celular para evitar zoom no iOS e altura de 44 px.
   `EsqueletoLista` ao carregar, `PuxarParaAtualizar` na lista e `ToqueDuplo`
   na foto. Posts dentro de `Revelar`, com `atraso` de 40 ms por
   item até o sexto (`frontend/app/feed/page.tsx`).
-- **Matches:** seção "Match de troca" primeiro, em destaque com `troca` (mel);
-  depois "Pode te ensinar". Cada pessoa num `Cartao interativo` com
-  `Botao variante="troca"` para conversar.
+- **Matches:** duas tabelas (`TabelaPares` em `frontend/app/matches/page.tsx`):
+  "01 · Pares de troca" primeiro, com as colunas Pessoa, Te ensina e Você
+  ensina, e depois "02 · Pode te ensinar". Cada linha termina num link
+  "Conversar" (`BotaoLink tamanho="sm"`), com `variante="troca"` nos pares de
+  troca e `variante="secundario"` em "Pode te ensinar".
 - **Perfil:** cabeçalho com `Avatar tamanho="lg"`, contadores com `numeros`,
   nota com `Estrelas`, habilidades em `TagHabilidade`. Edição de habilidades
   em `EditorHabilidades` (`frontend/components/perfil/`).
