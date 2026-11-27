@@ -108,6 +108,13 @@ cartão da troca na conversa mostra **Enviar avaliação** para as duas pessoas.
 - **3:10–3:40 — Nicho na interface:** mostrar habilidades, post de estudo e exemplos do seed.
 - **3:40–4:00 — Decisão:** resumir o que foi escolhido e o corte da troca recíproca pura.
 
+### Demo curta (46 s)
+
+Para abrir a apresentação ou mandar junto com o link, há uma demo animada com as telas reais do app
+(feed com fotos, registrar estudo, Sua semana e Mais estudadas, matches, conversa com agendamento,
+avaliação, notificações e lupa). Abra [`docs/demo/index.html`](demo/index.html) no navegador; o
+[guia da demo](demo/README.md) explica como gerar o MP4 e refazer as capturas.
+
 ## Roteiro do pitch (3 min)
 
 - **0:00–0:40:** público: iniciantes em tech, universitários, alunos de bootcamp e pessoas
