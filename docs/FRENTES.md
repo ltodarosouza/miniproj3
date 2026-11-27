@@ -1,5 +1,7 @@
 # Frentes do time
 
+> Plano de divisão escrito no começo do projeto. O estado final de cada feature, com dono e motivo, está em [Features no DECISIONS.md](../DECISIONS.md#features); as decisões ficam em [docs/decisoes/](decisoes/).
+
 Quatro frentes, uma por pessoa. Cada dono faz a sua feature de ponta a ponta:
 model, service, router, tela e, quando houver, a estrutura em `core/`
 (guia 07). Rotas e campos abaixo são o contrato combinado entre as frentes.

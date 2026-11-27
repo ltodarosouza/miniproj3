@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { prefereMenosMovimento } from "@/lib/movimento";
 
 type Particula = {
@@ -108,15 +107,4 @@ export function celebrar(): void {
   }
 
   quadro = requestAnimationFrame(desenhar);
-}
-
-export function Celebrar({ quando }: { quando: boolean }): null {
-  const anterior = useRef(false);
-
-  useEffect(() => {
-    if (quando && !anterior.current) celebrar();
-    anterior.current = quando;
-  }, [quando]);
-
-  return null;
 }

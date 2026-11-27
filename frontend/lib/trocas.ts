@@ -9,7 +9,7 @@ export type MatchesComAndamento = Matches & {
   em_andamento: Match[];
 };
 
-export type PropostaDeTroca = {
+type PropostaDeTroca = {
   com_username: string;
   data_hora: string;
   habilidade_ensino_id: number | null;
@@ -31,7 +31,7 @@ export function listarMatchesComAndamento(): Promise<MatchesComAndamento> {
   }));
 }
 
-export type StatusDaOrdem = "aberta" | "confirmada" | "concluida" | "recusada";
+type StatusDaOrdem = "aberta" | "confirmada" | "concluida" | "recusada";
 
 export const ROTULO_STATUS: Record<StatusDaOrdem, string> = {
   aberta: "aberta",

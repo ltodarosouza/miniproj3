@@ -37,7 +37,7 @@ export type Comentario = {
   created_at: string;
 };
 
-export type NovoPost = {
+type NovoPost = {
   texto: string;
   habilidade_id: number | null;
   minutos_estudados: number | null;
@@ -51,8 +51,8 @@ export type HabilidadesAgrupadas = {
 export const LIMITE_TEXTO_POST = 1000;
 export const LIMITE_TEXTO_COMENTARIO = 500;
 export const LIMITE_MINUTOS = 1440;
-export const LIMITE_BYTES_IMAGEM = 2 * 1024 * 1024;
-export const TIPOS_IMAGEM = ["image/jpeg", "image/png", "image/webp"];
+const LIMITE_BYTES_IMAGEM = 2 * 1024 * 1024;
+const TIPOS_IMAGEM = ["image/jpeg", "image/png", "image/webp"];
 export const EVENTO_POSTS_MUDARAM = "troca:posts-mudaram";
 
 function avisarPostsMudaram(): void {
@@ -94,7 +94,7 @@ export function buscarPost(id: number): Promise<Post> {
   return apiGet(`/posts/${id}`);
 }
 
-export type EdicaoPost = Partial<NovoPost>;
+type EdicaoPost = Partial<NovoPost>;
 
 export function editarPost(id: number, dados: EdicaoPost): Promise<Post> {
   return apiPatch(`/posts/${id}`, dados);

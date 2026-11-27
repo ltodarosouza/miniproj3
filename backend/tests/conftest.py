@@ -20,7 +20,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 MSG_AUTH = (
     "auth ainda não implementada — este teste depende de registro/login. "
-    "Siga docs/guias/01-autenticacao.md."
+    "Siga docs/disciplina/guias/01-autenticacao.md."
 )
 
 SENHA_PADRAO = "senha-forte-123"

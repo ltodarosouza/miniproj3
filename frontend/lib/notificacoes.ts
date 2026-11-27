@@ -20,11 +20,11 @@ export type Notificacao = {
 
 export type GrupoData = "Hoje" | "Esta semana" | "Antes";
 
-export function listarNotificacoes(offset = 0, limit = 50): Promise<Page<Notificacao>> {
+function listarNotificacoes(offset = 0, limit = 50): Promise<Page<Notificacao>> {
   return apiGet(`/notificacoes?offset=${offset}&limit=${limit}`);
 }
 
-export type PaginaNotificacoes = Page<Notificacao> & { proximo_cursor: string | null };
+type PaginaNotificacoes = Page<Notificacao> & { proximo_cursor: string | null };
 
 export async function listarPaginaNotificacoes(
   limit = 50,
@@ -42,9 +42,9 @@ export function chaveDaNotificacao(n: Notificacao): string {
   return `${n.tipo}-${n.em}-${n.ator.id}-${n.post_id ?? ""}-${n.troca_id ?? ""}`;
 }
 
-export type NaoLidas = { total: number; ultima_em: string | null };
+type NaoLidas = { total: number; ultima_em: string | null };
 
-export function consultarNaoLidas(): Promise<NaoLidas> {
+function consultarNaoLidas(): Promise<NaoLidas> {
   return apiGet<NaoLidas>("/notificacoes/nao-lidas");
 }
 
@@ -77,7 +77,7 @@ export function grupoDaData(iso: string): GrupoData {
   return "Antes";
 }
 
-export type HorarioNotificacao = { hora: string; dia: string | null };
+type HorarioNotificacao = { hora: string; dia: string | null };
 
 export function horarioDaNotificacao(iso: string): HorarioNotificacao {
   const grupo = grupoDaData(iso);

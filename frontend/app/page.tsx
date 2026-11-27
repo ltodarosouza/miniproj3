@@ -36,6 +36,19 @@ const PASSOS = [
   },
 ] as const;
 
+const CENAS_DA_DEMO = [
+  "Abertura: o logo do Colmatch e a frase “Troque conhecimento com quem estuda o mesmo que você.”",
+  "Feed: posts de rotina de estudo com foto; o post da Julia, sobre 25 minutos de Python, fica em destaque.",
+  "Registrar estudo: a Ada abre o formulário, escreve que revisou flexbox e grid, escolhe CSS, informa 45 minutos, anexa uma foto e publica.",
+  "Sua semana: as horas estudadas da Ada sobem de 3h20 para 4h05, e CSS passa ao 1º lugar em Mais estudadas.",
+  "Matches: a Ana Borges aparece em Pares de troca (ensina CSS e quer aprender Estrutura de Dados); abaixo, a lista Pode te ensinar. A Ada clica em Conversar.",
+  "Conversa: a Ada manda uma mensagem, abre o perfil da Ana e usa Agendar troca para escolher dia e horário.",
+  "Google Agenda: a Ana confirma; o cartão da troca mostra Agendar no Google Agenda, que abre o evento já preenchido com título, dia, 19:00–20:00 e quem ensina o quê. Ao salvar, o Google adiciona o Meet se a conta tiver o Meet automático ativado.",
+  "Avaliação: numa troca que já aconteceu com o Linus, a Ada dá 5 estrelas, escreve um recado e envia.",
+  "Notificações: confirmação da troca, curtidas, comentários e novos seguidores.",
+  "Fechamento: “Aprenda junto.” e o endereço do deploy, miniproj3.vercel.app.",
+] as const;
+
 function TickerDePares() {
   const [pausado, setPausado] = useState(false);
   const itens = PARES.map(([a, b]) => `${a} ↔ ${b}`);
@@ -112,6 +125,41 @@ export default function Inicio() {
             Já tenho conta
           </BotaoLink>
         </div>
+      </section>
+
+      <section aria-labelledby="demo" className="pb-12 sm:pb-16">
+        <h2 id="demo" className="text-[0.8125rem] font-semibold text-texto-2">
+          Veja em 46 segundos
+        </h2>
+        <video
+          className="mt-4 aspect-video w-full rounded-cartao border border-linha bg-superficie"
+          controls
+          muted
+          playsInline
+          preload="metadata"
+          poster="/demo/colmatch-demo-poster.webp"
+          aria-describedby="demo-descricao"
+        >
+          <source src="/demo/colmatch-demo.mp4" type="video/mp4" />
+        </video>
+        <p id="demo-descricao" className="mt-3 text-sm leading-relaxed text-texto-2">
+          Demonstração sem som: registrar um estudo, encontrar um par em Matches, combinar e agendar a
+          troca na conversa, levar para o Google Agenda e avaliar depois.{" "}
+          <a
+            href="/demo/colmatch-demo.mp4"
+            className="font-medium text-texto underline decoration-linha-forte underline-offset-4 hover:decoration-texto"
+          >
+            Abrir o vídeo
+          </a>
+        </p>
+        <details className="mt-3 text-sm leading-relaxed text-texto-2">
+          <summary className="cursor-pointer font-medium text-texto">Descrição das cenas</summary>
+          <ol className="mt-3 list-decimal space-y-2 pl-5">
+            {CENAS_DA_DEMO.map((cena) => (
+              <li key={cena}>{cena}</li>
+            ))}
+          </ol>
+        </details>
       </section>
 
       <TickerDePares />

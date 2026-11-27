@@ -119,12 +119,12 @@ export type Page<T> = {
   limit: number;
 };
 
-export type Credenciais = {
+type Credenciais = {
   username: string;
   password: string;
 };
 
-export type DadosRegistro = Credenciais & {
+type DadosRegistro = Credenciais & {
   name: string;
 };
 
@@ -180,7 +180,7 @@ export type Troca = {
   link_google_agenda: string;
 };
 
-export type Avaliacao = {
+type Avaliacao = {
   id: number;
   troca_id: number;
   de: User;

@@ -30,7 +30,7 @@ def checa_python() -> None:
         falha(
             f"python {v.major}.{v.minor} — precisa de 3.11+. "
             "Instale via https://docs.astral.sh/uv/ (uv python install 3.12) "
-            "e rode sempre com 'uv run' (ver docs/guias/00-setup.md)"
+            "e rode sempre com 'uv run' (ver docs/disciplina/guias/00-setup.md)"
         )
 
 
@@ -85,7 +85,7 @@ def main() -> None:
     checa_backend()
     print()
     if ERROS:
-        print(f"{len(ERROS)} problema(s). Corrija acima e rode de novo (docs/guias/00-setup.md ajuda).")
+        print(f"{len(ERROS)} problema(s). Corrija acima e rode de novo (docs/disciplina/guias/00-setup.md ajuda).")
         sys.exit(1)
     print("tudo verde — próximos passos: make seed, make dev-back, make dev-front")
 

@@ -10,15 +10,20 @@ mundo já sabe usar (feed no centro, navegação no topo, cartões de post),
 executado com o capricho de Threads/Bluesky (espaço, foco no texto) e de
 Linear (detalhes finos, movimento suave).
 
-- **Acolhedora:** cantos arredondados, verde-azulado calmo, linguagem leve. O
-  iniciante não pode se sentir avaliado.
-- **Limpa:** neutros com um toque de verde-azulado e uma cor de destaque só.
-  Muito espaço, pouca borda.
+- **Acolhedora:** linguagem leve. O iniciante não pode se sentir avaliado.
+- **Limpa:** neutros quentes e uma cor de destaque só (o mel). Espaço sem
+  função cortado; listas com divisórias finas.
 - **Fluida:** as coisas respondem ao que você faz (tocar, curtir, enviar,
   arrastar) e assentam com suavidade. Nada segue o mouse.
 
-O nome "Troca" na navegação é provisório: troque a constante `NOME_REDE` em
-`frontend/lib/marca.ts` quando o time escolher o nome.
+O nome da rede é Colmatch ([decisão 32](docs/decisoes/32-identidade-colmatch-bolsa-de-saberes.md)).
+O texto vem da constante `NOME_REDE` em `frontend/lib/marca.ts` (título da página,
+manifest e rótulos acessíveis); a marca desenhada na navegação ("Col" + "match" e o
+favo) fica em `frontend/components/ui/Logo.tsx`.
+
+A identidade atual, "Bolsa de saberes" (mel e grafite, painéis densos e réguas
+finas), vale sobre a direção acima. O logo está na
+[decisão 40](docs/decisoes/40-logo-colmeia.md).
 
 ## Cores
 
@@ -33,39 +38,44 @@ tokens, que mudam sozinhos no tema escuro.
 | `superficie-2` | `bg-superficie-2` | Hover, áreas recuadas |
 | `linha` / `linha-forte` | `border-linha` | Bordas e divisórias |
 | `texto` / `texto-2` / `texto-3` | `text-texto` | Principal, secundário, apagado |
-| `marca` / `marca-forte` / `marca-suave` | `bg-marca` | Verde-azulado: ações principais, link ativo, "sei" |
-| `troca` / `troca-suave` | `bg-troca` | Laranja: o que fecha um match de troca e a chama da sequência |
+| `marca` / `marca-forte` / `marca-suave` | `bg-marca` | Mel: ações principais, item ativo do menu, tags "sei" |
+| `troca` / `troca-suave` | `bg-troca` | Mesmo mel de `marca`: o que fecha um match de troca |
 | `estrela` | `text-estrela` | Avaliações |
 | `perigo` / `sucesso` | `text-perigo` | Erros e confirmações |
 
 Regras:
 
 - Uma ação primária (`marca`) por tela.
-- O laranja (`troca`) é raro de propósito: aparece no "Match de troca", no
-  botão "Propor troca", na habilidade que fecha a troca e na chama da
-  sequência, por ser a cor natural do fogo. Se aparecer em todo lugar, perde
-  o significado.
-- O tema segue o sistema. Os dois temas têm contraste AA.
+- `troca` usa o mesmo mel de `marca` (decisão 32), então a cor sozinha não
+  diz que é uma troca. Use `Botao variante="troca"` (ex.: "Propor troca") e o
+  destaque de match só onde a tela trata uma troca. Mel ocupa no máximo 5% da
+  tela.
+- O tema segue o sistema. A meta é contraste AA (4,5:1 no texto pequeno) nos dois
+  temas; confira cada combinação nova, porque nem todas foram medidas.
 
 ## Tipografia
 
-Geist para tudo e Geist Mono só para tempo de estudo, números e código.
+Literata (`font-display`, `font-conteudo`) nos títulos e no texto dos posts;
+Fira Sans (`font-sans`) na interface; IBM Plex Mono (`font-mono`) só para dados,
+com números tabulares. Ver [decisão 32](docs/decisoes/32-identidade-colmatch-bolsa-de-saberes.md).
 
 | Papel | Classes |
 |---|---|
-| Título de página | `text-[2rem] font-semibold tracking-[-0.025em] leading-tight` |
+| Título de página | `font-display text-[2rem] tracking-[-0.025em] leading-tight`, com `font-bold` ou `font-semibold` (ex.: Pares e Busca) |
 | Título de seção | `text-lg font-semibold tracking-tight` |
-| Texto de post | `text-[0.9375rem] leading-relaxed max-w-[65ch]` |
+| Texto de post | `font-conteudo text-base leading-relaxed max-w-[65ch]` |
 | Secundário | `text-sm text-texto-2` |
 | Números | `numeros` (algarismos de mesma largura) e, para tempo, `font-mono` |
 
-Pesos: 400, 500 e 600. Nada de negrito 700+ nem itálico decorativo.
+Pesos: 400, 500 e 600; alguns títulos de página usam 700. Nada de itálico decorativo.
 
 ## Forma e espaço
 
-- Raio: `rounded-cartao` (14px) para cartões e quadros, `rounded-controle`
-  (10px) para botões e campos, `rounded-full` para tags e avatares.
-- Sombra: `shadow-cartao` em repouso, `shadow-alta` em destaque ou hover.
+- Raio: `rounded-cartao` (6px) para cartões e painéis, `rounded-controle`
+  (4px) para botões e campos. Tags usam `rounded-[2px]`; avatares são
+  hexágonos (`clip-path`), como o nó de match.
+- Sombra: nenhuma em cartões (`--sombra` é `none`). `shadow-alta` só no que flutua:
+  popover, menu, toast e modal (ex.: Agendar troca).
 - Cada página escolhe a própria largura. Feed e textos longos podem usar
   `max-w-2xl`.
 - Espaço: grupos apertados (`gap-2`/`gap-3`), seções bem separadas (`gap-8`
@@ -80,32 +90,34 @@ Todos em `frontend/components/ui/`. Importe com `@/components/ui/<Nome>`.
 |---|---|---|
 | `Botao` | Qualquer ação | `variante`: `primario`, `secundario`, `fantasma`, `troca`; `tamanho`: `sm`, `md`; `carregando`; `magnetico` é aceito, mas sem efeito |
 | `Campo`, `AreaTexto` | Formulários | `rotulo` (obrigatório), `dica`, `erro` |
-| `Cartao` | Post, match, perfil | `interativo` reforça borda e sombra no hover, sem mover |
-| `Avatar` | Foto ou iniciais | `nome`, `url`, `tamanho`: `sm`, `md`, `lg`; `online` |
-| `TagHabilidade` | Habilidade | `nome`, `tipo`: `sei`, `quero_aprender`, `neutra`; `nivel` (1–5); `destaque` (fecha troca) |
+| `Cartao` | Post, match, perfil | `interativo` reforça a borda no hover, sem mover; `rotulo` ("01 · Título") numera a seção |
+| `Avatar` | Foto ou iniciais | `nome`, `url`, `tamanho`: `sm`, `md`, `lg` |
+| `TagHabilidade` | Habilidade | `nome`, `tipo`: `sei`, `quero_aprender` (ou `quero`), `neutra`; `nivel` (1–5); `destaque` (fecha troca) |
 | `Estrelas` | Nota | `valor`; com `aoMudar` vira interativa |
 | `BotaoCurtir` | Curtida | `curtido`, `total`, `aoAlternar` |
-| `QuadroArrastavel` | Mover itens entre colunas | `colunas`, `aoMover`, `renderItem` |
 | `Revelar` | Aparecer ao rolar | `atraso` (ms) para escalonar listas |
 | `Navegacao` | Barra do topo | já está no layout |
 | `Icone` | Ícones | `nome`, `tamanho`, `preenchido` |
 | `Folha` | Opções em painel inferior | Alça de arraste; janela centralizada no computador |
 | `ToqueDuplo` | Curtir foto com dois toques | Mostra um coração grande |
-| `Celebrar` | Confete leve | `celebrar()` ao concluir uma ação |
+| `celebrar()` (em `Celebrar.tsx`) | Confete leve | Chamada ao concluir uma ação |
 | `PuxarParaAtualizar` | Atualizar lista no celular | Envolve uma lista atualizável |
-| `Esqueleto`, `EsqueletoPost`, `EsqueletoLista` | Carregamento | Esqueleto com brilho |
+| `EsqueletoPost`, `EsqueletoLista` | Carregamento | Blocos com pulso de opacidade |
 | `SeloContador` | Contador pequeno | Badge numérico |
-| `Streak` | Sequência de estudo | Chama e número de dias |
+| `Streak` | Sequência de estudo | Barras da semana e número de dias |
 | `NavegacaoLateral` | Navegação no computador | Painel lateral flutuante |
 | `CabecalhoCelular` | Navegação no celular | Cabeçalho fino com sequência e avisos |
 | `BarraInferior` | Navegação no celular | Cinco destinos fixos |
-| `useNaoLidas` | Badges de mensagens e notificações | Polling com aba visível |
+| `useSelos` | Badges de mensagens, notificações e avaliações | Polling com aba visível |
 | `useStreak` | Sequência de estudo | Carrega sequência e último post |
 
-Exemplos de uso de cada um estão em `frontend/app/design/page.tsx`.
+A vitrine `/design` (`frontend/app/design/page.tsx`) mostra os componentes visuais da tabela;
+o `EsqueletoPost` aparece dentro da amostra de `EsqueletoLista`. A casca (`Navegacao`,
+`NavegacaoLateral`, `CabecalhoCelular`, `BarraInferior`) e os hooks `useSelos` e `useStreak`
+não estão na vitrine: eles vivem no layout, montados por `frontend/components/ui/Navegacao.tsx`.
 
 Precisa de um ícone novo? Adicione o caminho SVG em `Icone.tsx`, no mesmo
-traço (24×24, linha 1.7, pontas arredondadas). Nada de emoji no lugar de
+traço (24×24, linha 1.5, pontas arredondadas). Nada de emoji no lugar de
 ícone.
 
 ## Movimento
@@ -117,23 +129,22 @@ responde a ação, nunca à posição do mouse. Ele já está pronto nos compone
 | Efeito | Onde já está | Quando usar |
 |---|---|---|
 | Página entra com leve subida e desfoque | `app/template.tsx`, automático | Toda navegação |
-| Arrastar com inclinação e assentamento com mola | `QuadroArrastavel` | Editor de habilidades (Sei / Quero aprender) |
 | Aparecer ao rolar | `Revelar` | Listas do feed, seções do perfil, matches |
 | Coração que pulsa | `BotaoCurtir` | Curtidas |
 | Partículas da curtida | `BotaoCurtir` | Ao curtir |
 | Contador animado | `BotaoCurtir` | Ao mudar o total de curtidas |
 | Toque duplo e coração grande | `ToqueDuplo` | Foto de post |
 | Folha que sobe | `Folha` | Opções no celular |
-| Confete leve | `Celebrar` / `celebrar()` | Ações concluídas |
+| Confete leve | `celebrar()` | Ações concluídas |
 | Puxar para atualizar | `PuxarParaAtualizar` | Listas no celular |
-| Brilho do esqueleto | `Esqueleto`, `EsqueletoPost`, `EsqueletoLista` | Conteúdo carregando |
+| Pulso do esqueleto | `EsqueletoPost`, `EsqueletoLista` | Conteúdo carregando |
 | Vibração curta | `vibrar()` em `lib/movimento.ts` | Curtir, seguir e toque duplo; troca ao confirmar |
-| Estrelas que acendem em sequência | `Estrelas` interativa | Avaliação pós-troca |
+| Estrelas com escala ao tocar | `Estrelas` interativa | Avaliação pós-troca |
 
 Regras:
 
 - Curva padrão: `ease-saida` (desacelera suave). A curva `ease-mola`, com um
-  leve passar do ponto, fica só para elementos pequenos (coração e estrelas).
+  leve passar do ponto, fica só para elementos pequenos (coração).
 - Durações: `--rapido` (160ms) para cor e hover, `--medio` (320ms) para
   posição, `--lento` (640ms) para entradas.
 - Um efeito de destaque por tela. Se tudo se mexe, nada chama atenção.
@@ -144,58 +155,21 @@ Regras:
 
 ## Navegação e celular
 
-No computador (a partir de 1024 px), a casca usa um painel lateral flutuante à
-esquerda, com logo, sequência, Feed, Buscar, Matches, Mensagens, Notificações,
-Perfil, Publicar, tema e Sair. Entre 1024 e 1279 px, mostra só ícones; a partir
-de 1280 px, ícones e rótulos. O item ativo fica verde-azulado, com marcador na
-borda do painel. A área central tem pelo menos 960 px a partir de 1280 px.
+A casca é um painel lateral no computador (a partir de 1024 px) e cabeçalho fino com barra
+inferior no celular. Larguras, alturas, variáveis CSS e a régua de alinhamento estão nas
+decisões [20](docs/decisoes/20-casca-de-rede-social.md) e
+[24](docs/decisoes/24-regua-de-alinhamento.md); os selos de mensagens e notificações, na
+[21](docs/decisoes/21-notificacoes-na-leitura.md); a sequência de estudo, na
+[23](docs/decisoes/23-streak-no-fuso-do-brasil.md). Os valores valem como estão no código
+(`frontend/components/ui/casca.ts` e `globals.css`); este guia não os repete.
 
-No celular (abaixo de 1024 px), há um cabeçalho fino com logo, sequência,
-notificações, mensagens e "Mais opções". Esse botão abre uma `Folha` com tema
-e sair. A barra inferior fixa e plana tem Feed, Buscar, Publicar (+), Matches
-e Perfil, e respeita a área segura do iPhone. Publicar e + levam a
-`/feed?publicar=1`.
+## Telas
 
-As variáveis da casca são `--altura-navegacao` (3,5 rem no celular, 0 no
-computador logado), `--altura-barra-inferior` (4 rem mais área segura no
-celular, 0 no computador) e `--largura-lateral`. Valem quando `<html
-data-logado="sim">`; um script no `<head>` define esse atributo antes da
-pintura. Exemplo: `h-[calc(100dvh-var(--altura-navegacao)-var(--altura-barra-inferior))]`.
-
-Mensagens usam `GET /dms/nao-lidas` (C1) e notificações usam
-`GET /notificacoes/nao-lidas` (C2). Os badges consultam a cada 15 s com a aba
-visível e ao trocar de rota. Erro ou 404 remove o badge e interrompe consultas
-àquele endpoint até recarregar.
-
-A sequência fica sempre visível, com chama e número na lateral e no cabeçalho
-do celular. Vem de `GET /usuarios/{eu}` (`streak`) e do último post, contado
-em UTC como no backend. A chama fica laranja quando a pessoa já postou hoje e
-cinza quando falta; o número usa a cor do texto para manter contraste AA. A
-dica é "Poste hoje para manter sua sequência de N dias". Clicar leva para
-Publicar.
-
-O app é instalável como PWA, com `display: standalone`, ícones 192, 512,
-maskable e `apple-touch-icon`, `viewport-fit=cover` e `theme-color` claro ou
-escuro. Campos têm 16 px no celular para evitar zoom no iOS e altura de 44 px.
-`Botao tamanho="sm"` também mantém alvo de toque de 44 px no celular.
-
-## Telas: padrão sugerido
-
-- **Feed:** coluna `max-w-2xl`, formulário de novo post no topo, use
-  `EsqueletoLista` ao carregar, `PuxarParaAtualizar` na lista e `ToqueDuplo`
-  na foto. Posts em `Cartao interativo` dentro de `Revelar` com
-  `atraso={i * 60}` (máximo 6 itens escalonados).
-- **Matches:** seção "Match de troca" primeiro, em destaque com o laranja;
-  depois "Pode te ensinar". Cada pessoa num `Cartao interativo` com
-  `Botao variante="troca"` para conversar.
-- **Perfil:** cabeçalho com `Avatar tamanho="lg"`, contadores com `numeros`,
-  nota com `Estrelas`, habilidades em `TagHabilidade`. Edição de habilidades
-  com `QuadroArrastavel`.
-- **Mensagens:** lista de conversas à esquerda no desktop e tela cheia no
-  celular. Balões em `bg-marca-suave` (meus) e `bg-superficie-2` (dele).
-- **Estados:** toda lista tem estado vazio com uma frase e uma ação ("Você
-  ainda não segue ninguém. Veja seus matches"), carregando com
-  `Botao carregando` ou um texto curto, e erro dizendo o que fazer.
+Antes de criar uma tela, copie a estrutura da tela parecida que já existe: feed em
+`frontend/app/feed/page.tsx`, matches em `frontend/app/matches/page.tsx`, perfil em
+`frontend/app/perfil/[username]/page.tsx` e conversa em `frontend/app/mensagens/[username]/page.tsx`.
+Toda lista tem estado vazio com uma frase e uma ação, um estado de carregamento e um erro que
+diz o que fazer.
 
 ## Não fazer
 

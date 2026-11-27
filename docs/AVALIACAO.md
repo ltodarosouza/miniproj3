@@ -1,7 +1,7 @@
 # Roteiro de avaliação
 
 Este roteiro é para a banca reproduzir os critérios e para o time preparar a apresentação.
-Consulte também a [rubrica completa](../RUBRICA.md), o [README do projeto](../README.md) e as
+Consulte também a [rubrica completa](disciplina/RUBRICA.md), o [README do projeto](../README.md) e as
 [decisões de produto e técnicas](../DECISIONS.md).
 
 ## Critérios e evidências
@@ -21,7 +21,7 @@ Consulte também a [rubrica completa](../RUBRICA.md), o [README do projeto](../R
 | Código 3 — cada coisa no seu lugar | [routers](../backend/app/routers/), [services](../backend/app/services/), [core](../backend/app/core/) | Confira router fino, regra no service e estrutura de dados em `core/`. |
 | Código 4 — sem sobra | [backend/app](../backend/app/), [frontend/app](../frontend/app/) | Procure código comentado, `print` de debug e funções sem chamada. |
 | Código 5 — escolha técnica explicada | [DECISIONS.md, escolha técnica](../DECISIONS.md#uma-escolha-técnica), [match](../backend/app/core/matches.py), [benchmark](../backend/scripts/bench_matches.py) | Leia a justificativa do índice invertido; se desejarem medir, executem `make bench`. |
-| Deploy público (+10) | [aplicação publicada](https://miniproj3.vercel.app), [guia de deploy](guias/08-deploy.md) | Tente o fluxo principal na URL; o bônus depende de o deploy estar disponível para uso. |
+| Deploy público (+10) | [aplicação publicada](https://miniproj3.vercel.app), [guia de deploy](disciplina/guias/08-deploy.md) | Tente o fluxo principal na URL; o bônus depende de o deploy estar disponível para uso. |
 | Destaque da turma (+2) | [DECISIONS.md](../DECISIONS.md) | Compare clareza do público, do escopo e das escolhas com os demais times. |
 
 ## Fluxo principal passo a passo
@@ -55,11 +55,10 @@ seguir](../frontend/components/ui/BotaoSeguir.tsx).
 
 ### Alternativa local com seed
 
-Na raiz, rode `make seed` em um banco vazio. O script cria 32 contas, 56 posts, metade com foto, follows, mensagens
-e trocas; todas as contas do seed usam a senha `senha-forte-123`
-([`SENHA_SEED`](../backend/scripts/seed.py)). Para a demo, entre em `/login` com `ada`, `linus`
-ou `grace` e essa senha. O seed não roda se já houver usuários no banco; o README descreve a
-preparação local e os comandos de execução.
+Os comandos para rodar na máquina e as contas prontas (`ada`, `linus`, `grace`) estão no README:
+[Como rodar localmente](../README.md#como-rodar-localmente) e
+[Contas de demonstração](../README.md#contas-de-demonstração). O `make seed` só popula um banco
+vazio.
 
 ## Features fortes para o vídeo
 
@@ -85,7 +84,7 @@ a conversa aparece com **Avaliar troca** na lista e o próprio cartão da troca 
 o [formulário](../frontend/components/trocas/FormAgendarTroca.tsx), o [cartão de
 troca](../frontend/components/trocas/CartaoTroca.tsx), o [formulário de
 avaliação](../frontend/components/avaliacoes/AvaliarTroca.tsx) e as decisões
-[8](../DECISIONS.md#8-troca-proposta-no-chat-avaliada-só-depois-do-horário), [17](../DECISIONS.md#17-do-match-à-troca-horário-por-toque-habilidades-do-par-e-meet-pelo-google-agenda), [28](decisoes/28-troca-so-avalia-o-que-aconteceu.md) e [39](decisoes/39-ranking-por-horas-respiro-e-avaliacao-na-conversa.md).
+[8](decisoes/08-troca-proposta-no-chat.md), [17](decisoes/17-do-match-a-troca.md), [28](decisoes/28-troca-so-avalia-o-que-aconteceu.md) e [39](decisoes/39-ranking-por-horas-respiro-e-avaliacao-na-conversa.md).
 
 O seed cria conversas para os oito primeiros pares fixos; os cinco primeiros já têm troca
 confirmada no passado com avaliação dos dois lados, e outro par fica com uma proposta pendente
@@ -110,10 +109,14 @@ cartão da troca na conversa mostra **Enviar avaliação** para as duas pessoas.
 
 ### Demo curta (46 s)
 
-Para abrir a apresentação ou mandar junto com o link, há uma demo animada com as telas reais do app
+Para abrir a apresentação ou mandar junto com o link, há uma demo sem som com as telas reais do app
 (feed com fotos, registrar estudo, Sua semana e Mais estudadas, matches, conversa com agendamento,
-troca confirmada levada ao Google Agenda, avaliação e notificações). Abra [`docs/demo/index.html`](demo/index.html) no navegador; o
-[guia da demo](demo/README.md) explica como gerar o MP4 e refazer as capturas.
+troca confirmada levada ao Google Agenda, avaliação e notificações). Ela aparece na
+[página inicial do deploy](https://miniproj3.vercel.app) e no topo do README, e o arquivo está em
+[`frontend/public/demo/colmatch-demo.mp4`](../frontend/public/demo/colmatch-demo.mp4) (no deploy,
+`/demo/colmatch-demo.mp4`).
+Ela não substitui o vídeo de cerca de 4 minutos da rubrica, que mostra também cadastro, login e
+follow. O [guia da demo](demo/README.md) explica como gerá-la de novo.
 
 ## Roteiro do pitch (3 min)
 
@@ -134,27 +137,10 @@ troca confirmada levada ao Google Agenda, avaliação e notificações). Abra [`
   de quem pode ensinar.
 - **Por que avaliar só depois de uma troca?** A nota deve refletir uma troca que aconteceu,
   não uma promessa ou popularidade de perfil; por isso a avaliação abre após o horário de
-  uma troca confirmada ([decisão 8](../DECISIONS.md#8-troca-proposta-no-chat-avaliada-só-depois-do-horário) e [decisão 28](decisoes/28-troca-so-avalia-o-que-aconteceu.md)).
+  uma troca confirmada ([decisão 8](decisoes/08-troca-proposta-no-chat.md) e [decisão 28](decisoes/28-troca-so-avalia-o-que-aconteceu.md)).
 - **Por que o feed não é ranqueado por curtidas?** Para quem está aprendendo, importa
   descobrir quem estuda a habilidade; o feed cronológico inclui posts próprios, de quem
   segue e de pessoas relacionadas às habilidades ([decisão 5](../DECISIONS.md#5-feed-com-meus-posts-quem-eu-sigo-e-quem-pode-me-ensinar)).
-
-## Código: onde a banca olha
-
-- **Sem duplicação:** compare [services de domínio](../backend/app/services/) e [componentes
-  compartilhados](../frontend/components/); confirme se comportamentos repetidos usam uma
-  implementação comum.
-- **Nomes claros:** acompanhe nomes em português por [models](../backend/app/models/),
-  [schemas](../backend/app/schemas/) e [routers](../backend/app/routers/).
-- **Cada coisa no seu lugar:** veja [routers](../backend/app/routers/),
-  [services](../backend/app/services/) e [estruturas em core](../backend/app/core/); observe
-  se o router encaminha e o service concentra a regra.
-- **Sem sobra:** percorra [backend/app](../backend/app/) e [frontend/app](../frontend/app/) em
-  busca de código comentado, `print` de depuração ou função não usada.
-- **Escolha técnica explicada:** consulte [Uma escolha técnica](../DECISIONS.md#uma-escolha-técnica) e o [índice invertido de matches](../backend/app/core/matches.py). `make bench`
-  procura scripts `backend/scripts/bench_*.py`;
-  [bench_matches.py](../backend/scripts/bench_matches.py) permite conferir a comparação se
-  estiver presente.
 
 ## Nicho no seed e na interface
 
@@ -172,5 +158,5 @@ post](../frontend/components/posts/FormNovoPost.tsx), além de **Sei** e **Quero
 ## Nota final
 
 `make test` orienta o time e ajuda a percorrer cenários; os testes não valem nota, conforme a
-[rubrica](../RUBRICA.md#funcionamento-30). O destaque (+2) é comparativo entre os times e
+[rubrica](disciplina/RUBRICA.md#funcionamento-30). O destaque (+2) é comparativo entre os times e
 considera qual `DECISIONS.md` explica melhor o público, o que ficou de fora e por quê.

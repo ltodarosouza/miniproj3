@@ -21,7 +21,7 @@ export function listarConversasComStatus(): Promise<{ items: ConversaComStatus[]
   return apiGet("/dms");
 }
 
-export function buscarNaoLidas(): Promise<NaoLidasMensagens> {
+function buscarNaoLidas(): Promise<NaoLidasMensagens> {
   return apiGet("/dms/nao-lidas");
 }
 
