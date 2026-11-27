@@ -32,7 +32,7 @@ escopo detalhado de cada frente está em [docs/FRENTES.md](docs/FRENTES.md).
 
 ## Decisões de produto
 
-O time registrou 45 decisões à medida que o produto mudou (lista completa em [Todas as decisões](#todas-as-decisões)). Estas quatro são as que mudaram o que a rede é. A decisão 1 é a que vai para o vídeo e o pitch ([docs/AVALIACAO.md](docs/AVALIACAO.md)).
+O time registrou 46 decisões à medida que o produto mudou (lista completa em [Todas as decisões](#todas-as-decisões)). Estas quatro são as que mudaram o que a rede é. A decisão 1 é a que vai para o vídeo e o pitch ([docs/AVALIACAO.md](docs/AVALIACAO.md)).
 
 ### 1. Match em dois níveis
 
@@ -154,9 +154,11 @@ As quatro de cima estão neste arquivo; as outras ficam em `docs/decisoes/<núme
   Pedido direto do dono; refina a decisão 42 com legenda, fundo desfocado e rolagem travada.
 - [44. Recorte da foto do post e texto longo sem espaço](docs/decisoes/44-recorte-da-foto-e-texto-longo-sem-espaco.md).
   Pedido direto do dono; editor de recorte sem dependência nova e quebra de sequências longas no direct, posts e comentários.
-- [45. Demo em vídeo na página inicial e no README](docs/decisoes/45-demo-na-pagina-inicial.md).
+- [45. Ajuste da foto de perfil](docs/decisoes/45-ajuste-da-foto-de-perfil.md).
+  Pedido direto do dono; o editor da decisão 44 em modo perfil, com máscara no hexágono do avatar.
+- [46. Demo em vídeo na página inicial e no README](docs/decisoes/46-demo-na-pagina-inicial.md).
   Pedido direto do dono; versão web leve servida pela Vercel, sem o MP4 grande no git.
-- [46. Repositório organizado para a entrega](docs/decisoes/46-repositorio-organizado-para-a-entrega.md).
+- [47. Repositório organizado para a entrega](docs/decisoes/47-repositorio-organizado-para-a-entrega.md).
   Pedido direto do dono; material da disciplina em `docs/disciplina/` e decisões em `docs/decisoes/`.
 
 ## Features
