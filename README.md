@@ -5,7 +5,8 @@ para iniciantes em tecnologia.
 
 [![Demo do Colmatch em 46 segundos: feed, registrar estudo, matches, conversa, agendamento e avaliação](docs/demo/capa-readme.webp)](https://miniproj3.vercel.app/demo/colmatch-demo.mp4)
 
-**[Abrir o Colmatch](https://miniproj3.vercel.app)** · [Ver a demo (46 s)](https://miniproj3.vercel.app/demo/colmatch-demo.mp4) ·
+**[Abrir o Colmatch](https://miniproj3.vercel.app)** · [Ver a demo (46 s)](https://miniproj3.vercel.app/demo/colmatch-demo.mp4)
+([no GitHub](frontend/public/demo/colmatch-demo.mp4)) ·
 [Decisões do time](DECISIONS.md) · [Roteiro para a banca](docs/AVALIACAO.md)
 
 ## O que é e para quem

@@ -43,7 +43,8 @@ para o git.
 
 A versão web (1280×720, 2,3 MB) e o poster ficam em `frontend/public/demo/` e são servidos pela Vercel:
 a página inicial do app mostra o vídeo, e o README abre
-[miniproj3.vercel.app/demo/colmatch-demo.mp4](https://miniproj3.vercel.app/demo/colmatch-demo.mp4) pela
+[miniproj3.vercel.app/demo/colmatch-demo.mp4](https://miniproj3.vercel.app/demo/colmatch-demo.mp4) (o mesmo arquivo
+está em [`frontend/public/demo/`](../../frontend/public/demo/colmatch-demo.mp4)) pela
 capa `capa-readme.webp`. O comando que gera a versão web a partir do MP4 grande está na
 [decisão 45](../decisoes/45-demo-na-pagina-inicial.md).
 
