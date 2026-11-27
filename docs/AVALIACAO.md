@@ -112,7 +112,7 @@ cartão da troca na conversa mostra **Enviar avaliação** para as duas pessoas.
 
 Para abrir a apresentação ou mandar junto com o link, há uma demo animada com as telas reais do app
 (feed com fotos, registrar estudo, Sua semana e Mais estudadas, matches, conversa com agendamento,
-avaliação, notificações e lupa). Abra [`docs/demo/index.html`](demo/index.html) no navegador; o
+troca confirmada levada ao Google Agenda, avaliação e notificações). Abra [`docs/demo/index.html`](demo/index.html) no navegador; o
 [guia da demo](demo/README.md) explica como gerar o MP4 e refazer as capturas.
 
 ## Roteiro do pitch (3 min)
