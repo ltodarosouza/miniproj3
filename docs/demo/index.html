@@ -9,6 +9,23 @@
 <body>
   <main id="palco" aria-label="Demonstração do Colmatch">
     <div id="camera"></div>
+    <!-- O Google Agenda da pessoa com o evento que o botão "Agendar no Google Agenda" abre: textos lidos do
+         link real (demo.js → lerLinkAgenda). Ao salvar, o Google adiciona a videoconferência do Meet. -->
+    <div id="agenda" aria-hidden="true">
+      <div class="janela">
+        <div class="barra"><i></i><i></i><i></i><span id="agenda-url"></span></div>
+        <div class="corpo">
+          <p class="selo campo"><span id="selo-antes">Seu Google Agenda · evento preenchido pelo Colmatch</span><span id="selo-depois">Seu Google Agenda · evento salvo, com Google Meet</span></p>
+          <h2 id="agenda-titulo" class="campo"></h2>
+          <dl>
+            <div class="campo"><dt>Quando</dt><dd id="agenda-quando" class="mono"></dd></div>
+            <div class="campo"><dt>Descrição</dt><dd id="agenda-descricao"></dd></div>
+            <div id="agenda-meet"><dt>Videochamada</dt><dd><span id="agenda-meet-botao">Participar com o Google Meet</span><em>adicionada pelo Google ao salvar</em></dd></div>
+          </dl>
+          <div class="rodape campo"><span id="agenda-salvar">Salvar</span></div>
+        </div>
+      </div>
+    </div>
     <div id="destaque"></div>
     <div id="anel"></div>
     <div id="legenda"><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M11 0L21.4 6V18L11 24L0.6 18V6Z" fill="#F2A900"/></svg><span></span></div>

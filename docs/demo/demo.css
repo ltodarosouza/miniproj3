@@ -56,6 +56,56 @@ body { background: #0E0D0C; overflow: hidden; font-family: "Fira Sans", system-u
 }
 #legenda svg { width: 22px; height: 24px; flex: none; }
 
+/* Google Agenda da pessoa com o evento do link do app. Esquemático, com a identidade da demo. */
+#agenda { position: absolute; inset: 0; display: none; opacity: 0; background: rgb(27 26 23 / 0.42); }
+#agenda .janela {
+  position: absolute; left: 400px; top: 120px; width: 1120px;
+  border-radius: 18px; overflow: hidden; background: #FFFFFF;
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.30), 0 2px 6px rgb(0 0 0 / 0.12);
+}
+#agenda .barra {
+  display: flex; align-items: center; gap: 10px; height: 64px; padding: 0 24px;
+  background: #EFEDE6; border-bottom: 1px solid #DDD9CE;
+}
+#agenda .barra i { width: 14px; height: 14px; border-radius: 50%; background: #CFCABD; flex: none; }
+#agenda .barra span {
+  margin-left: 14px; flex: 1; min-width: 0; padding: 8px 18px; border-radius: 999px; background: #FFFFFF;
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 19px; color: var(--texto-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#agenda .corpo { padding: 34px 56px 40px; color: var(--texto); }
+#agenda .selo {
+  display: inline-grid; margin: 0; padding: 6px 14px; border-radius: 999px;
+  background: var(--marca-suave); color: var(--marca-forte); font-weight: 600; font-size: 20px;
+}
+#agenda .selo span { grid-area: 1 / 1; }
+#agenda h2 {
+  margin: 20px 0 26px; padding-bottom: 14px; border-bottom: 2px solid var(--marca);
+  font-family: "Literata", Georgia, serif; font-weight: 700; font-size: 46px; letter-spacing: -0.01em;
+}
+#agenda dl { margin: 0; display: grid; gap: 20px; }
+#agenda dl > div { display: grid; grid-template-columns: 210px 1fr; align-items: baseline; gap: 24px; }
+#agenda dt { font-weight: 500; font-size: 22px; color: var(--texto-2); }
+#agenda dd { margin: 0; font-weight: 500; font-size: 27px; line-height: 1.35; }
+#agenda dd.mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 26px; }
+#agenda #agenda-descricao span { display: block; }
+#agenda-meet {
+  --brilho-meet: 0;
+  margin: 0 -18px; padding: 14px 18px; border-radius: 12px;
+  box-shadow: 0 0 0 3px rgb(242 169 0 / var(--brilho-meet)), 0 0 0 12px rgb(242 169 0 / calc(var(--brilho-meet) * 0.22));
+}
+#agenda-meet dd { display: flex; align-items: center; gap: 18px; }
+#agenda-meet-botao {
+  padding: 10px 22px; border-radius: 10px; background: var(--marca); color: var(--texto);
+  font-weight: 600; font-size: 24px;
+}
+#agenda-meet em { font-style: normal; font-size: 20px; color: var(--texto-2); }
+#agenda .rodape { display: flex; justify-content: flex-end; margin-top: 28px; }
+#agenda .rodape span {
+  padding: 12px 34px; border-radius: 10px; background: var(--grafite); color: var(--grafite-texto);
+  font-weight: 600; font-size: 24px;
+}
+
 .marca {
   position: absolute; inset: 0; opacity: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
