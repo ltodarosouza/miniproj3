@@ -2,7 +2,7 @@ import random
 import re
 import sys
 import unicodedata
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -13,6 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.tempo import agora_utc
+from app.core.streak import FUSO_BRASIL, dia_no_brasil
 from app.db import Base, SessionLocal, engine
 import app.models  # noqa: F401
 from app.models.avaliacao import Avaliacao
@@ -30,9 +31,9 @@ from app.services.habilidades import garantir_catalogo
 SENHA_SEED = "senha-forte-123"
 SEMENTE = 42
 TOTAL_PARES = 16
-TOTAL_POSTS_DE_PROGRESSO = 10
+USUARIOS_CONSTANTES = 8
+DIAS_DE_SEQUENCIA = 4
 RETRATOS = "https://randomuser.me/api/portraits/{genero}/{numero}.jpg"
-FRACAO_COM_FOTO = 0.45
 UNSPLASH = "https://images.unsplash.com/photo-{}?w=800&q=80&auto=format&fit=crop"
 
 _IDS_POR_TEMA = {
@@ -104,23 +105,25 @@ BIOS = [
 ]
 
 ROTINAS = [
-    "Fiz {min} minutos de {hab} hoje. Travei num exercício, mas saiu.",
-    "Revisão de {hab}: {min} minutos e um resumo de uma página.",
-    "Primeira vez que entendi de verdade uma parte de {hab}. Foram {min} min.",
-    "{min} minutos de {hab} antes da aula. Pouco, mas todo dia conta.",
-    "Lista de {hab} feita ({min} min). Alguém quer comparar as respostas?",
-    "Assisti uma aula de {hab} e refiz os exemplos por conta própria, {min} minutos.",
-    "Hoje o {hab} venceu: {min} minutos e ainda não entendi. Amanhã eu volto.",
+    "{min} min de {hab} hoje. Travei num exercício, mas saiu.",
+    "Revisei {hab} por {min} minutos antes da aula.",
+    "Hoje finalmente entendi uma parte de {hab} que me travava.",
+    "Pouco tempo hoje: {min} min de {hab}, mas não deixei passar.",
+    "Terminei a lista de {hab}. Quem quiser comparar respostas, me chama.",
+    "{hab} venceu hoje. Amanhã eu volto.",
+    "Expliquei {hab} para um colega e aprendi mais do que ele.",
+    "Dia de rever o básico de {hab}: {min} minutos.",
 ]
 
-PROGRESSOS = [
-    "Meu caderno depois de {min} minutos de {hab}. Agora vai.",
-    "Montei meu cantinho de estudo para {hab}: {min} minutos hoje.",
-    "Print do que eu fiz em {hab} hoje, {min} min.",
-    "Registrei meus {min} minutos de {hab}. Aos poucos está saindo.",
-    "Mais uma página de {hab} no caderno depois de {min} minutos.",
-    "Meu progresso em {hab} hoje: {min} minutos focado.",
-    "Separei {min} minutos para {hab} e deixei tudo anotado.",
+LEGENDAS_COM_FOTO = [
+    "Meu caderno depois de {min} min de {hab}.",
+    "Cantinho de estudo pronto. Hoje é {hab}.",
+    "Print do que saiu em {hab} hoje.",
+    "{min} minutos de {hab} e essa tela no fim.",
+    "Mais uma página de {hab} anotada.",
+    "{hab} rendeu hoje: {min} min.",
+    "Registro do dia: {hab}, {min} minutos.",
+    "Começando {hab} agora. Bora.",
 ]
 
 COMENTARIOS = [
@@ -154,9 +157,26 @@ def _avatar(genero: str, numero: int) -> str:
     return RETRATOS.format(genero=genero, numero=numero)
 
 
-def _foto_do_post(nome_habilidade: str | None, sorteio: random.Random) -> str:
+def _foto_do_post(
+    nome_habilidade: str | None,
+    sorteio: random.Random,
+    contadores: dict[str, int],
+    deslocamentos: dict[str, int],
+    ultima_foto: str | None,
+) -> str:
     tema = TEMA_POR_HABILIDADE.get(nome_habilidade, "estudo")
-    return sorteio.choice(FOTOS_POR_TEMA[tema])
+    fotos = FOTOS_POR_TEMA[tema]
+    if tema not in deslocamentos:
+        deslocamentos[tema] = sorteio.randrange(len(fotos))
+        contadores[tema] = 0
+    indice = (deslocamentos[tema] + contadores[tema]) % len(fotos)
+    foto = fotos[indice]
+    contadores[tema] += 1
+    if foto == ultima_foto:
+        indice = (deslocamentos[tema] + contadores[tema]) % len(fotos)
+        foto = fotos[indice]
+        contadores[tema] += 1
+    return foto
 
 
 def _username(nome: str, usados: set[str]) -> str:
@@ -258,36 +278,85 @@ def _criar_follows(db: Session, usuarios: list[User], sorteio: random.Random) ->
     )
 
 
-def _momento_do_dia(dia: int, sorteio: random.Random) -> datetime:
-    agora = agora_utc()
-    meia_noite = agora.replace(hour=0, minute=0, second=0, microsecond=0)
-    if dia == 0:
-        return meia_noite + (agora - meia_noite) / 2
-    return meia_noite - timedelta(days=dia) + timedelta(hours=sorteio.randint(8, 20))
+def _momento_do_dia(dia: int, sorteio: random.Random, agora: datetime) -> datetime:
+    hoje = dia_no_brasil(agora)
+    meia_noite_local = datetime.combine(hoje, datetime.min.time(), tzinfo=FUSO_BRASIL)
+    meia_noite_utc = meia_noite_local.astimezone(timezone.utc).replace(tzinfo=None)
+    # Perto da virada, termina ontem para o streak aceitar a sequência completa.
+    deslocamento = 1 if agora - meia_noite_utc < timedelta(hours=2) else 0
+    dia_alvo = dia + deslocamento
+    inicio_local = meia_noite_local - timedelta(days=dia_alvo)
+    inicio_utc = inicio_local.astimezone(timezone.utc).replace(tzinfo=None)
+    if dia_alvo == 0:
+        limite = agora - timedelta(minutes=1)
+        duracao = max((limite - inicio_utc).total_seconds(), 0)
+        return inicio_utc + timedelta(seconds=sorteio.uniform(0, duracao))
+    hora_local = inicio_local + timedelta(
+        hours=sorteio.randint(8, 20), minutes=sorteio.randint(0, 59), seconds=sorteio.randint(0, 59)
+    )
+    return hora_local.astimezone(timezone.utc).replace(tzinfo=None)
 
 
-def _criar_posts_de_progresso(
+def gerar_posts(
     usuarios: list[User],
     perfis: dict[int, tuple[set[int], set[int]]],
     nomes: dict[int, str],
     sorteio: random.Random,
+    agora: datetime | None = None,
 ) -> list[Post]:
-    agora = agora_utc()
+    agora = agora or agora_utc()
     posts = []
-    for usuario in sorteio.sample(usuarios, TOTAL_POSTS_DE_PROGRESSO):
+    constantes = 0
+    for indice, usuario in enumerate(usuarios):
         sei, quero = perfis[usuario.id]
-        habilidade_id = sorteio.choice(sorted(quero | sei))
-        minutos = sorteio.choice([15, 20, 25, 30, 45, 60, 90])
-        posts.append(
-            Post(
+        estudando = sorted(quero | sei)
+        if not estudando:
+            continue
+        if indice % 4 == 0 and constantes < USUARIOS_CONSTANTES:
+            dias = range(DIAS_DE_SEQUENCIA)
+            constantes += 1
+        else:
+            dias = (sorteio.randint(0, 6),)
+        for dia in dias:
+            habilidade_id = sorteio.choice(estudando)
+            minutos = sorteio.choice([15, 20, 25, 30, 45, 60, 90])
+            posts.append(Post(
                 autor_id=usuario.id,
-                texto=sorteio.choice(PROGRESSOS).format(min=minutos, hab=nomes[habilidade_id]),
                 habilidade_id=habilidade_id,
                 minutos_estudados=minutos,
-                imagem_url=_foto_do_post(nomes[habilidade_id], sorteio),
-                created_at=agora - timedelta(minutes=sorteio.randint(10, 47 * 60)),
-            )
+                created_at=_momento_do_dia(dia, sorteio, agora),
+            ))
+    posts.sort(key=lambda post: post.created_at)
+    while True:
+        posts.sort(key=lambda post: post.created_at)
+        empate = next(
+            (indice for indice in range(1, len(posts)) if posts[indice].created_at == posts[indice - 1].created_at),
+            None,
         )
+        if empate is None:
+            break
+        posts[empate - 1].created_at -= timedelta(seconds=1)
+    contadores: dict[str, int] = {}
+    deslocamentos: dict[str, int] = {}
+    anterior_foto = None
+    ultimos_modelos: dict[bool, int | None] = {True: None, False: None}
+    for indice, post in enumerate(posts):
+        com_foto = indice % 2 == 1
+        modelos = LEGENDAS_COM_FOTO if com_foto else ROTINAS
+        modelo_indice = sorteio.randrange(len(modelos))
+        while modelo_indice == ultimos_modelos[com_foto]:
+            modelo_indice = sorteio.randrange(len(modelos))
+        ultimos_modelos[com_foto] = modelo_indice
+        habilidade_id = post.habilidade_id
+        minutos = post.minutos_estudados
+        post.texto = modelos[modelo_indice].format(min=minutos, hab=nomes[habilidade_id])
+        if com_foto:
+            post.imagem_url = _foto_do_post(
+                nomes[habilidade_id], sorteio, contadores, deslocamentos, anterior_foto
+            )
+            anterior_foto = post.imagem_url
+        else:
+            post.imagem_url = None
     return posts
 
 
@@ -298,37 +367,13 @@ def _criar_posts(
     nomes: dict[int, str],
     sorteio: random.Random,
 ) -> list[Post]:
-    posts: list[Post] = []
-    for indice, usuario in enumerate(usuarios):
-        sei, quero = perfis[usuario.id]
-        estudando = sorted(quero | sei)
-        dias = range(sorteio.randint(4, 7)) if indice % 3 == 0 else sorted(
-            sorteio.sample(range(14), sorteio.randint(1, 3))
-        )
-        for dia in dias:
-            habilidade_id = sorteio.choice(estudando)
-            minutos = sorteio.choice([15, 20, 25, 30, 45, 60, 90])
-            posts.append(
-                Post(
-                    autor_id=usuario.id,
-                    texto=sorteio.choice(ROTINAS).format(min=minutos, hab=nomes[habilidade_id]),
-                    habilidade_id=habilidade_id,
-                    minutos_estudados=minutos,
-                    imagem_url=(
-                        _foto_do_post(nomes[habilidade_id], sorteio)
-                        if sorteio.random() < FRACAO_COM_FOTO
-                        else None
-                    ),
-                    created_at=_momento_do_dia(dia, sorteio),
-                )
-            )
-    posts.extend(_criar_posts_de_progresso(usuarios, perfis, nomes, sorteio))
+    posts = gerar_posts(usuarios, perfis, nomes, sorteio)
     db.add_all(posts)
     db.flush()
     return posts
 
 
-def _criar_curtidas_e_comentarios(
+def criar_curtidas_e_comentarios(
     db: Session, usuarios: list[User], posts: list[Post], sorteio: random.Random
 ) -> None:
     agora = agora_utc()
@@ -418,7 +463,7 @@ def seed_fake(db: Session) -> None:
     perfis = _marcar_habilidades(db, usuarios, ids, sorteio)
     _criar_follows(db, usuarios, sorteio)
     posts = _criar_posts(db, usuarios, perfis, nomes, sorteio)
-    _criar_curtidas_e_comentarios(db, usuarios, posts, sorteio)
+    criar_curtidas_e_comentarios(db, usuarios, posts, sorteio)
     _criar_conversas_e_trocas(db, usuarios, ids, sorteio)
     db.commit()
 

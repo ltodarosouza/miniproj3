@@ -1,6 +1,6 @@
 # Comandos do dia a dia. Rode da raiz do repo.
 
-.PHONY: check dev-back dev-front seed test bench migracao
+.PHONY: check dev-back dev-front seed refazer-posts test bench migracao
 
 check:
 	cd backend && uv run python scripts/check_setup.py
@@ -13,6 +13,9 @@ dev-front:
 
 seed:
 	cd backend && uv run python scripts/seed.py
+
+refazer-posts:
+	cd backend && uv run python scripts/refazer_posts.py $(args)
 
 test:
 	cd backend && uv run pytest -v

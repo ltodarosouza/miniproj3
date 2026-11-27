@@ -21,7 +21,7 @@ const POSTS_POR_PAGINA = 10;
 type InfoTroca = { euEnsino: string; elaEnsina: string } | null;
 
 const DIAS_DA_SEMANA = 7;
-const ROTULO = "font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3";
+const ROTULO = "text-[0.8125rem] text-texto-2 font-semibold";
 // Contorno claro para os botões secundários sobre a faixa grafite.
 const CONTORNO_CLARO = "border-grafite-texto/50! text-grafite-texto! hover:border-grafite-texto!";
 
@@ -29,7 +29,7 @@ const CONTORNO_CLARO = "border-grafite-texto/50! text-grafite-texto! hover:borde
 function Numero({ valor, rotulo, href, children }: { valor: ReactNode; rotulo: string; href?: string; children?: ReactNode }) {
   const corpo = (
     <>
-      <span className="block font-mono text-xl text-texto numeros">{valor}</span>
+      <span className="block font-mono text-xl font-medium text-texto numeros">{valor}</span>
       {children}
       <span className={`mt-1 block ${ROTULO}`}>{rotulo}</span>
     </>
@@ -49,7 +49,7 @@ function ColunaHabilidades({ numero, titulo, lista }: { numero: string; titulo: 
   return (
     <section aria-labelledby={`habilidades-${numero}`}>
       <h3 id={`habilidades-${numero}`} className={`border-b border-linha pb-2 ${ROTULO}`}>
-        <span className="text-texto-2 numeros">{numero}</span> · {titulo}
+        <span className="font-mono font-medium text-texto-2 numeros">{numero}</span> · {titulo}
       </h3>
       {lista.length === 0 ? (
         <p className="py-3 text-sm text-texto-3">Nada por aqui ainda.</p>
@@ -242,7 +242,7 @@ export default function PerfilPage() {
               </h1>
               <p className="truncate font-mono text-sm opacity-70">@{perfil.username}</p>
               {perfil.bio && (
-                <p className="mt-3 max-w-[60ch] whitespace-pre-line text-[0.9375rem] leading-relaxed opacity-90">
+                <p className="mt-3 max-w-[60ch] whitespace-pre-line font-conteudo text-base leading-relaxed opacity-90">
                   {perfil.bio}
                 </p>
               )}

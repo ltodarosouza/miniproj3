@@ -123,7 +123,7 @@ export function ListaConversas({ ativa, naoLidas }: { ativa?: string; naoLidas: 
                           <time className="shrink-0 font-mono text-[0.6875rem] tabular-nums text-texto-3" dateTime={conversa.em}>{formatarQuando(conversa.em)}</time>
                         </span>
                         <span className={`block truncate text-[0.8125rem] ${quantidade ? "text-texto" : "text-texto-2"}`}>{previa}</span>
-                        {temTrocaParaAvaliar && <span className="flex items-center gap-1.5 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-marca-forte"><span aria-hidden="true" className="size-1.5 rounded-full bg-marca" />Avaliar troca</span>}
+                        {temTrocaParaAvaliar && <span className="flex items-center gap-1.5 text-[0.8125rem] font-semibold text-marca-forte"><span aria-hidden="true" className="size-1.5 rounded-full bg-marca" />Avaliar troca</span>}
                       </span>
                       <SeloContador total={quantidade} />
                     </Link>

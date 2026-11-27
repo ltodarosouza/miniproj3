@@ -33,3 +33,6 @@ docs/review-painel-v2.md
 
 .impeccable/
 *.tsbuildinfo
+
+# backups do scripts/refazer_posts.py (podem ter dados de produção)
+backup-posts-*.json

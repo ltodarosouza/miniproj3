@@ -12,11 +12,11 @@ export function EmAlta({ habilidades }: { habilidades: HabilidadeEmAlta[] }) {
       <table className="w-full table-fixed text-sm">
         <caption className="sr-only">Habilidades mais estudadas nos últimos 7 dias, por horas</caption>
         <thead>
-          <tr className="border-b border-linha font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-3">
-            <th scope="col" className="w-7 py-1.5 text-left font-normal"><span className="sr-only">Posição</span>#</th>
-            <th scope="col" className="py-1.5 text-left font-normal">Habilidade</th>
-            <th scope="col" className="w-16 py-1.5 text-right font-medium text-texto">Horas</th>
-            <th scope="col" className="w-12 py-1.5 text-right font-normal">Posts</th>
+          <tr className="border-b border-linha text-[0.8125rem] font-semibold text-texto-2">
+            <th scope="col" className="w-7 py-1.5 text-left font-semibold"><span className="sr-only">Posição</span>#</th>
+            <th scope="col" className="py-1.5 text-left font-semibold">Habilidade</th>
+            <th scope="col" className="w-16 py-1.5 text-right font-semibold text-texto">Horas</th>
+            <th scope="col" className="w-12 py-1.5 text-right font-semibold">Posts</th>
           </tr>
         </thead>
         <tbody>
@@ -36,7 +36,7 @@ export function EmAlta({ habilidades }: { habilidades: HabilidadeEmAlta[] }) {
           ))}
         </tbody>
       </table>
-      <p className="mt-1 font-mono text-[0.6875rem] text-texto-3">Ordem: horas estudadas nos últimos 7 dias.</p>
+      <p className="mt-1 text-[0.8125rem] text-texto-2">Ordem: horas estudadas nos últimos 7 dias.</p>
     </>
   );
 }

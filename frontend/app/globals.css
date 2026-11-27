@@ -134,9 +134,10 @@
   --radius-controle: var(--raio-sm);
   --shadow-cartao: var(--sombra);
   --shadow-alta: var(--sombra-alta);
-  --font-sans: var(--fonte-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--fonte-fira), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--fonte-plex-mono), ui-monospace, monospace;
-  --font-display: var(--fonte-grotesk), var(--fonte-plex-sans), ui-sans-serif, sans-serif;
+  --font-display: var(--fonte-literata), ui-serif, Georgia, serif;
+  --font-conteudo: var(--fonte-literata), ui-serif, Georgia, serif;
   --ease-saida: var(--ease-saida);
   --ease-mola: var(--ease-mola);
 }

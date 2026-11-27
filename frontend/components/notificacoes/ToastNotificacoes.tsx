@@ -54,7 +54,7 @@ export function ToastNotificacoes() {
         >
           <Avatar nome={ultimaNova.ator.name} url={ultimaNova.ator.avatar_url} tamanho="sm" />
           <div className="min-w-0 flex-1">
-            <span className="block font-mono text-[11px] uppercase tracking-[0.08em] opacity-70">Nova atividade</span>
+            <span className="block text-[0.8125rem] opacity-70 font-semibold">Nova atividade</span>
             <Link
               href={linkDaNotificacao(ultimaNova)}
               onClick={fechar}

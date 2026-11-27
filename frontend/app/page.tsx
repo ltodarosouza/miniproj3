@@ -74,7 +74,7 @@ function TickerDePares() {
         type="button"
         onClick={() => setPausado((atual) => !atual)}
         aria-pressed={pausado}
-        className="ticker-pares-botao shrink-0 border-l border-linha bg-fundo px-3 py-3 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-texto-2 hover:text-texto"
+        className="ticker-pares-botao shrink-0 border-l border-linha bg-fundo px-3 py-3 text-[0.8125rem] text-texto-2 hover:text-texto font-semibold"
       >
         {pausado ? "Continuar" : "Pausar"}
       </button>
@@ -117,7 +117,7 @@ export default function Inicio() {
       <TickerDePares />
 
       <section aria-labelledby="como-funciona" className="py-12 sm:py-16">
-        <h2 id="como-funciona" className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-texto-3">
+        <h2 id="como-funciona" className="text-[0.8125rem] font-semibold text-texto-2">
           Como funciona
         </h2>
         <ol className="mt-6 border-t border-linha">
