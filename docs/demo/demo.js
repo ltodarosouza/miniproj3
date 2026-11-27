@@ -78,6 +78,7 @@
       { t: 25.62, id: "07-perfil", dur: 0.3 },
       { t: 27.55, id: "06-conversa", dur: 0.35 },
       { t: 28.72, id: "08-agendar", dur: 0.45 },
+      { t: 29.85, id: "08b-agendar-horario", dur: 0.2 },
       { t: 31.22, id: "09-proposta", dur: 0.45 },
       { t: 32.5, id: "10-avaliar", dur: 0.4 },
       { t: 34.05, id: "11-avaliar-preenchido", tipo: "revela", area: ret("11-avaliar-preenchido", "cartao"), dur: 1.0 },
@@ -100,8 +101,6 @@
       { t: 18.25, dur: 0.9, s: 1, foco: meio },
       { t: 20.2, dur: 1.0, s: 1.3, foco: centro(uniao(ret("05-matches", "secao_troca"), ret("05-matches", "secao_ensinar"))) },
       { t: 23.45, dur: 0.85, s: 1, foco: meio },
-      { t: 28.8, dur: 0.9, s: 1.14, foco: centro(uniao(ret("08-agendar", "horario"), ret("08-agendar", "resumo"), ret("08-agendar", "propor"))) },
-      { t: 31.15, dur: 0.8, s: 1, foco: meio },
       { t: 32.5, dur: 1.0, s: 1.3, foco: centro(ret("10-avaliar", "cartao")) },
       { t: 37.15, dur: 0.9, s: 1, foco: meio },
       { t: 43.0, dur: 1.2, s: 1.05, foco: centro(ret("15-lupa", "lupa")) },
@@ -128,7 +127,7 @@
         { de: 25.95, ate: 26.7, para: A("07-perfil", "habilidades", 60, 10) },
         { de: 27.7, ate: 28.4, para: A("06-conversa", "agendar") },
         { de: 29.0, ate: 29.55, para: A("08-agendar", "horario") },
-        { de: 30.25, ate: 30.9, para: A("08-agendar", "propor") },
+        { de: 30.25, ate: 30.9, para: A("08b-agendar-horario", "propor") },
         { de: 31.6, ate: 32.3, para: A("09-proposta", "cartao", 120, 60) },
         { de: 33.0, ate: 33.7, para: A("10-avaliar", "estrela5") },
         { de: 35.15, ate: 35.85, para: A("11-avaliar-preenchido", "enviar") },
@@ -150,7 +149,7 @@
       { de: 19.95, ate: 22.3, r: ret("05-matches", "par_troca") },
       { de: 24.0, ate: 25.35, r: ret("06-conversa", "mensagem") },
       { de: 26.0, ate: 27.45, r: ret("07-perfil", "habilidades") },
-      { de: 30.0, ate: 30.95, r: ret("08-agendar", "resumo") },
+      { de: 30.0, ate: 30.95, r: ret("08b-agendar-horario", "resumo") },
       { de: 31.55, ate: 32.45, r: ret("09-proposta", "cartao") },
       { de: 36.6, ate: 37.4, r: ret("12-avaliado", "cartao") },
       { de: 38.95, ate: 39.75, r: ret("13-notificacoes", "item1") },
@@ -232,35 +231,43 @@
     return `inset(${r.y}px ${W - r.x - r.w}px ${H - r.y - r.h}px ${r.x}px)`;
   }
 
+  function estiloDaTela(ev, p) {
+    const estilo = { opacity: 1, clip: "none", transform: "none" };
+    if (ev.tipo === "revela") {
+      // Revela a tela preenchida só dentro da área: para baixo (o formulário cresce) ou para a direita.
+      const a = ev.area, e = saida(p);
+      estilo.clip = ev.direcao === "baixo"
+        ? inset({ x: a.x, y: a.y, w: a.w, h: a.h * e })
+        : inset({ x: a.x, y: a.y, w: a.w * e, h: a.h });
+    } else if (ev.tipo === "lupa") {
+      // A foto da lupa nasce exatamente sobre a foto do post e cresce até o lugar dela.
+      const e = saida(p), L = ev.para, F = ev.de;
+      const k = lerp(F.w / L.w, 1, e);
+      const px = lerp(F.x, L.x, e), py = lerp(F.y, L.y, e);
+      estilo.transform = `translate(${px - L.x * k}px, ${py - L.y * k}px) scale(${k})`;
+      const c = saida(clamp((p - 0.15) / 0.85));
+      estilo.clip = inset({ x: lerp(L.x, 0, c), y: lerp(L.y, 0, c), w: lerp(L.w, W, c), h: lerp(L.h, H, c) });
+    } else {
+      estilo.opacity = suave(p); // simétrico: sem "estalo" nos primeiros quadros
+    }
+    return estilo;
+  }
+
+  // Pilha de camadas da tela k no tempo t, de baixo para cima. Uma tela revelada é só um recorte:
+  // a de baixo continua sempre por trás dela, inclusive enquanto a próxima tela entra.
+  function camadas(k, t) {
+    if (k < 0) return [];
+    const ev = TELA_EVENTOS[k];
+    const p = prog(t, ev.t, ev.dur);
+    const base = ev.tipo === "revela" || p < 1 ? camadas(k - 1, t) : [];
+    return [...base, { id: ev.id, estilo: estiloDaTela(ev, p) }];
+  }
+
   function desenharTelas(t) {
     let i = -1;
     for (let k = 0; k < TELA_EVENTOS.length; k++) if (t >= TELA_EVENTOS[k].t) i = k;
-    const visiveis = new Map(); // id → estilo
-    if (i >= 0) {
-      const ev = TELA_EVENTOS[i];
-      const p = prog(t, ev.t, ev.dur);
-      const anterior = TELA_EVENTOS[i - 1];
-      if (anterior && p < 1) visiveis.set(anterior.id, { opacity: 1, z: 1, clip: "none", transform: "none" });
-      const estilo = { opacity: 1, z: 2, clip: "none", transform: "none" };
-      if (ev.tipo === "revela") {
-        // Revela a tela preenchida só dentro da área: para baixo (o formulário cresce) ou para a direita.
-        const a = ev.area, e = saida(p);
-        estilo.clip = ev.direcao === "baixo"
-          ? inset({ x: a.x, y: a.y, w: a.w, h: a.h * e })
-          : inset({ x: a.x, y: a.y, w: a.w * e, h: a.h });
-      } else if (ev.tipo === "lupa") {
-        // A foto da lupa nasce exatamente sobre a foto do post e cresce até o lugar dela.
-        const e = saida(p), L = ev.para, F = ev.de;
-        const k = lerp(F.w / L.w, 1, e);
-        const px = lerp(F.x, L.x, e), py = lerp(F.y, L.y, e);
-        estilo.transform = `translate(${px - L.x * k}px, ${py - L.y * k}px) scale(${k})`;
-        const c = clamp((p - 0.15) / 0.85);
-        estilo.clip = inset({ x: lerp(L.x, 0, saida(c)), y: lerp(L.y, 0, saida(c)), w: lerp(L.w, W, saida(c)), h: lerp(L.h, H, saida(c)) });
-      } else {
-        estilo.opacity = suave(p); // simétrico: sem "estalo" nos primeiros quadros
-      }
-      visiveis.set(ev.id, estilo);
-    }
+    const visiveis = new Map(); // id → estilo (com z pela posição na pilha)
+    camadas(i, t).forEach(({ id, estilo }, z) => visiveis.set(id, { ...estilo, z: z + 1 }));
     for (const [id, img] of Object.entries(imagens)) {
       const v = visiveis.get(id);
       if (!v) {
