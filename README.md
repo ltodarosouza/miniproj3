@@ -60,12 +60,13 @@ Requisitos: Python 3.12 ([`backend/.python-version`](backend/.python-version)), 
 (cd backend && uv sync)
 (cd frontend && npm install && cp .env.local.example .env.local)
 make check      # confere o ambiente
-make seed       # popula um banco vazio (SQLite local se DATABASE_URL ficar vazio)
+make seed       # popula um banco vazio (SQLite em backend/app.db se DATABASE_URL não existir)
 make dev-back   # API em http://localhost:8000 (Swagger em /docs)
 make dev-front  # site em http://localhost:3000 (em outro terminal)
 ```
 
-As variáveis ficam em [`backend/.env.example`](backend/.env.example) e
+Sem a variável `DATABASE_URL` (não a defina vazia), o backend usa o SQLite local. As variáveis ficam
+em [`backend/.env.example`](backend/.env.example) e
 [`frontend/.env.local.example`](frontend/.env.local.example). `IA_PROVIDER`, `IA_API_KEY` e
 `IA_MODEL` ligam o mapeamento de habilidades por IA; sem chave, o backend usa a aproximação local
 com `difflib`.
