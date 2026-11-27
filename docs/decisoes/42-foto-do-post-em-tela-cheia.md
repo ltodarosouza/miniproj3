@@ -1,4 +1,4 @@
-# 41. Foto do post abre em tela cheia
+# 42. Foto do post abre em tela cheia
 
 Issue #106.
 

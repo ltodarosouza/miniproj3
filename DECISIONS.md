@@ -717,7 +717,7 @@ Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada de
   Atualizada a pedido do dono: a coluna encosta na borda direita em telas largas.
 - [40. Símbolo do Colmatch vira uma colmeia](docs/decisoes/40-logo-colmeia.md).
   Pedido direto do dono; substitui o desenho de três células da decisão 32.
-- [41. Foto do post abre em tela cheia](docs/decisoes/41-foto-do-post-em-tela-cheia.md).
+- [42. Foto do post abre em tela cheia](docs/decisoes/42-foto-do-post-em-tela-cheia.md).
   Issue #106; o toque na foto amplia a imagem inteira, e seguidores/seguindo
   seguem como página (o modal estilo Instagram foi descartado).
 
