@@ -69,6 +69,10 @@ def rodar(cmd):
     return subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 
+def drenar(pipe, acumulado):
+    acumulado.append(pipe.read())
+
+
 def metadados(ffmpeg, caminho):
     p = rodar([ffmpeg, "-i", str(caminho)])
     info = p.stderr
@@ -90,6 +94,16 @@ async def principal(args):
         raise FileNotFoundError(f"Não encontrei {args.pagina / 'index.html'}")
     if args.de < 0 or (args.ate is not None and args.ate <= args.de):
         raise ValueError("Use --de >= 0 e --ate maior que --de")
+    saida = Path(args.saida).expanduser().resolve()
+    previas = {}
+    if args.previa:
+        # Os nomes das prévias derivam da saída; se coincidirem com ela, o ffmpeg
+        # receberia o mesmo arquivo como entrada e saída.
+        previas = {"mp4": saida.with_name(f"{saida.stem}-previa.mp4"),
+                   "gif": saida.with_name(f"{saida.stem}-previa.gif")}
+        for destino in previas.values():
+            if destino == saida:
+                raise ValueError(f"A prévia {destino.name} coincide com a saída {saida.name}; escolha outro --saida")
     ffmpeg = ffmpeg_exe()
     servidor, thread = iniciar_servidor(args.pagina.resolve())
     try:
@@ -141,9 +155,8 @@ async def principal(args):
             n = round((fim - inicio) * fps)
             if n <= 0:
                 raise ValueError("O trecho não contém quadros")
-            saida = Path(args.saida).expanduser().resolve()
             saida.parent.mkdir(parents=True, exist_ok=True)
-            # Sem estatísticas: o stderr só é lido no fim e não pode encher o pipe.
+            # Sem estatísticas; o stderr é drenado em thread para o pipe nunca encher.
             cmd = [ffmpeg, "-y", "-hide_banner", "-nostats", "-loglevel", "error", "-f", "image2pipe", "-framerate", str(fps), "-c:v", "png", "-i", "-",
                    "-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p", "-c:v", "libx264",
                    "-preset", "slow", "-crf", "18", "-profile:v", "high", "-pix_fmt", "yuv420p",
@@ -151,6 +164,9 @@ async def principal(args):
                    "-movflags", "+faststart", str(saida)]
             proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL,
                                     stderr=subprocess.PIPE)
+            erro_ffmpeg = []
+            leitor_stderr = threading.Thread(target=drenar, args=(proc.stderr, erro_ffmpeg), daemon=True)
+            leitor_stderr.start()
             comeco = time.monotonic()
             try:
                 for i in range(n):
@@ -163,7 +179,8 @@ async def principal(args):
                     if (i + 1) % max(1, n // 20) == 0 or i + 1 == n:
                         print(f"Progresso: {percentual}% ({i + 1}/{n})", flush=True)
                 proc.stdin.close()
-                stderr = proc.stderr.read().decode("utf-8", "replace")
+                leitor_stderr.join()
+                stderr = b"".join(erro_ffmpeg).decode("utf-8", "replace")
                 rc = proc.wait()
                 if rc:
                     print(stderr, file=sys.stderr)
@@ -172,6 +189,7 @@ async def principal(args):
                 if proc.poll() is None:
                     proc.kill()
                     proc.wait()
+                leitor_stderr.join()
                 raise
             print(f"Tempo total: {time.monotonic() - comeco:.1f}s")
             await browser.close()
@@ -180,11 +198,10 @@ async def principal(args):
         servidor.server_close()
         thread.join()
 
-    saida = Path(args.saida).expanduser().resolve()
     arquivos = [saida]
     if args.previa:
-        mp4 = saida.with_name("colmatch-demo-previa.mp4")
-        gif = saida.with_name("colmatch-demo-previa.gif")
+        mp4 = previas["mp4"]
+        gif = previas["gif"]
         r = rodar([ffmpeg, "-y", "-i", str(saida), "-vf", "scale=960:540", "-c:v", "libx264",
                    "-preset", "slow", "-crf", "26", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(mp4)])
         if r.returncode:
