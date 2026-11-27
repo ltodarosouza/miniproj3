@@ -722,6 +722,8 @@ Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada de
 - [42. Foto do post abre em tela cheia](docs/decisoes/42-foto-do-post-em-tela-cheia.md).
   Issue #106; o toque na foto amplia a imagem inteira, e seguidores/seguindo
   seguem como página (o modal estilo Instagram foi descartado).
+- [43. Lupa da foto vira cartão, e a página não rola por trás](docs/decisoes/43-lupa-com-cartao-e-rolagem-travada.md).
+  Pedido direto do dono; refina a decisão 42 com legenda, fundo desfocado e rolagem travada.
 
 ## Features
 
