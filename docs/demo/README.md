@@ -1,6 +1,6 @@
 # Demo em vídeo (46 s)
 
-Uma demo curta do Colmatch em uso: um cursor percorre as telas reais do app e mostra as features
+Uma demo curta do Colmatch em uso, sem som: um cursor percorre as telas reais do app e mostra as features
 principais. A página `index.html` anima as capturas e o `render.py` transforma essa página em MP4.
 
 ## Roteiro
@@ -36,8 +36,16 @@ uv run --with playwright==1.64.0 --with imageio-ffmpeg==0.6.0 python docs/demo/r
 Sai um MP4 H.264 1920×1080, 60 fps, CRF 18, yuv420p e faststart (~13 MB, ~4 min de render), além de
 `colmatch-demo-previa.mp4` (960×540) e `colmatch-demo-previa.gif` na mesma pasta (`--sem-previa` desliga).
 Para conferir sem renderizar tudo: `--quadros 5,20,35` salva PNGs e uma folha de contato
-(acrescente `--with pillow==11.3.0`), e `--de 6 --ate 15` renderiza só um trecho. Os vídeos não vão para
-o git.
+(acrescente `--with pillow==11.3.0`), e `--de 6 --ate 15` renderiza só um trecho. Esses vídeos não vão
+para o git.
+
+## Onde a demo aparece
+
+A versão web (1280×720, 2,3 MB) e o poster ficam em `frontend/public/demo/` e são servidos pela Vercel:
+a página inicial do app mostra o vídeo, e o README abre
+[miniproj3.vercel.app/demo/colmatch-demo.mp4](https://miniproj3.vercel.app/demo/colmatch-demo.mp4) pela
+capa `capa-readme.webp`. O comando que gera a versão web a partir do MP4 grande está na
+[decisão 45](../decisoes/45-demo-na-pagina-inicial.md).
 
 ## Refazer as capturas
 

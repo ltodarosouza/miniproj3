@@ -114,6 +114,33 @@ export default function Inicio() {
         </div>
       </section>
 
+      <section aria-labelledby="demo" className="pb-12 sm:pb-16">
+        <h2 id="demo" className="text-[0.8125rem] font-semibold text-texto-2">
+          Veja em 46 segundos
+        </h2>
+        <video
+          className="mt-4 aspect-video w-full rounded-cartao border border-linha bg-superficie"
+          controls
+          muted
+          playsInline
+          preload="metadata"
+          poster="/demo/colmatch-demo-poster.webp"
+          aria-describedby="demo-descricao"
+        >
+          <source src="/demo/colmatch-demo.mp4" type="video/mp4" />
+        </video>
+        <p id="demo-descricao" className="mt-3 text-sm leading-relaxed text-texto-2">
+          Demonstração sem som: registrar um estudo, encontrar um par em Matches, combinar e agendar a
+          troca na conversa, levar para o Google Agenda e avaliar depois.{" "}
+          <a
+            href="/demo/colmatch-demo.mp4"
+            className="font-medium text-texto underline decoration-linha-forte underline-offset-4 hover:decoration-texto"
+          >
+            Abrir o vídeo
+          </a>
+        </p>
+      </section>
+
       <TickerDePares />
 
       <section aria-labelledby="como-funciona" className="py-12 sm:py-16">
