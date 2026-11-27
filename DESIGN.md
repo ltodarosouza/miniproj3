@@ -110,7 +110,11 @@ Todos em `frontend/components/ui/`. Importe com `@/components/ui/<Nome>`.
 | `useSelos` | Badges de mensagens, notificações e avaliações | Polling com aba visível |
 | `useStreak` | Sequência de estudo | Carrega sequência e último post |
 
-Exemplos de uso de cada um estão em `frontend/app/design/page.tsx`.
+A vitrine `/design` (`frontend/app/design/page.tsx`) mostra os componentes visuais da tabela. A
+casca (`Navegacao`, `NavegacaoLateral`, `CabecalhoCelular`, `BarraInferior`), o `EsqueletoPost` e os
+hooks `useSelos` e `useStreak` não aparecem nela: veja o uso real em
+`frontend/components/ui/Navegacao.tsx`, que monta a casca com os dois hooks, e em
+`frontend/components/ui/Esqueleto.tsx`.
 
 Precisa de um ícone novo? Adicione o caminho SVG em `Icone.tsx`, no mesmo
 traço (24×24, linha 1.5, pontas arredondadas). Nada de emoji no lugar de
