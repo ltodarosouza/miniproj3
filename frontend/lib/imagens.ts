@@ -120,8 +120,13 @@ export async function prepararImagem(
 export type AreaRecorte = { x: number; y: number; largura: number; altura: number };
 
 // Recorta a foto já preparada (orientada e com no máximo 1600 px de lado) e exporta
-// com o mesmo limite de tamanho e formato das outras fotos de post.
-export async function recortarImagem(arquivo: File, area: AreaRecorte): Promise<File> {
+// com o mesmo limite de tamanho e formato das outras fotos. `ladoMaximo` é 1600 no post
+// e LADO_MAXIMO_AVATAR (512) na foto de perfil.
+export async function recortarImagem(
+  arquivo: File,
+  area: AreaRecorte,
+  ladoMaximo: number = LADO_MAXIMO_POST,
+): Promise<File> {
   let bitmap: ImageBitmap;
   try {
     bitmap = await createImageBitmap(arquivo, { imageOrientation: "from-image" });
@@ -133,7 +138,7 @@ export async function recortarImagem(arquivo: File, area: AreaRecorte): Promise<
     const y = Math.max(0, Math.min(bitmap.height - 1, Math.round(area.y)));
     const largura = Math.max(1, Math.min(bitmap.width - x, Math.round(area.largura)));
     const altura = Math.max(1, Math.min(bitmap.height - y, Math.round(area.altura)));
-    const escala = Math.min(1, LADO_MAXIMO_POST / Math.max(largura, altura));
+    const escala = Math.min(1, ladoMaximo / Math.max(largura, altura));
     const canvas = criarCanvas(
       Math.max(1, Math.round(largura * escala)),
       Math.max(1, Math.round(altura * escala)),
