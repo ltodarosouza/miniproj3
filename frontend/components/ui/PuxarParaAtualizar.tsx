@@ -41,6 +41,9 @@ export function PuxarParaAtualizar({
 
     function aoIniciar(evento: TouchEvent) {
       if (atualizandoRef.current || window.scrollY > 0 || evento.touches.length !== 1) return;
+      // Gesto dentro de um diálogo aberto (lupa, folha) não é puxar a página: com a rolagem
+      // travada o scrollY fica 0, e o toque ainda sobe pelo DOM até aqui.
+      if ((evento.target as Element | null)?.closest?.("dialog[open]")) return;
       inicioRef.current = evento.touches[0].clientY;
       distanciaRef.current = 0;
       definirDistancia(0, false);
