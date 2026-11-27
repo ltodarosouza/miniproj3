@@ -13,7 +13,7 @@ principais. A página `index.html` anima as capturas e o `render.py` transforma 
 | 0:14 | Sua semana | Zoom na coluna: horas da semana sobem para 4h05 e CSS passa a 1º em "Mais estudadas". |
 | 0:18 | Matches | Ana Borges como troca recíproca e a lista "Pode te ensinar"; clique em Conversar. |
 | 0:23 | Conversa | Mensagem enviada, perfil clicável da Ana e "Agendar troca" com dia e horário. |
-| 0:32 | Google Agenda | A Ana confirma; o cartão mostra "Agendar no Google Agenda" e o clique abre o Google Agenda da pessoa com o evento já preenchido pelo link do app (título, dia, 19:00–20:00 e quem ensina o quê). Ao salvar, o Google adiciona a videoconferência do Meet (quando a conta Google adiciona o Meet sozinha, o padrão). O painel é uma reconstrução: os textos vêm do link real capturado, sem conta Google. |
+| 0:32 | Google Agenda | A Ana confirma; o cartão mostra "Agendar no Google Agenda" e o clique abre o Google Agenda da pessoa com o evento já preenchido pelo link do app (título, dia, 19:00–20:00 e quem ensina o quê). Ao salvar, o Google adiciona a videoconferência do Meet; o painel avisa que isso vale para a conta com o Meet automático ativado (sem ele, a pessoa adiciona o Meet antes de salvar, como diz o cartão). O painel é uma reconstrução: os textos vêm do link real capturado, sem conta Google. |
 | 0:37 | Avaliação | Na troca já feita com o Linus: 5 estrelas, recado e envio. |
 | 0:41 | Notificações | Confirmação da troca, curtidas, comentários e seguidores. |
 | 0:44 | Fechamento | "Aprenda junto." e o endereço do deploy. |
