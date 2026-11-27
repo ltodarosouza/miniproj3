@@ -1,0 +1,536 @@
+{
+  "viewport": {
+    "largura": 1600,
+    "altura": 900,
+    "escala": 2
+  },
+  "usuario": "ada",
+  "telas": [
+    {
+      "id": "01-feed",
+      "arquivo": "01-feed.webp",
+      "rota": "/feed",
+      "alvos": {
+        "registrar": {
+          "x": 899,
+          "y": 100,
+          "w": 130,
+          "h": 36
+        },
+        "composer": {
+          "x": 434,
+          "y": 96,
+          "w": 600,
+          "h": 44
+        },
+        "post_foto": {
+          "x": 434,
+          "y": 165,
+          "w": 600,
+          "h": 520
+        },
+        "foto": {
+          "x": 514,
+          "y": 332,
+          "w": 520,
+          "h": 292
+        },
+        "sua_semana": {
+          "x": 1256,
+          "y": 96,
+          "w": 320,
+          "h": 142
+        },
+        "mais_estudadas": {
+          "x": 1256,
+          "y": 262,
+          "w": 320,
+          "h": 284
+        },
+        "pode_te_ensinar": {
+          "x": 1256,
+          "y": 569,
+          "w": 320,
+          "h": 224
+        },
+        "nav_matches": {
+          "x": 16,
+          "y": 200,
+          "w": 219,
+          "h": 40
+        },
+        "nav_mensagens": {
+          "x": 16,
+          "y": 242,
+          "w": 219,
+          "h": 40
+        },
+        "nav_notificacoes": {
+          "x": 16,
+          "y": 284,
+          "w": 219,
+          "h": 40
+        }
+      }
+    },
+    {
+      "id": "02-registrar",
+      "arquivo": "02-registrar.webp",
+      "rota": "/feed",
+      "alvos": {
+        "texto": {
+          "x": 451,
+          "y": 138,
+          "w": 566,
+          "h": 96
+        },
+        "habilidade": {
+          "x": 451,
+          "y": 276,
+          "w": 275,
+          "h": 40
+        },
+        "tempo": {
+          "x": 742,
+          "y": 276,
+          "w": 275,
+          "h": 40
+        },
+        "foto_botao": {
+          "x": 451,
+          "y": 334,
+          "w": 137,
+          "h": 36
+        },
+        "publicar": {
+          "x": 872,
+          "y": 332,
+          "w": 145,
+          "h": 40
+        },
+        "form": {
+          "x": 451,
+          "y": 113,
+          "w": 566,
+          "h": 259
+        }
+      }
+    },
+    {
+      "id": "03-registrar-preenchido",
+      "arquivo": "03-registrar-preenchido.webp",
+      "rota": "/feed",
+      "alvos": {
+        "texto": {
+          "x": 451,
+          "y": 138,
+          "w": 566,
+          "h": 96
+        },
+        "habilidade": {
+          "x": 451,
+          "y": 276,
+          "w": 275,
+          "h": 40
+        },
+        "tempo": {
+          "x": 742,
+          "y": 276,
+          "w": 275,
+          "h": 40
+        },
+        "foto_botao": {
+          "x": 451,
+          "y": 358,
+          "w": 566,
+          "h": 256
+        },
+        "publicar": {
+          "x": 872,
+          "y": 622,
+          "w": 145,
+          "h": 40
+        },
+        "form": {
+          "x": 451,
+          "y": 113,
+          "w": 566,
+          "h": 549
+        }
+      }
+    },
+    {
+      "id": "04-feed-publicado",
+      "arquivo": "04-feed-publicado.webp",
+      "rota": "/feed",
+      "alvos": {
+        "post_novo": {
+          "x": 434,
+          "y": 165,
+          "w": 600,
+          "h": 545
+        },
+        "foto_nova": {
+          "x": 514,
+          "y": 304,
+          "w": 520,
+          "h": 346
+        },
+        "sua_semana": {
+          "x": 1256,
+          "y": 96,
+          "w": 320,
+          "h": 142
+        },
+        "sua_semana_horas": {
+          "x": 1256,
+          "y": 140,
+          "w": 320,
+          "h": 40
+        },
+        "mais_estudadas": {
+          "x": 1256,
+          "y": 262,
+          "w": 320,
+          "h": 284
+        },
+        "nav_matches": {
+          "x": 16,
+          "y": 200,
+          "w": 219,
+          "h": 40
+        }
+      }
+    },
+    {
+      "id": "05-matches",
+      "arquivo": "05-matches.webp",
+      "rota": "/matches",
+      "alvos": {
+        "par_troca": {
+          "x": 590,
+          "y": 200,
+          "w": 672,
+          "h": 60
+        },
+        "conversar_par": {
+          "x": 1170,
+          "y": 212,
+          "w": 88,
+          "h": 36
+        },
+        "secao_troca": {
+          "x": 590,
+          "y": 128,
+          "w": 672,
+          "h": 133
+        },
+        "secao_ensinar": {
+          "x": 590,
+          "y": 293,
+          "w": 672,
+          "h": 194
+        }
+      }
+    },
+    {
+      "id": "06-conversa",
+      "arquivo": "06-conversa.webp",
+      "rota": "/mensagens/ana_borges",
+      "alvos": {
+        "cabecalho_perfil": {
+          "x": 609,
+          "y": 45,
+          "w": 103,
+          "h": 30
+        },
+        "agendar": {
+          "x": 1424,
+          "y": 42,
+          "w": 135,
+          "h": 36
+        },
+        "mensagem": {
+          "x": 1010,
+          "y": 170,
+          "w": 460,
+          "h": 40
+        },
+        "campo": {
+          "x": 609,
+          "y": 802,
+          "w": 906,
+          "h": 40
+        }
+      }
+    },
+    {
+      "id": "07-perfil",
+      "arquivo": "07-perfil.webp",
+      "rota": "/perfil/ana_borges",
+      "alvos": {
+        "cabecalho": {
+          "x": 542,
+          "y": 32,
+          "w": 768,
+          "h": 284
+        },
+        "habilidades": {
+          "x": 542,
+          "y": 348,
+          "w": 768,
+          "h": 202
+        }
+      }
+    },
+    {
+      "id": "08-agendar",
+      "arquivo": "08-agendar.webp",
+      "rota": "/mensagens/ana_borges",
+      "alvos": {
+        "form": {
+          "x": 544,
+          "y": 19,
+          "w": 512,
+          "h": 862
+        },
+        "horario": {
+          "x": 874,
+          "y": 597,
+          "w": 70,
+          "h": 36
+        },
+        "resumo": {
+          "x": 569,
+          "y": 695,
+          "w": 462,
+          "h": 101
+        },
+        "propor": {
+          "x": 914,
+          "y": 816,
+          "w": 117,
+          "h": 40
+        }
+      }
+    },
+    {
+      "id": "08b-agendar-horario",
+      "arquivo": "08b-agendar-horario.webp",
+      "rota": "/mensagens/ana_borges",
+      "alvos": {
+        "form": {
+          "x": 544,
+          "y": 19,
+          "w": 512,
+          "h": 862
+        },
+        "horario": {
+          "x": 874,
+          "y": 597,
+          "w": 70,
+          "h": 36
+        },
+        "resumo": {
+          "x": 569,
+          "y": 695,
+          "w": 462,
+          "h": 101
+        },
+        "propor": {
+          "x": 914,
+          "y": 816,
+          "w": 117,
+          "h": 40
+        }
+      }
+    },
+    {
+      "id": "09-proposta",
+      "arquivo": "09-proposta.webp",
+      "rota": "/mensagens/ana_borges",
+      "alvos": {
+        "cartao": {
+          "x": 894,
+          "y": 246,
+          "w": 384,
+          "h": 276
+        },
+        "status": {
+          "x": 1211,
+          "y": 263,
+          "w": 50,
+          "h": 16
+        }
+      }
+    },
+    {
+      "id": "10-avaliar",
+      "arquivo": "10-avaliar.webp",
+      "rota": "/mensagens/linus",
+      "alvos": {
+        "cartao": {
+          "x": 894,
+          "y": 146,
+          "w": 384,
+          "h": 554
+        },
+        "estrelas": {
+          "x": 911,
+          "y": 431,
+          "w": 156,
+          "h": 28
+        },
+        "estrela5": {
+          "x": 1039,
+          "y": 431,
+          "w": 28,
+          "h": 28
+        },
+        "recado": {
+          "x": 911,
+          "y": 496,
+          "w": 350,
+          "h": 96
+        },
+        "enviar": {
+          "x": 1119,
+          "y": 604,
+          "w": 142,
+          "h": 40
+        }
+      }
+    },
+    {
+      "id": "11-avaliar-preenchido",
+      "arquivo": "11-avaliar-preenchido.webp",
+      "rota": "/mensagens/linus",
+      "alvos": {
+        "cartao": {
+          "x": 894,
+          "y": 146,
+          "w": 384,
+          "h": 554
+        },
+        "estrelas": {
+          "x": 911,
+          "y": 431,
+          "w": 156,
+          "h": 28
+        },
+        "estrela5": {
+          "x": 1039,
+          "y": 431,
+          "w": 28,
+          "h": 28
+        },
+        "recado": {
+          "x": 911,
+          "y": 496,
+          "w": 350,
+          "h": 96
+        },
+        "enviar": {
+          "x": 1119,
+          "y": 604,
+          "w": 142,
+          "h": 40
+        }
+      }
+    },
+    {
+      "id": "12-avaliado",
+      "arquivo": "12-avaliado.webp",
+      "rota": "/mensagens/linus",
+      "alvos": {
+        "cartao": {
+          "x": 894,
+          "y": 409,
+          "w": 384,
+          "h": 292
+        }
+      }
+    },
+    {
+      "id": "13-notificacoes",
+      "arquivo": "13-notificacoes.webp",
+      "rota": "/notificacoes",
+      "alvos": {
+        "titulo": {
+          "x": 590,
+          "y": 32,
+          "w": 672,
+          "h": 40
+        },
+        "lista": {
+          "x": 590,
+          "y": 153,
+          "w": 672,
+          "h": 65
+        },
+        "item1": {
+          "x": 590,
+          "y": 153,
+          "w": 672,
+          "h": 64
+        },
+        "item2": {
+          "x": 590,
+          "y": 275,
+          "w": 672,
+          "h": 65
+        },
+        "item3": {
+          "x": 590,
+          "y": 340,
+          "w": 672,
+          "h": 65
+        },
+        "nav_notificacoes": {
+          "x": 16,
+          "y": 284,
+          "w": 219,
+          "h": 40
+        }
+      }
+    },
+    {
+      "id": "14-feed-foto",
+      "arquivo": "14-feed-foto.webp",
+      "rota": "/feed",
+      "alvos": {
+        "foto": {
+          "x": 514,
+          "y": 264,
+          "w": 520,
+          "h": 346
+        },
+        "post": {
+          "x": 434,
+          "y": 125,
+          "w": 600,
+          "h": 545
+        }
+      }
+    },
+    {
+      "id": "15-lupa",
+      "arquivo": "15-lupa.webp",
+      "rota": "/feed",
+      "alvos": {
+        "lupa": {
+          "x": 400,
+          "y": 210,
+          "w": 800,
+          "h": 533
+        },
+        "fechar": {
+          "x": 1156,
+          "y": 158,
+          "w": 44,
+          "h": 44
+        }
+      }
+    }
+  ]
+}

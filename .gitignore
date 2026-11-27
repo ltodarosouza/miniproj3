@@ -36,3 +36,8 @@ docs/review-painel-v2.md
 
 # backups do scripts/refazer_posts.py (podem ter dados de produção)
 backup-posts-*.json
+
+# vídeos e quadros gerados pelo docs/demo/render.py (o MP4 não vai para o git)
+docs/demo/**/*.mp4
+docs/demo/**/*.gif
+docs/demo/**/quadros/
