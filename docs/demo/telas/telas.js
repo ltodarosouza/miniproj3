@@ -365,6 +365,38 @@ window.TELAS = {
       }
     },
     {
+      "id": "09b-confirmada",
+      "arquivo": "09b-confirmada.webp",
+      "rota": "/mensagens/ana_borges",
+      "alvos": {
+        "cartao": {
+          "x": 894,
+          "y": 246,
+          "w": 384,
+          "h": 343
+        },
+        "status": {
+          "x": 1185,
+          "y": 263,
+          "w": 76,
+          "h": 16
+        },
+        "agenda": {
+          "x": 911,
+          "y": 446,
+          "w": 350,
+          "h": 40
+        },
+        "dica": {
+          "x": 911,
+          "y": 494,
+          "w": 350,
+          "h": 39
+        }
+      },
+      "link_google_agenda": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Troca%3A+Estrutura+de+Dados+%E2%86%94+CSS&dates=20261128T220000Z%2F20261128T230000Z&details=%40ada+ensina+Estrutura+de+Dados+para+%40ana_borges%0A%40ana_borges+ensina+CSS+para+%40ada"
+    },
+    {
       "id": "10-avaliar",
       "arquivo": "10-avaliar.webp",
       "rota": "/mensagens/linus",
@@ -466,19 +498,19 @@ window.TELAS = {
           "x": 590,
           "y": 153,
           "w": 672,
-          "h": 65
+          "h": 130
         },
         "item1": {
           "x": 590,
           "y": 153,
           "w": 672,
-          "h": 64
+          "h": 65
         },
         "item2": {
           "x": 590,
-          "y": 275,
+          "y": 218,
           "w": 672,
-          "h": 65
+          "h": 64
         },
         "item3": {
           "x": 590,
@@ -491,44 +523,6 @@ window.TELAS = {
           "y": 284,
           "w": 219,
           "h": 40
-        }
-      }
-    },
-    {
-      "id": "14-feed-foto",
-      "arquivo": "14-feed-foto.webp",
-      "rota": "/feed",
-      "alvos": {
-        "foto": {
-          "x": 514,
-          "y": 264,
-          "w": 520,
-          "h": 346
-        },
-        "post": {
-          "x": 434,
-          "y": 125,
-          "w": 600,
-          "h": 545
-        }
-      }
-    },
-    {
-      "id": "15-lupa",
-      "arquivo": "15-lupa.webp",
-      "rota": "/feed",
-      "alvos": {
-        "lupa": {
-          "x": 400,
-          "y": 210,
-          "w": 800,
-          "h": 533
-        },
-        "fechar": {
-          "x": 1156,
-          "y": 158,
-          "w": 44,
-          "h": 44
         }
       }
     }
