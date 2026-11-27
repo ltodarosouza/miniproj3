@@ -17,8 +17,9 @@ Linear (detalhes finos, movimento suave).
   arrastar) e assentam com suavidade. Nada segue o mouse.
 
 O nome da rede é Colmatch ([decisão 32](docs/decisoes/32-identidade-colmatch-bolsa-de-saberes.md)).
-Ele vem da constante `NOME_REDE` em `frontend/lib/marca.ts`: trocá-la muda o
-nome na navegação, no título e no manifest.
+O texto vem da constante `NOME_REDE` em `frontend/lib/marca.ts` (título da página,
+manifest e rótulos acessíveis); a marca desenhada na navegação ("Col" + "match" e o
+favo) fica em `frontend/components/ui/Logo.tsx`.
 
 A identidade atual, "Bolsa de saberes" (mel e grafite, painéis densos e réguas
 finas), vale sobre a direção acima. O logo está na
@@ -110,11 +111,10 @@ Todos em `frontend/components/ui/`. Importe com `@/components/ui/<Nome>`.
 | `useSelos` | Badges de mensagens, notificações e avaliações | Polling com aba visível |
 | `useStreak` | Sequência de estudo | Carrega sequência e último post |
 
-A vitrine `/design` (`frontend/app/design/page.tsx`) mostra os componentes visuais da tabela. A
-casca (`Navegacao`, `NavegacaoLateral`, `CabecalhoCelular`, `BarraInferior`), o `EsqueletoPost` e os
-hooks `useSelos` e `useStreak` não aparecem nela: veja o uso real em
-`frontend/components/ui/Navegacao.tsx`, que monta a casca com os dois hooks, e em
-`frontend/components/ui/Esqueleto.tsx`.
+A vitrine `/design` (`frontend/app/design/page.tsx`) mostra os componentes visuais da tabela;
+o `EsqueletoPost` aparece dentro da amostra de `EsqueletoLista`. A casca (`Navegacao`,
+`NavegacaoLateral`, `CabecalhoCelular`, `BarraInferior`) e os hooks `useSelos` e `useStreak`
+não estão na vitrine: eles vivem no layout, montados por `frontend/components/ui/Navegacao.tsx`.
 
 Precisa de um ícone novo? Adicione o caminho SVG em `Icone.tsx`, no mesmo
 traço (24×24, linha 1.5, pontas arredondadas). Nada de emoji no lugar de
@@ -155,61 +155,21 @@ Regras:
 
 ## Navegação e celular
 
-No computador (a partir de 1024 px), a casca usa um painel lateral flutuante à
-esquerda, com logo, sequência, Feed, Buscar, Matches, Mensagens, Notificações,
-Perfil, Publicar, tema e Sair. Entre 1024 e 1279 px, mostra só ícones; a partir
-de 1280 px, ícones e rótulos. O item ativo ganha fundo `superficie-2`, texto em
-negrito e uma barra mel de 2 px na borda do painel. A área central tem pelo menos 960 px a partir de 1280 px.
+A casca é um painel lateral no computador (a partir de 1024 px) e cabeçalho fino com barra
+inferior no celular. Larguras, alturas, variáveis CSS e a régua de alinhamento estão nas
+decisões [20](docs/decisoes/20-casca-de-rede-social.md) e
+[24](docs/decisoes/24-regua-de-alinhamento.md); os selos de mensagens e notificações, na
+[21](docs/decisoes/21-notificacoes-na-leitura.md); a sequência de estudo, na
+[23](docs/decisoes/23-streak-no-fuso-do-brasil.md). Os valores valem como estão no código
+(`frontend/components/ui/casca.ts` e `globals.css`); este guia não os repete.
 
-No celular (abaixo de 1024 px), há um cabeçalho fino com logo, sequência,
-notificações, mensagens e "Mais opções". Esse botão abre uma `Folha` com tema
-e sair. A barra inferior fixa e plana tem Feed, Buscar, Publicar (+), Matches
-e Perfil, e respeita a área segura do iPhone. Publicar e + levam a
-`/feed?publicar=1`.
+## Telas
 
-As variáveis da casca são `--altura-navegacao` (3,5 rem no celular, 0 no
-computador logado), `--altura-barra-inferior` (4 rem mais área segura no
-celular, 0 no computador) e `--largura-lateral`. Valem quando `<html
-data-logado="sim">`; um script no `<head>` define esse atributo antes da
-pintura. Exemplo: `h-[calc(100dvh-var(--altura-navegacao)-var(--altura-barra-inferior))]`.
-
-Mensagens usam `GET /dms/nao-lidas` (C1) e notificações usam
-`GET /notificacoes/nao-lidas` (C2). Os badges consultam a cada 15 s com a aba
-visível e ao trocar de rota. Erro remove o badge; 404 também interrompe as consultas
-àquele endpoint até recarregar.
-
-A sequência fica sempre visível, com barras da semana e número na lateral e no
-cabeçalho do celular. Vem de `GET /usuarios/{eu}` (`streak`) e do último post,
-contado no fuso de São Paulo, como em
-[decisão 23](docs/decisoes/23-streak-no-fuso-do-brasil.md). As barras acendem em mel
-nos dias seguidos; o número fica em `texto` quando a pessoa já postou hoje e em
-`texto-2` quando falta. A dica é "Poste hoje para manter sua sequência de N
-dias". Clicar leva para Publicar, ou para o próprio perfil se já postou hoje.
-
-O app é instalável como PWA, com `display: standalone`, ícones 192, 512,
-maskable e `apple-touch-icon`, `viewport-fit=cover` e `theme-color` claro ou
-escuro. Campos têm 16 px no celular para evitar zoom no iOS e altura de 44 px.
-`Botao tamanho="sm"` também mantém alvo de toque de 44 px no celular.
-
-## Telas: padrão sugerido
-
-- **Feed:** coluna `max-w-2xl`, formulário de novo post no topo, use
-  `EsqueletoLista` ao carregar, `PuxarParaAtualizar` na lista e `ToqueDuplo`
-  na foto. Posts dentro de `Revelar`, com `atraso` de 40 ms por
-  item até o sexto (`frontend/app/feed/page.tsx`).
-- **Matches:** duas tabelas (`TabelaPares` em `frontend/app/matches/page.tsx`):
-  "01 · Pares de troca" primeiro, com as colunas Pessoa, Te ensina e Você
-  ensina, e depois "02 · Pode te ensinar". Cada linha termina num link
-  "Conversar" (`BotaoLink tamanho="sm"`), com `variante="troca"` nos pares de
-  troca e `variante="secundario"` em "Pode te ensinar".
-- **Perfil:** cabeçalho com `Avatar tamanho="lg"`, contadores com `numeros`,
-  nota com `Estrelas`, habilidades em `TagHabilidade`. Edição de habilidades
-  em `EditorHabilidades` (`frontend/components/perfil/`).
-- **Mensagens:** lista de conversas à esquerda no desktop e tela cheia no
-  celular. Balões em `bg-marca-suave` (meus) e `bg-superficie-2` (dele).
-- **Estados:** toda lista tem estado vazio com uma frase e uma ação ("Você
-  ainda não segue ninguém. Veja seus matches"), carregando com
-  `Botao carregando` ou um texto curto, e erro dizendo o que fazer.
+Antes de criar uma tela, copie a estrutura da tela parecida que já existe: feed em
+`frontend/app/feed/page.tsx`, matches em `frontend/app/matches/page.tsx`, perfil em
+`frontend/app/perfil/[username]/page.tsx` e conversa em `frontend/app/mensagens/[username]/page.tsx`.
+Toda lista tem estado vazio com uma frase e uma ação, um estado de carregamento e um erro que
+diz o que fazer.
 
 ## Não fazer
 
