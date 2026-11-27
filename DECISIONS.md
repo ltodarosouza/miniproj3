@@ -726,6 +726,8 @@ Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada de
   Pedido direto do dono; refina a decisão 42 com legenda, fundo desfocado e rolagem travada.
 - [44. Recorte da foto do post e texto longo sem espaço](docs/decisoes/44-recorte-da-foto-e-texto-longo-sem-espaco.md).
   Pedido direto do dono; editor de recorte sem dependência nova e quebra de sequências longas no direct, posts e comentários.
+- [45. Ajuste da foto de perfil](docs/decisoes/45-ajuste-da-foto-de-perfil.md).
+  Pedido direto do dono; o editor da decisão 44 em modo perfil, com máscara no hexágono do avatar.
 
 ## Features
 
