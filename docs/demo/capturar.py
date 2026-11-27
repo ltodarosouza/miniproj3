@@ -10,6 +10,7 @@ Variáveis opcionais: FRONT_URL, API_URL e DEMO_DB (caminho do SQLite semeado).
 """
 from __future__ import annotations
 
+import atexit
 import json
 import os
 import shutil
@@ -75,6 +76,7 @@ def capture(page, ident, rota, selectors):
 records = []
 # Grava numa pasta temporária; as capturas antigas só são trocadas se o roteiro terminar.
 NOVA = Path(tempfile.mkdtemp(prefix="colmatch-telas-"))
+atexit.register(shutil.rmtree, NOVA, ignore_errors=True)  # some com a pasta mesmo se o roteiro falhar
 
 with sync_playwright() as pw:
     browser = pw.chromium.launch(headless=True)
