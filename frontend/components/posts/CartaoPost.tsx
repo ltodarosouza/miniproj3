@@ -172,7 +172,7 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApaga
             />
           ) : (
             <>
-              <p className="mt-2.5 max-w-[65ch] whitespace-pre-line break-words font-conteudo text-base leading-relaxed text-texto">
+              <p className="mt-2.5 max-w-[65ch] whitespace-pre-line font-conteudo [overflow-wrap:anywhere] text-base leading-relaxed text-texto">
                 {post.texto}
               </p>
 

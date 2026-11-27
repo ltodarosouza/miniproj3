@@ -31,8 +31,8 @@ export function BalaoMensagem({
 
   return (
     <div className={`flex transition-[opacity,transform] duration-[var(--medio)] ease-saida motion-reduce:transition-none ${visivel ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"} ${minha ? "justify-end" : "justify-start"} ${agrupadaComAnterior ? "mt-0.5" : "mt-3"}`}>
-      <div className={`max-w-[75%] ${minha ? "items-end" : "items-start"} flex flex-col`}>
-        <p className={`rounded-[4px] px-3 py-2 text-[0.9375rem] leading-relaxed whitespace-pre-wrap break-words text-texto ${minha ? "bg-marca-suave" : "bg-superficie-2"}`}>
+      <div className={`min-w-0 max-w-[75%] ${minha ? "items-end" : "items-start"} flex flex-col`}>
+        <p className={`rounded-[4px] px-3 py-2 text-[0.9375rem] leading-relaxed max-w-full whitespace-pre-wrap text-texto [overflow-wrap:anywhere] ${minha ? "bg-marca-suave" : "bg-superficie-2"}`}>
           {mensagem.texto}
         </p>
         {(mostrarHora || mensagem.estado === "enviando" || mensagem.estado === "falhou") && <div className={`mt-1 flex items-center gap-1.5 px-0.5 font-mono text-[0.6875rem] tabular-nums ${mensagem.estado === "falhou" ? "text-perigo" : "text-texto-3"}`}>
