@@ -329,8 +329,9 @@
     const salvo = saida(prog(t, AGENDA.salvo, 0.45));
     el.meet.style.opacity = String(salvo);
     el.meet.style.transform = `translateY(${(1 - salvo) * 14}px)`;
-    el.seloAntes.style.opacity = String(1 - suave(prog(t, AGENDA.salvo, 0.3)));
-    el.seloDepois.style.opacity = String(suave(prog(t, AGENDA.salvo, 0.3)));
+    // Um texto sai antes de o outro entrar: nunca os dois sobrepostos.
+    el.seloAntes.style.opacity = String(1 - suave(prog(t, AGENDA.salvo, 0.18)));
+    el.seloDepois.style.opacity = String(suave(prog(t, AGENDA.salvo + 0.18, 0.22)));
     const [m0, m1] = AGENDA.meet;
     el.meet.style.setProperty("--brilho-meet", String(opacidadeJanela(t, m0, m1)));
   }
