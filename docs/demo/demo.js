@@ -68,10 +68,13 @@
   let TELA_EVENTOS, CAMERA, CURSOR, CLIQUES, DESTAQUES, LEGENDAS;
 
   function montarRoteiro() {
+    const form = ret("03-registrar-preenchido", "form");
+    const colunaDoFeed = { x: 340 * ESCALA, y: form.y, w: 700 * ESCALA, h: H - form.y };
     TELA_EVENTOS = [
       { t: 2.25, id: "01-feed", dur: 0.6 },
       { t: 8.12, id: "02-registrar", dur: 0.3 },
-      { t: 9.3, id: "03-registrar-preenchido", tipo: "revela", direcao: "baixo", area: ret("03-registrar-preenchido", "form"), dur: 1.3 },
+      // O formulário cresce e empurra o feed: revela a coluna inteira, do topo do formulário até a borda.
+      { t: 9.3, id: "03-registrar-preenchido", tipo: "revela", direcao: "baixo", area: colunaDoFeed, dur: 1.3 },
       { t: 11.92, id: "04-feed-publicado", dur: 0.3 },
       { t: 19.52, id: "05-matches", dur: 0.3 },
       { t: 23.62, id: "06-conversa", dur: 0.3 },
