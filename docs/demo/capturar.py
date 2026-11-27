@@ -2,7 +2,8 @@
 
 Requer banco recém-semeado, frontend e API rodando. O roteiro publica um post
 com foto, adiciona Estrutura de Dados às habilidades de Ada, envia uma mensagem,
-propõe uma troca e avalia a troca com Linus (removendo antes a avaliação de Ada).
+propõe uma troca, confirma a troca como Ana (pela API, para mostrar o botão do Google Agenda)
+e avalia a troca com Linus (removendo antes a avaliação de Ada).
 
 Uso (da raiz do repo; passo a passo em docs/demo/README.md):
   uv run --with playwright==1.64.0 --with pillow==11.3.0 python docs/demo/capturar.py
@@ -159,6 +160,25 @@ with sync_playwright() as pw:
         page.get_by_text("Estrutura de Dados",exact=False).last.wait_for(timeout=20000)
         capture(page,"09-proposta","/mensagens/ana_borges",{"cartao":"[id^='troca-']:has-text('Estrutura de Dados')","status":"[id^='troca-']:has-text('Estrutura de Dados') > div:first-child > span:last-child"})
 
+        # Ana confirma a troca pela API (é o mesmo que clicar em "Confirmar") para mostrar o botão do Google Agenda.
+        def trocas_de_ana(tok):
+            req=urllib.request.Request(API+"/trocas?com=ana_borges",headers={"Authorization":"Bearer "+tok})
+            with urllib.request.urlopen(req) as response: return json.load(response)["items"]
+        proposta=next((t for t in trocas_de_ana(token) if t.get("status")=="proposta" and (t.get("proposta_por") or {}).get("username")=="ada"),None)
+        if not proposta: raise RuntimeError("Troca proposta por Ada não encontrada na API")
+        troca_id=proposta["id"]
+        with urllib.request.urlopen(urllib.request.Request(API+"/auth/login",data=json.dumps({"username":"ana_borges","password":"senha-forte-123"}).encode(),headers={"Content-Type":"application/json"},method="POST")) as response: ana_token=json.load(response)["token"]
+        with urllib.request.urlopen(urllib.request.Request(API+f"/trocas/{troca_id}/confirmar",data=b"",headers={"Authorization":"Bearer "+ana_token},method="POST")) as response: response.read()
+        confirmada=next((t for t in trocas_de_ana(token) if t["id"]==troca_id),None)
+        if not confirmada or confirmada.get("status")!="confirmada": raise RuntimeError("Troca não ficou confirmada na API")
+        link=confirmada.get("link_google_agenda") or ""
+        if not link.startswith("https://calendar.google.com/calendar/render?"): raise RuntimeError("Link do Google Agenda ausente ou inválido na troca confirmada")
+        page.reload()
+        page.locator("a:has-text('Agendar no Google Agenda')").first.wait_for(state="visible",timeout=20000)
+        page.locator(f"[id='troca-{troca_id}']").scroll_into_view_if_needed()
+        capture(page,"09b-confirmada","/mensagens/ana_borges",{"cartao":f"[id='troca-{troca_id}']","status":f"[id='troca-{troca_id}'] > div:first-child > span:last-child","agenda":f"[id='troca-{troca_id}'] a:has-text('Agendar no Google Agenda')","dica":f"[id='troca-{troca_id}'] p:has-text('Adicionar videoconferência do Google Meet')"})
+        records[-1]["link_google_agenda"]=link
+
         # Estado logo após conclusão da troca: remove apenas a avaliação de Ada para a troca com Linus.
         con=sqlite3.connect(DB)
         try:
@@ -181,11 +201,6 @@ with sync_playwright() as pw:
         capture(page,"12-avaliado","/mensagens/linus",{"cartao":"[id^='troca-']"})
         page.goto(FRONT+"/notificacoes")
         capture(page,"13-notificacoes","/notificacoes",{"titulo":"h1","lista":"main ul","item1":"main ul li >> nth=0","item2":"main ul li >> nth=1","item3":"main ul li >> nth=2","nav_notificacoes":nav("notificacoes")})
-        page.goto(FRONT+"/feed"); photo=page.locator("article:has(img[alt='Foto do post'])").first
-        photo.locator("img[alt='Foto do post']").evaluate("el => el.scrollIntoView({block: 'center'})")
-        capture(page,"14-feed-foto","/feed",{"foto":"article img[alt='Foto do post']","post":"article:has(img[alt='Foto do post'])"})
-        photo.locator("img[alt='Foto do post']").click(); page.wait_for_timeout(1200)
-        capture(page,"15-lupa","/feed",{"lupa":"img[alt^='Foto do post de']","fechar":"button[aria-label='Fechar foto']"})
     except Exception:
         # Guarda a tela do momento da falha para depurar o roteiro.
         page.screenshot(path=str(ROOT / ".demo-srv/erro-captura.png"))
