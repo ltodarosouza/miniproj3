@@ -256,6 +256,44 @@ a {
   }
 }
 
+@keyframes sumir-escala {
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes aparecer {
+  from { opacity: 0; }
+}
+
+@keyframes sumir {
+  to { opacity: 0; }
+}
+
+/* Lupa da foto (decisão 43): fundo escurecido e desfocado; cartão entra e sai em escala. */
+.lupa::backdrop {
+  background: rgb(18 17 16 / 0.72);
+  -webkit-backdrop-filter: blur(10px) saturate(0.9);
+  backdrop-filter: blur(10px) saturate(0.9);
+}
+
+.lupa[open]::backdrop {
+  animation: aparecer var(--medio) var(--ease-saida) both;
+}
+
+.lupa[open] .lupa-foto {
+  animation: aparecer-escala var(--medio) var(--ease-saida) both;
+}
+
+.lupa[data-fechando]::backdrop {
+  animation: sumir var(--rapido) ease-in both;
+}
+
+.lupa[data-fechando] .lupa-foto {
+  animation: sumir-escala var(--rapido) ease-in both;
+}
+
 .entrar-pagina {
   animation: entrar-pagina var(--lento) var(--ease-saida) both;
 }
