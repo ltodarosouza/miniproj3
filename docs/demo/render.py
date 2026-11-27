@@ -31,9 +31,11 @@ class Servidor(http.server.ThreadingHTTPServer):
 
 
 def iniciar_servidor(pasta):
-    handler = lambda *args, **kwargs: http.server.SimpleHTTPRequestHandler(
-        *args, directory=str(pasta), **kwargs
-    )
+    class Silencioso(http.server.SimpleHTTPRequestHandler):
+        def log_message(self, *args):
+            pass  # um GET por arquivo só polui o progresso
+
+    handler = lambda *args, **kwargs: Silencioso(*args, directory=str(pasta), **kwargs)
     servidor = Servidor(("127.0.0.1", 0), handler)
     thread = threading.Thread(target=servidor.serve_forever, daemon=True)
     thread.start()
