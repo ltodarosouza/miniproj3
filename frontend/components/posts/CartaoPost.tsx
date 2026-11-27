@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { EditorPost } from "@/components/posts/EditorPost";
+import { Lupa } from "@/components/posts/Lupa";
 import { Avatar } from "@/components/ui/Avatar";
 import { Botao } from "@/components/ui/Botao";
 import { BotaoCurtir } from "@/components/ui/BotaoCurtir";
@@ -42,6 +43,7 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApaga
   const [curtido, setCurtido] = useState(post.curtido);
   const [curtidas, setCurtidas] = useState(post.curtidas);
   const [imagemFalhou, setImagemFalhou] = useState(false);
+  const [ampliando, setAmpliando] = useState(false);
   const [souAutor, setSouAutor] = useState(false);
   const [confirmando, setConfirmando] = useState(false);
   const [apagando, setApagando] = useState(false);
@@ -184,13 +186,25 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApaga
               )}
 
               {post.imagem_url && !imagemFalhou && (
-                <img
-                  src={urlDaImagem(post.imagem_url)}
-                  alt="Foto do post"
-                  loading="lazy"
-                  onError={() => setImagemFalhou(true)}
-                  className="mt-3 max-h-[28rem] w-full rounded-controle object-cover ring-1 ring-linha"
-                />
+                <>
+                  {/* Toque simples amplia; o duplo toque de curtir não vale em cima da foto (decisão 42). */}
+                  <button
+                    type="button"
+                    data-sem-toque-duplo
+                    aria-label="Ampliar foto"
+                    onClick={() => setAmpliando(true)}
+                    className="mt-3 block w-full cursor-zoom-in overflow-hidden rounded-controle ring-1 ring-linha"
+                  >
+                    <img
+                      src={urlDaImagem(post.imagem_url)}
+                      alt="Foto do post"
+                      loading="lazy"
+                      onError={() => setImagemFalhou(true)}
+                      className="max-h-[28rem] w-full object-cover"
+                    />
+                  </button>
+                  <Lupa aberta={ampliando} src={urlDaImagem(post.imagem_url)} aoFechar={() => setAmpliando(false)} />
+                </>
               )}
             </>
           )}

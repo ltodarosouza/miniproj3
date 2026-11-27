@@ -719,6 +719,9 @@ Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada de
   Pedido direto do dono; substitui o desenho de três células da decisão 32.
 - [41. Feed com mais imagem](docs/decisoes/41-feed-com-mais-imagem.md).
   Pedido direto do dono.
+- [42. Foto do post abre em tela cheia](docs/decisoes/42-foto-do-post-em-tela-cheia.md).
+  Issue #106; o toque na foto amplia a imagem inteira, e seguidores/seguindo
+  seguem como página (o modal estilo Instagram foi descartado).
 
 ## Features
 
