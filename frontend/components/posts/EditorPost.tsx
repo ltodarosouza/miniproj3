@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 
+import { RecortarFoto, type EstadoRecorte } from "@/components/posts/RecortarFoto";
 import { AreaTexto, Campo, Selecao } from "@/components/ui/Campo";
 import { Botao } from "@/components/ui/Botao";
 import { Icone } from "@/components/ui/Icone";
@@ -39,6 +40,10 @@ export function EditorPost({
   const [foto, setFoto] = useState<File | null>(null);
   const [urlPrevia, setUrlPrevia] = useState("");
   const [removerFoto, setRemoverFoto] = useState(false);
+  // Foto nova antes do recorte; a foto que já está no servidor não passa pelo editor.
+  const [original, setOriginal] = useState<File | null>(null);
+  const [estadoRecorte, setEstadoRecorte] = useState<EstadoRecorte | null>(null);
+  const [paraRecortar, setParaRecortar] = useState<File | null>(null);
   const formulario = useRef<HTMLFormElement>(null);
   const entradaFoto = useRef<HTMLInputElement>(null);
   const urlAtual = useRef("");
@@ -75,18 +80,33 @@ export function EditorPost({
       if (selecao !== selecaoFoto.current) return;
       const mensagem = validarImagem(preparada);
       if (mensagem) throw new Error(mensagem);
-      if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
-      const url = URL.createObjectURL(preparada);
-      urlAtual.current = url;
-      setUrlPrevia(url);
-      setFoto(preparada);
-      setRemoverFoto(false);
+      // A foto só entra depois do recorte; cancelar mantém a anterior.
+      setParaRecortar(preparada);
     } catch (falha) {
       if (selecao !== selecaoFoto.current) return;
       setErro(falha instanceof Error ? falha.message : "Não foi possível preparar a foto.");
     } finally {
       if (selecao === selecaoFoto.current) setPreparandoFoto(false);
     }
+  }
+
+  function usarFotoRecortada(recortada: File, estado: EstadoRecorte) {
+    const escolhida = paraRecortar;
+    const mensagem = validarImagem(recortada);
+    setParaRecortar(null);
+    if (mensagem) {
+      setErro(mensagem);
+      return;
+    }
+    if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
+    const url = URL.createObjectURL(recortada);
+    urlAtual.current = url;
+    setUrlPrevia(url);
+    setFoto(recortada);
+    setOriginal(escolhida);
+    setEstadoRecorte(estado);
+    setRemoverFoto(false);
+    setErro("");
   }
 
   function limparFoto() {
@@ -96,6 +116,9 @@ export function EditorPost({
     urlAtual.current = "";
     setUrlPrevia("");
     setFoto(null);
+    setOriginal(null);
+    setEstadoRecorte(null);
+    setParaRecortar(null);
     setRemoverFoto(true);
     setErro("");
     if (entradaFoto.current) entradaFoto.current.value = "";
@@ -207,8 +230,18 @@ export function EditorPost({
             <img
               src={urlPrevia || urlDaImagem(post.imagem_url!)}
               alt={urlPrevia ? "Prévia da nova foto" : "Foto atual"}
-              className="max-h-64 w-full rounded-controle object-cover ring-1 ring-linha"
+              className="max-h-64 w-full rounded-controle bg-superficie-2 object-contain ring-1 ring-linha"
             />
+            {urlPrevia && original && (
+              <button
+                type="button"
+                onClick={() => setParaRecortar(original)}
+                disabled={salvando}
+                className="absolute left-2 top-2 inline-flex h-8 items-center rounded-controle bg-superficie px-2.5 text-sm font-medium text-texto ring-1 ring-linha transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
+              >
+                Recortar
+              </button>
+            )}
             <button
               type="button"
               onClick={limparFoto}
@@ -221,6 +254,12 @@ export function EditorPost({
           </div>
         )}
         <input ref={entradaFoto} type="file" accept="image/*" className="sr-only" onChange={escolherFoto} />
+        <RecortarFoto
+          arquivo={paraRecortar}
+          inicial={paraRecortar && paraRecortar === original ? estadoRecorte : null}
+          aoConfirmar={usarFotoRecortada}
+          aoCancelar={() => setParaRecortar(null)}
+        />
         <div className="flex items-center gap-2">
           <Botao type="button" variante="fantasma" tamanho="sm" onClick={() => entradaFoto.current?.click()} disabled={salvando || preparandoFoto}>
             {preparandoFoto ? "Preparando foto…" : (post.imagem_url && !removerFoto) || foto ? "Trocar foto" : "Adicionar foto"}
