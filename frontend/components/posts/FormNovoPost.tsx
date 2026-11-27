@@ -8,6 +8,7 @@ import {
   type FormEvent,
 } from "react";
 
+import { RecortarFoto, type EstadoRecorte } from "@/components/posts/RecortarFoto";
 import { AreaTexto, Campo, Selecao } from "@/components/ui/Campo";
 import { Botao } from "@/components/ui/Botao";
 import { Icone } from "@/components/ui/Icone";
@@ -47,6 +48,10 @@ export function FormNovoPost({
   const [postFotoPendente, setPostFotoPendente] = useState<Post | null>(null);
   const [reenviandoFoto, setReenviandoFoto] = useState(false);
   const [aberto, setAberto] = useState(false);
+  // Foto escolhida antes do recorte: reabrir o editor parte dela, não da já recortada.
+  const [original, setOriginal] = useState<File | null>(null);
+  const [estadoRecorte, setEstadoRecorte] = useState<EstadoRecorte | null>(null);
+  const [paraRecortar, setParaRecortar] = useState<File | null>(null);
   const entradaFoto = useRef<HTMLInputElement>(null);
   const urlAtual = useRef("");
   const envioAtivo = useRef(false);
@@ -90,6 +95,9 @@ export function FormNovoPost({
     urlAtual.current = "";
     setUrlPrevia("");
     setFoto(null);
+    setOriginal(null);
+    setEstadoRecorte(null);
+    setParaRecortar(null);
     setErroFoto("");
     if (entradaFoto.current) entradaFoto.current.value = "";
   }
@@ -110,11 +118,8 @@ export function FormNovoPost({
         setErroFoto(mensagem);
         return;
       }
-      if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
-      const url = URL.createObjectURL(imagem);
-      urlAtual.current = url;
-      setUrlPrevia(url);
-      setFoto(imagem);
+      // A foto só entra no post depois do recorte; cancelar mantém a anterior.
+      setParaRecortar(imagem);
     } catch (erro) {
       if (selecao === selecaoFotoAtual.current) {
         setErroFoto(erro instanceof Error ? erro.message : "Não consegui preparar essa foto.");
@@ -122,6 +127,29 @@ export function FormNovoPost({
     } finally {
       if (selecao === selecaoFotoAtual.current) setPreparandoFoto(false);
     }
+  }
+
+  function usarFotoRecortada(recortada: File, estado: EstadoRecorte) {
+    const escolhida = paraRecortar;
+    const mensagem = validarImagem(recortada);
+    setParaRecortar(null);
+    if (mensagem) {
+      setErroFoto(mensagem);
+      return;
+    }
+    if (urlAtual.current) URL.revokeObjectURL(urlAtual.current);
+    const url = URL.createObjectURL(recortada);
+    urlAtual.current = url;
+    setUrlPrevia(url);
+    setFoto(recortada);
+    setOriginal(escolhida);
+    setEstadoRecorte(estado);
+    setErroFoto("");
+  }
+
+  function recortarDeNovo() {
+    if (!original || enviando || reenviandoFoto || postFotoPendente) return;
+    setParaRecortar(original);
   }
 
   async function tentarEnviarFotoNovamente() {
@@ -299,11 +327,22 @@ export function FormNovoPost({
         <div className="space-y-2">
           {urlPrevia && (
             <div className="relative">
+              {/* object-contain: a prévia mostra exatamente o recorte escolhido. */}
               <img
                 src={urlPrevia}
                 alt="Prévia da foto"
-                className="max-h-64 w-full rounded-controle object-cover ring-1 ring-linha"
+                className="max-h-64 w-full rounded-controle bg-superficie-2 object-contain ring-1 ring-linha"
               />
+              {original && !postFotoPendente && (
+                <button
+                  type="button"
+                  onClick={recortarDeNovo}
+                  disabled={enviando || reenviandoFoto}
+                  className="absolute left-2 top-2 inline-flex h-8 items-center gap-1.5 rounded-controle bg-superficie px-2.5 text-sm font-medium text-texto ring-1 ring-linha transition-colors duration-[var(--rapido)] hover:bg-superficie-2 motion-reduce:transition-none"
+                >
+                  Recortar
+                </button>
+              )}
               <button
                 type="button"
                 onClick={removerFotoEscolhida}
@@ -323,6 +362,12 @@ export function FormNovoPost({
             tabIndex={-1}
             aria-hidden="true"
             onChange={escolherFoto}
+          />
+          <RecortarFoto
+            arquivo={paraRecortar}
+            inicial={paraRecortar && paraRecortar === original ? estadoRecorte : null}
+            aoConfirmar={usarFotoRecortada}
+            aoCancelar={() => setParaRecortar(null)}
           />
           <div className="flex items-center justify-between gap-3">
             <Botao

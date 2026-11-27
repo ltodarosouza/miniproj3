@@ -724,6 +724,8 @@ Rodada da auditoria e da repaginada Colmatch (decisões a partir da 27). Cada de
   seguem como página (o modal estilo Instagram foi descartado).
 - [43. Lupa da foto vira cartão, e a página não rola por trás](docs/decisoes/43-lupa-com-cartao-e-rolagem-travada.md).
   Pedido direto do dono; refina a decisão 42 com legenda, fundo desfocado e rolagem travada.
+- [44. Recorte da foto do post e texto longo sem espaço](docs/decisoes/44-recorte-da-foto-e-texto-longo-sem-espaco.md).
+  Pedido direto do dono; editor de recorte sem dependência nova e quebra de sequências longas no direct, posts e comentários.
 
 ## Features
 
