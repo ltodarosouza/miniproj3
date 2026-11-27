@@ -294,6 +294,14 @@ a {
   animation: sumir-escala var(--rapido) ease-in both;
 }
 
+/* A regra global de menos movimento não alcança o ::backdrop: aqui a lupa abre parada. */
+@media (prefers-reduced-motion: reduce) {
+  .lupa::backdrop,
+  .lupa .lupa-foto {
+    animation: none !important;
+  }
+}
+
 .entrar-pagina {
   animation: entrar-pagina var(--lento) var(--ease-saida) both;
 }
