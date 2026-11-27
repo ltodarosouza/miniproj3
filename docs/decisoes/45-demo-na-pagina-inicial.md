@@ -11,8 +11,9 @@ Pedido direto do dono, sem issue.
   quem não está logado) mostra a demo num `<video>` com `controls`, `muted`, `playsInline`,
   `preload="metadata"` e o poster, além de um parágrafo que descreve o que aparece e um link para
   abrir o arquivo. O README mostra uma capa estática com botão de play
-  (`docs/demo/capa-readme.webp`, 33 KB) que abre o vídeo no deploy, porque o GitHub não toca um
-  `<video>` que aponta para um arquivo do repositório.
+  (`docs/demo/capa-readme.webp`, 33 KB) que abre o MP4 do repositório no GitHub (o link funciona
+  em qualquer branch, sem esperar o deploy), porque o README não toca `<video>` com arquivo do
+  repositório.
 - **Comando.** A partir do MP4 gerado pelo `render.py`, com o ffmpeg do `imageio-ffmpeg`:
   `ffmpeg -i colmatch-demo.mp4 -vf "scale=1280:720:flags=lanczos,fps=30" -c:v libx264 -preset veryslow -crf 26 -profile:v high -pix_fmt yuv420p -movflags +faststart -an colmatch-demo-web.mp4`;
   o poster é o quadro de 3,5 s (`-ss 3.5 -frames:v 1`, WebP qualidade 82).

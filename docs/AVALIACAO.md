@@ -112,9 +112,9 @@ cartão da troca na conversa mostra **Enviar avaliação** para as duas pessoas.
 Para abrir a apresentação ou mandar junto com o link, há uma demo sem som com as telas reais do app
 (feed com fotos, registrar estudo, Sua semana e Mais estudadas, matches, conversa com agendamento,
 troca confirmada levada ao Google Agenda, avaliação e notificações). Ela aparece na
-[página inicial do deploy](https://miniproj3.vercel.app) e no topo do README, e o arquivo fica em
-[miniproj3.vercel.app/demo/colmatch-demo.mp4](https://miniproj3.vercel.app/demo/colmatch-demo.mp4)
-(também [no repositório](../frontend/public/demo/colmatch-demo.mp4)).
+[página inicial do deploy](https://miniproj3.vercel.app) e no topo do README, e o arquivo está em
+[`frontend/public/demo/colmatch-demo.mp4`](../frontend/public/demo/colmatch-demo.mp4) (no deploy,
+`/demo/colmatch-demo.mp4`).
 Ela não substitui o vídeo de cerca de 4 minutos da rubrica, que mostra também cadastro, login e
 follow. O [guia da demo](demo/README.md) explica como gerá-la de novo.
 
