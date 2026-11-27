@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Colmatch — demo</title>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+  <main id="palco" aria-label="Demonstração do Colmatch">
+    <div id="camera"></div>
+    <div id="destaque"></div>
+    <div id="anel"></div>
+    <div id="legenda"><svg viewBox="0 0 22 24" aria-hidden="true"><path d="M11 0L21.4 6V18L11 24L0.6 18V6Z" fill="#F2A900"/></svg><span></span></div>
+    <div id="abertura" class="marca">
+      <div class="logo"><svg viewBox="0 0 40 40" aria-hidden="true"></svg><span class="palavra">Col<b>match</b></span></div>
+      <p>Troque conhecimento com quem estuda o mesmo que você.</p>
+    </div>
+    <div id="fecho" class="marca">
+      <div class="logo"><svg viewBox="0 0 40 40" aria-hidden="true"></svg><span class="palavra">Col<b>match</b></span></div>
+      <strong>Aprenda junto.</strong>
+      <small>miniproj3.vercel.app</small>
+    </div>
+    <svg id="cursor" viewBox="-2 -2 28 40" aria-hidden="true">
+      <path d="M0 0V30.5L7.2 23.6L12 34.6L17.2 32.4L12.5 21.6H22.4Z" fill="#1B1A17" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/>
+    </svg>
+    <div id="aviso">Não encontrei telas/telas.js. Rode o docs/demo/capturar.py (veja docs/demo/README.md).</div>
+  </main>
+  <nav id="controles" aria-label="Controles da demo">
+    <button id="tocar" type="button" aria-label="Pausar">❚❚</button>
+    <input id="barra" type="range" min="0" max="46" step="0.01" value="0" aria-label="Posição">
+    <output id="relogio">00:00.0</output>
+  </nav>
+  <script src="telas/telas.js"></script>
+  <script src="demo.js"></script>
+</body>
+</html>
