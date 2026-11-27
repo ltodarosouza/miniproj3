@@ -1,37 +1,66 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Icone } from "@/components/ui/Icone";
 
-// Visualizador da foto em tela cheia (decisão 41): ajusta a imagem à tela e fecha
-// com Esc, no ✕ ou tocando fora. Fica na camada superior do <dialog>, acima da barra do celular.
+// Visualizador da foto em tela cheia (decisão 42): fecha com Esc, ✕ ou toque fora.
+// Clique na foto: zoom 2× ancorado — o transform-origin é o ponto clicado, que fica
+// exatamente sob o cursor; outro clique volta a ajustar.
+// Atalho: não há pan com arrasto no 2×; se o arrasto for pedido, volta o container rolável.
 export function Lupa({ aberta, src, aoFechar }: { aberta: boolean; src: string; aoFechar: () => void }) {
   const dialogo = useRef<HTMLDialogElement>(null);
+  const foto = useRef<HTMLImageElement>(null);
+  const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const elemento = dialogo.current;
     if (!elemento) return;
     if (aberta && !elemento.open) elemento.showModal();
-    else if (!aberta && elemento.open) elemento.close();
+    // Reabrindo, a foto volta ajustada.
+    else if (!aberta && elemento.open) {
+      elemento.close();
+      setZoom(null);
+    }
   }, [aberta]);
+
+  function alternarZoom(evento: React.MouseEvent<HTMLImageElement>) {
+    evento.stopPropagation();
+    const imagem = foto.current;
+    if (!imagem || zoom) {
+      setZoom(null);
+      return;
+    }
+    const caixa = imagem.getBoundingClientRect();
+    setZoom({
+      x: ((evento.clientX - caixa.left) / caixa.width) * 100,
+      y: ((evento.clientY - caixa.top) / caixa.height) * 100,
+    });
+  }
 
   return (
     <dialog
       ref={dialogo}
+      data-sem-toque-duplo
       aria-label="Foto do post em tela cheia"
       onClick={aoFechar}
       onCancel={(evento) => {
         evento.preventDefault();
         aoFechar();
       }}
-      className="fixed inset-0 m-0 grid h-dvh w-full place-items-center border-0 bg-[rgb(18_17_16/0.92)] p-4 text-transparent backdrop:bg-transparent open:animate-[aparecer-escala_var(--rapido)_var(--ease-saida)_both] motion-reduce:open:animate-none"
+      className="fixed inset-0 m-0 hidden h-dvh max-h-none w-full max-w-none border-0 bg-[rgb(18_17_16/0.92)] p-0 text-transparent backdrop:bg-transparent open:block open:animate-[aparecer-escala_var(--rapido)_var(--ease-saida)_both] motion-reduce:open:animate-none"
     >
-      <img
-        src={src}
-        alt="Foto do post em tela cheia"
-        className="max-h-full max-w-full rounded-controle object-contain"
-      />
+      <div className="grid h-dvh w-full place-items-center overflow-hidden p-4">
+        <img
+          ref={foto}
+          src={src}
+          alt="Foto do post em tela cheia"
+          title={zoom ? "Clique para ajustar à tela" : "Clique para dar zoom no ponto"}
+          onClick={alternarZoom}
+          style={zoom ? { transform: "scale(2)", transformOrigin: `${zoom.x}% ${zoom.y}%` } : undefined}
+          className={`max-h-full max-w-full rounded-controle object-contain ${zoom ? "cursor-zoom-out" : "cursor-zoom-in"}`}
+        />
+      </div>
       <button
         type="button"
         aria-label="Fechar"

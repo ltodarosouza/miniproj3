@@ -187,7 +187,7 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApaga
 
               {post.imagem_url && !imagemFalhou && (
                 <>
-                  {/* Toque simples amplia; o duplo toque de curtir não vale em cima da foto (decisão 41). */}
+                  {/* Toque simples amplia; o duplo toque de curtir não vale em cima da foto (decisão 42). */}
                   <button
                     type="button"
                     data-sem-toque-duplo
