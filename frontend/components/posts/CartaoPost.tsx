@@ -50,6 +50,7 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApaga
   const [apagado, setApagado] = useState(false);
   const [erroApagar, setErroApagar] = useState(false);
   const rodape = useRef<HTMLElement>(null);
+  const botaoFoto = useRef<HTMLButtonElement>(null);
   const jaConfirmou = useRef(false);
   // Segundo clique enquanto o primeiro ainda está no servidor é ignorado: evita contador fora de sincronia.
   const curtindo = useRef(false);
@@ -189,6 +190,7 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApaga
                 <>
                   {/* Toque simples amplia; o duplo toque de curtir não vale em cima da foto (decisão 42). */}
                   <button
+                    ref={botaoFoto}
                     type="button"
                     data-sem-toque-duplo
                     aria-label="Ampliar foto"
@@ -203,7 +205,39 @@ export function CartaoPost({ post: inicial, podeEnsinar = false, rotulo, aoApaga
                       className="max-h-[28rem] w-full object-cover"
                     />
                   </button>
-                  <Lupa aberta={ampliando} src={urlDaImagem(post.imagem_url)} aoFechar={() => setAmpliando(false)} />
+                  <Lupa
+                    aberta={ampliando}
+                    src={urlDaImagem(post.imagem_url)}
+                    alt={`Foto do post de ${post.autor.name}`}
+                    origem={botaoFoto}
+                    aoFechar={() => setAmpliando(false)}
+                    legenda={
+                      <>
+                        <Avatar nome={post.autor.name} url={post.autor.avatar_url} tamanho="sm" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium leading-5">{post.autor.name}</span>
+                          <span className="flex min-w-0 items-center gap-1.5 font-mono text-xs leading-5 text-texto-3 numeros">
+                            <span className="truncate">@{post.autor.username}</span>
+                            <span aria-hidden="true">·</span>
+                            <time className="shrink-0" dateTime={post.created_at}>{horaDoDiario(post.created_at)}</time>
+                          </span>
+                          {/* Abaixo de 400 px a habilidade desce para uma linha própria em vez de sumir. */}
+                          {post.habilidade && (
+                            <span className="mt-1 flex min-[400px]:hidden">
+                              <span className="truncate rounded-controle border border-linha px-1.5 py-px font-mono text-xs leading-5 text-texto">
+                                {post.habilidade.nome}
+                              </span>
+                            </span>
+                          )}
+                        </span>
+                        {post.habilidade && (
+                          <span className="hidden shrink-0 rounded-controle border border-linha px-1.5 py-0.5 font-mono text-xs text-texto min-[400px]:inline">
+                            {post.habilidade.nome}
+                          </span>
+                        )}
+                      </>
+                    }
+                  />
                 </>
               )}
             </>
