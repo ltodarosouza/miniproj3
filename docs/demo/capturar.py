@@ -12,7 +12,9 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sqlite3
+import tempfile
 import urllib.request
 from pathlib import Path
 
@@ -61,8 +63,8 @@ def ready(page):
 def capture(page, ident, rota, selectors):
     ready(page)
     alvos = rects(page, selectors)
-    png = OUT / (ident + ".png")
-    webp = OUT / (ident + ".webp")
+    png = NOVA / (ident + ".png")
+    webp = NOVA / (ident + ".webp")
     page.screenshot(path=str(png), animations="disabled")
     with Image.open(png) as im:
         im.convert("RGB").save(webp, "WEBP", quality=92, method=6)
@@ -71,11 +73,8 @@ def capture(page, ident, rota, selectors):
 
 
 records = []
-OUT.mkdir(parents=True, exist_ok=True)
-for old in OUT.glob("*.webp"):
-    old.unlink()
-for old in OUT.glob("*.png"):
-    old.unlink()
+# Grava numa pasta temporária; as capturas antigas só são trocadas se o roteiro terminar.
+NOVA = Path(tempfile.mkdtemp(prefix="colmatch-telas-"))
 
 with sync_playwright() as pw:
     browser = pw.chromium.launch(headless=True)
@@ -145,11 +144,15 @@ with sync_playwright() as pw:
         page.goto(FRONT+"/mensagens/ana_borges"); page.locator("header button:has-text('Agendar troca'), button[aria-label='Agendar troca']").first.click()
         dialog=page.locator("dialog[aria-labelledby='titulo-agendar-troca']")
         # As habilidades da troca já vêm escolhidas (Estrutura de Dados ↔ CSS); falta o dia e o horário.
-        dialog.get_by_role("button",name="Sábado",exact=True).click()
-        h=dialog.get_by_role("button",name="19:00",exact=True)
-        require(h,"horário 19:00").click()
+        # "Amanhã" existe todo dia (o outro atalho muda com o dia da semana) e 19:00 de amanhã está sempre livre.
+        dialog.get_by_role("button",name="Amanhã",exact=True).click()
+        h=require(dialog.get_by_role("button",name="19:00",exact=True),"horário 19:00")
         h.scroll_into_view_if_needed()
-        capture(page,"08-agendar","/mensagens/ana_borges",{"form":"dialog[aria-labelledby='titulo-agendar-troca']","horario":"dialog button[aria-pressed=true]:text-is('19:00')","resumo":"section[aria-label='Resumo da ordem']","propor":"dialog button:has-text('Propor troca')"})
+        agendar={"form":"dialog[aria-labelledby='titulo-agendar-troca']","horario":"dialog button:text-is('19:00')","resumo":"section[aria-label='Resumo da ordem']","propor":"dialog button:has-text('Propor troca')"}
+        capture(page,"08-agendar","/mensagens/ana_borges",agendar)
+        h.click()
+        dialog.locator("button[aria-pressed=true]:text-is('19:00')").wait_for(timeout=5000)
+        capture(page,"08b-agendar-horario","/mensagens/ana_borges",agendar)
         dialog.get_by_role("button",name="Propor troca").click()
         page.get_by_text("Estrutura de Dados",exact=False).last.wait_for(timeout=20000)
         capture(page,"09-proposta","/mensagens/ana_borges",{"cartao":"[id^='troca-']:has-text('Estrutura de Dados')","status":"[id^='troca-']:has-text('Estrutura de Dados') > div:first-child > span:last-child"})
@@ -189,6 +192,12 @@ with sync_playwright() as pw:
 
 payload={"viewport":VIEWPORT,"usuario":"ada","telas":records}
 texto=json.dumps(payload,ensure_ascii=False,indent=2)
+OUT.mkdir(parents=True, exist_ok=True)
+for antiga in OUT.glob("*.webp"):
+    antiga.unlink()
+for nova in NOVA.glob("*.webp"):
+    shutil.move(str(nova), OUT / nova.name)
+shutil.rmtree(NOVA)
 (OUT/"telas.json").write_text(texto+"\n",encoding="utf-8")
 # Mesmo conteúdo como script: a demo abre direto do disco (file://), onde fetch não funciona.
 (OUT/"telas.js").write_text("window.TELAS = "+texto+";\n",encoding="utf-8")

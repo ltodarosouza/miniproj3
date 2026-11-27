@@ -315,6 +315,37 @@
       }
     },
     {
+      "id": "08b-agendar-horario",
+      "arquivo": "08b-agendar-horario.webp",
+      "rota": "/mensagens/ana_borges",
+      "alvos": {
+        "form": {
+          "x": 544,
+          "y": 19,
+          "w": 512,
+          "h": 862
+        },
+        "horario": {
+          "x": 874,
+          "y": 597,
+          "w": 70,
+          "h": 36
+        },
+        "resumo": {
+          "x": 569,
+          "y": 695,
+          "w": 462,
+          "h": 101
+        },
+        "propor": {
+          "x": 914,
+          "y": 816,
+          "w": 117,
+          "h": 40
+        }
+      }
+    },
+    {
       "id": "09-proposta",
       "arquivo": "09-proposta.webp",
       "rota": "/mensagens/ana_borges",
